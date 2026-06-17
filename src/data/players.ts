@@ -42,6 +42,10 @@ export const PLAYERS: Player[] = playersGenerated as Player[];
 
 export const PLAYER_IDS = PLAYERS.map((player) => player.id);
 
+export const MAX_COMPARISON_PLAYERS = 5;
+
+export const RANKING_AXIS_TICKS = [1, 10, 50, 100, 250, 500, 1000] as const;
+
 const playersById = new Map(PLAYERS.map((player) => [player.id, player]));
 const playersByAtpId = new Map(PLAYERS.map((player) => [player.atpPlayerId, player]));
 const indexByAtpId = new Map(PLAYER_INDEX.map((entry) => [entry.atpPlayerId, entry]));
@@ -101,7 +105,11 @@ export function formatBirthDate(birthDate: string | null): string {
 
 export interface ChartRow {
   age: number;
-  [playerId: string]: number | null;
+  [key: string]: number | string | null | undefined;
+}
+
+export function chartDateKey(playerId: string): string {
+  return `${playerId}__date`;
 }
 
 export function buildChartData(
@@ -116,11 +124,35 @@ export function buildChartData(
       if (!rows.has(point.age)) {
         rows.set(point.age, { age: point.age });
       }
-      rows.get(point.age)![player.id] = point.ranking;
+      const row = rows.get(point.age)!;
+      row[player.id] = point.ranking;
+      row[chartDateKey(player.id)] = point.rankingDate;
     });
   });
 
   return Array.from(rows.values()).sort((a, b) => a.age - b.age);
+}
+
+export function getYAxisDomain(
+  chartData: ChartRow[],
+  selectedPlayerIds: string[],
+): [number, number] {
+  let maxRank = 1;
+
+  chartData.forEach((row) => {
+    selectedPlayerIds.forEach((playerId) => {
+      const value = row[playerId];
+      if (typeof value === "number" && value > maxRank) {
+        maxRank = value;
+      }
+    });
+  });
+
+  return [1, Math.max(RANKING_AXIS_TICKS[RANKING_AXIS_TICKS.length - 1], maxRank)];
+}
+
+export function getVisibleRankingTicks(maxRank: number): number[] {
+  return RANKING_AXIS_TICKS.filter((tick) => tick <= maxRank);
 }
 
 export function getAgeRange(

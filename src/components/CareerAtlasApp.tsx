@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import {
   PLAYERS,
   PLAYER_IDS,
   PlayerIndexEntry,
+  MAX_COMPARISON_PLAYERS,
   getIndexEntryByAtpId,
 } from "@/data/players";
 import dataSourceMeta from "@/data/data-source-meta.json";
@@ -17,6 +18,13 @@ function buildInitialComparisonTargets(): PlayerIndexEntry[] {
     .filter((entry): entry is PlayerIndexEntry => Boolean(entry));
 }
 
+function isAlreadyInComparison(
+  targets: PlayerIndexEntry[],
+  entry: PlayerIndexEntry,
+): boolean {
+  return targets.some((target) => target.atpPlayerId === entry.atpPlayerId);
+}
+
 export function CareerAtlasApp() {
   const [selectedIds, setSelectedIds] = useState<string[]>([
     "djokovic",
@@ -26,40 +34,85 @@ export function CareerAtlasApp() {
   const [comparisonTargets, setComparisonTargets] = useState<PlayerIndexEntry[]>(
     buildInitialComparisonTargets,
   );
+  const [limitWarning, setLimitWarning] = useState<string | null>(null);
+  const warningTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const comparisonTargetsRef = useRef(comparisonTargets);
 
-  const togglePlayer = useCallback((id: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((playerId) => playerId !== id) : [...prev, id],
+  useEffect(() => {
+    comparisonTargetsRef.current = comparisonTargets;
+  }, [comparisonTargets]);
+
+  const showLimitWarning = useCallback(() => {
+    setLimitWarning(
+      `You can compare up to ${MAX_COMPARISON_PLAYERS} players at a time. Remove one to add another.`,
     );
 
-    const player = PLAYERS.find((entry) => entry.id === id);
-    if (!player) return;
-
-    const indexEntry = getIndexEntryByAtpId(player.atpPlayerId);
-    if (!indexEntry) return;
-
-    setComparisonTargets((prev) => {
-      if (prev.some((entry) => entry.atpPlayerId === indexEntry.atpPlayerId)) {
-        return prev;
-      }
-      return [...prev, indexEntry];
-    });
-  }, []);
-
-  const addToComparison = useCallback((entry: PlayerIndexEntry) => {
-    setComparisonTargets((prev) => {
-      if (prev.some((target) => target.atpPlayerId === entry.atpPlayerId)) {
-        return prev;
-      }
-      return [...prev, entry];
-    });
-
-    if (entry.hasRankingData && entry.slug) {
-      setSelectedIds((prev) =>
-        prev.includes(entry.slug!) ? prev : [...prev, entry.slug!],
-      );
+    if (warningTimeoutRef.current) {
+      clearTimeout(warningTimeoutRef.current);
     }
+
+    warningTimeoutRef.current = setTimeout(() => {
+      setLimitWarning(null);
+    }, 4000);
   }, []);
+
+  const tryAddComparisonTarget = useCallback(
+    (entry: PlayerIndexEntry): boolean => {
+      const current = comparisonTargetsRef.current;
+
+      if (isAlreadyInComparison(current, entry)) {
+        return true;
+      }
+
+      if (current.length >= MAX_COMPARISON_PLAYERS) {
+        showLimitWarning();
+        return false;
+      }
+
+      setComparisonTargets((prev) => [...prev, entry]);
+      return true;
+    },
+    [showLimitWarning],
+  );
+
+  const togglePlayer = useCallback(
+    (id: string) => {
+      const player = PLAYERS.find((entry) => entry.id === id);
+      if (!player) return;
+
+      const indexEntry = getIndexEntryByAtpId(player.atpPlayerId);
+      if (!indexEntry) return;
+
+      if (selectedIds.includes(id)) {
+        setSelectedIds((prev) => prev.filter((playerId) => playerId !== id));
+        setComparisonTargets((prev) =>
+          prev.filter((target) => target.atpPlayerId !== indexEntry.atpPlayerId),
+        );
+        return;
+      }
+
+      if (!tryAddComparisonTarget(indexEntry)) {
+        return;
+      }
+
+      setSelectedIds((prev) => [...prev, id]);
+    },
+    [selectedIds, tryAddComparisonTarget],
+  );
+
+  const addToComparison = useCallback(
+    (entry: PlayerIndexEntry) => {
+      const added = tryAddComparisonTarget(entry);
+      if (!added) return;
+
+      if (entry.hasRankingData && entry.slug) {
+        setSelectedIds((prev) =>
+          prev.includes(entry.slug!) ? prev : [...prev, entry.slug!],
+        );
+      }
+    },
+    [tryAddComparisonTarget],
+  );
 
   const removeComparisonTarget = useCallback((atpPlayerId: string) => {
     const entry = getIndexEntryByAtpId(atpPlayerId);
@@ -73,22 +126,22 @@ export function CareerAtlasApp() {
   }, []);
 
   const selectAll = useCallback(() => {
-    setSelectedIds([...PLAYER_IDS]);
-    setComparisonTargets((prev) => {
-      const merged = new Map(prev.map((entry) => [entry.atpPlayerId, entry]));
-      for (const player of PLAYERS) {
-        const indexEntry = getIndexEntryByAtpId(player.atpPlayerId);
-        if (indexEntry) {
-          merged.set(indexEntry.atpPlayerId, indexEntry);
-        }
-      }
-      return Array.from(merged.values());
-    });
+    const limitedIds = PLAYER_IDS.slice(0, MAX_COMPARISON_PLAYERS);
+    setSelectedIds(limitedIds);
+    setComparisonTargets(
+      limitedIds
+        .map((id) => {
+          const player = PLAYERS.find((entry) => entry.id === id);
+          return player ? getIndexEntryByAtpId(player.atpPlayerId) : undefined;
+        })
+        .filter((entry): entry is PlayerIndexEntry => Boolean(entry)),
+    );
   }, []);
 
   const clearAll = useCallback(() => {
     setSelectedIds([]);
     setComparisonTargets([]);
+    setLimitWarning(null);
   }, []);
 
   return (
@@ -101,8 +154,8 @@ export function CareerAtlasApp() {
           Compare ATP ranking trajectories
         </h1>
         <p className="mt-3 max-w-2xl text-base leading-relaxed text-[#86868b]">
-          Search any ATP player and add them to the comparison. Players with
-          generated weekly ranking history appear on the chart.
+          Compare up to 5 players by age. Start with the yearly view for a
+          career overview, then drill into monthly or weekly detail.
         </p>
       </header>
 
@@ -110,6 +163,7 @@ export function CareerAtlasApp() {
         players={PLAYERS}
         selectedIds={selectedIds}
         comparisonTargets={comparisonTargets}
+        limitWarning={limitWarning}
         onToggle={togglePlayer}
         onAddToComparison={addToComparison}
         onRemoveComparisonTarget={removeComparisonTarget}
