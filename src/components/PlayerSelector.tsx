@@ -7,6 +7,7 @@ interface PlayerSelectorProps {
   players: Player[];
   selectedIds: string[];
   comparisonTargets: PlayerIndexEntry[];
+  limitWarning: string | null;
   onToggle: (id: string) => void;
   onAddToComparison: (entry: PlayerIndexEntry) => void;
   onRemoveComparisonTarget: (atpPlayerId: string) => void;
@@ -18,6 +19,7 @@ export function PlayerSelector({
   players,
   selectedIds,
   comparisonTargets,
+  limitWarning,
   onToggle,
   onAddToComparison,
   onRemoveComparisonTarget,
@@ -32,7 +34,7 @@ export function PlayerSelector({
             Players
           </h2>
           <p className="mt-0.5 text-sm text-[#86868b]">
-            Search any ATP player and add them to the comparison
+            Compare up to 5 players · {comparisonTargets.length}/5 selected
           </p>
         </div>
         <div className="flex gap-2">
@@ -52,6 +54,12 @@ export function PlayerSelector({
           </button>
         </div>
       </div>
+
+      {limitWarning && (
+        <div className="mb-5 rounded-xl border border-[#FFCCBC] bg-[#FFF3E0] px-4 py-3">
+          <p className="text-sm font-medium text-[#E65100]">{limitWarning}</p>
+        </div>
+      )}
 
       <div className="mb-5">
         <PlayerSearch
