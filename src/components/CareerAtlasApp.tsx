@@ -13,7 +13,7 @@ import { PlayerSelector } from "@/components/PlayerSelector";
 import { RankingChart } from "@/components/RankingChart";
 
 function buildInitialComparisonTargets(): PlayerIndexEntry[] {
-  return ["104925", "103819", "104745"]
+  return ["103819", "104745", "104925"]
     .map((atpPlayerId) => getIndexEntryByAtpId(atpPlayerId))
     .filter((entry): entry is PlayerIndexEntry => Boolean(entry));
 }
@@ -27,9 +27,9 @@ function isAlreadyInComparison(
 
 export function CareerAtlasApp() {
   const [selectedIds, setSelectedIds] = useState<string[]>([
-    "djokovic",
     "federer",
     "nadal",
+    "djokovic",
   ]);
   const [comparisonTargets, setComparisonTargets] = useState<PlayerIndexEntry[]>(
     buildInitialComparisonTargets,

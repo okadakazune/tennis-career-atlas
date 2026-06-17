@@ -9,7 +9,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
   ReferenceLine,
 } from "recharts";
 import {
@@ -17,6 +16,9 @@ import {
   TrajectoryGranularity,
   buildChartData,
   chartDateKey,
+  getAgeExtent,
+  getYearlyAgeTicks,
+  getVisibleAgeTicks,
   getVisibleRankingTicks,
   getYAxisDomain,
 } from "@/data/players";
@@ -47,7 +49,7 @@ const GRANULARITY_LABELS: Record<TrajectoryGranularity, string> = {
 };
 
 const GRANULARITY_DESCRIPTIONS: Record<TrajectoryGranularity, string> = {
-  yearly: "Career overview by year-end ranking. Dots show each age checkpoint.",
+  yearly: "Compare careers by integer age with clear trend lines and year-end checkpoints.",
   monthly: "Month-end rankings for a more detailed career view.",
   weekly: "Full weekly ranking history for deep analysis.",
 };
@@ -63,6 +65,8 @@ const SCALE_DESCRIPTIONS: Record<RankingScale, string> = {
   log: "Log scale treats 10× ranking gaps equally (#1→#10, #10→#100).",
   linear: "Linear scale highlights small differences among top-ranked players.",
 };
+
+const CHART_HEIGHT_PX = 520;
 
 function ChartToggleGroup<T extends string>({
   label,
@@ -107,17 +111,25 @@ function getLineStyle(granularity: TrajectoryGranularity, color: string) {
   switch (granularity) {
     case "yearly":
       return {
-        strokeWidth: 1,
-        strokeOpacity: 0.3,
-        dot: { r: 6, fill: color, stroke: "#fff", strokeWidth: 2 },
-        activeDot: { r: 8, strokeWidth: 2, stroke: "#fff" },
+        strokeWidth: 2.5,
+        strokeOpacity: 0.75,
+        dot: {
+          r: 5,
+          fill: color,
+          fillOpacity: 1,
+          stroke: "#fff",
+          strokeWidth: 2,
+        },
+        activeDot: { r: 7, strokeWidth: 2, stroke: "#fff" },
+        type: "linear" as const,
       };
     case "monthly":
       return {
         strokeWidth: 2,
         strokeOpacity: 1,
-        dot: { r: 3.5, fill: color, strokeWidth: 0 },
+        dot: { r: 3.5, fill: color, fillOpacity: 1, strokeWidth: 0 },
         activeDot: { r: 5, strokeWidth: 2, stroke: "#fff" },
+        type: "monotone" as const,
       };
     case "weekly":
       return {
@@ -125,8 +137,13 @@ function getLineStyle(granularity: TrajectoryGranularity, color: string) {
         strokeOpacity: 0.85,
         dot: false as const,
         activeDot: { r: 4, strokeWidth: 2, stroke: "#fff" },
+        type: "monotone" as const,
       };
   }
+}
+
+function formatYearFromDate(rankingDate: string): string {
+  return `${rankingDate.slice(0, 4)}年`;
 }
 
 function CustomTooltip({
@@ -153,40 +170,70 @@ function CustomTooltip({
 
   if (!validEntries.length) return null;
 
+  const hoveredAge =
+    typeof label === "number" ? label : validEntries[0]?.payload?.age;
+
   return (
     <div className="rounded-xl border border-black/[0.06] bg-white/95 px-4 py-3 shadow-[0_8px_30px_rgba(0,0,0,0.12)] backdrop-blur-sm">
-      <p className="mb-1 text-xs font-medium uppercase tracking-wide text-[#86868b]">
-        {GRANULARITY_LABELS[granularity]} · Age{" "}
-        {typeof label === "number" ? label.toFixed(1) : label}
-      </p>
-      <div className="space-y-2">
+      <div className="space-y-3">
         {validEntries
           .sort((a, b) => a.value - b.value)
-          .map((entry) => {
+          .map((entry, index) => {
             const player = players.find((p) => p.id === entry.dataKey);
             const rankingDate = entry.payload?.[chartDateKey(entry.dataKey)];
+            const age =
+              typeof hoveredAge === "number"
+                ? hoveredAge
+                : typeof entry.payload?.age === "number"
+                  ? entry.payload.age
+                  : null;
 
             return (
-              <div key={entry.dataKey} className="space-y-0.5">
-                <div className="flex items-center justify-between gap-6 text-sm">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="h-2.5 w-2.5 rounded-full"
-                      style={{ backgroundColor: entry.color }}
-                    />
-                    <span className="font-medium text-[#1d1d1f]">
-                      {player?.name ?? entry.name}
-                    </span>
-                  </div>
-                  <span className="tabular-nums font-medium text-[#1d1d1f]">
-                    #{entry.value}
-                  </span>
+              <div
+                key={entry.dataKey}
+                className={index > 0 ? "border-t border-black/[0.06] pt-3" : ""}
+              >
+                <div className="mb-1.5 flex items-center gap-2">
+                  <span
+                    className="h-2.5 w-2.5 rounded-full"
+                    style={{ backgroundColor: entry.color }}
+                  />
+                  <p className="text-sm font-semibold text-[#1d1d1f]">
+                    {player?.name ?? entry.name}
+                  </p>
                 </div>
-                <p className="pl-[18px] text-xs text-[#86868b]">
-                  {typeof rankingDate === "string"
-                    ? rankingDate
-                    : "Ranking date unavailable"}
-                </p>
+
+                {granularity === "yearly" ? (
+                  <div className="space-y-0.5 pl-[18px] text-sm text-[#1d1d1f]">
+                    <p>
+                      {typeof rankingDate === "string"
+                        ? formatYearFromDate(rankingDate)
+                        : "—"}
+                    </p>
+                    <p>{age != null ? `${Math.round(age)}歳` : "—"}</p>
+                    <p className="font-medium">ATP Ranking #{entry.value}</p>
+                  </div>
+                ) : (
+                  <div className="space-y-0.5 pl-[18px] text-xs text-[#1d1d1f]">
+                    <p>
+                      <span className="text-[#86868b]">Age: </span>
+                      {age != null ? age.toFixed(1) : "—"}
+                    </p>
+                    <p>
+                      <span className="text-[#86868b]">Ranking: </span>#{entry.value}
+                    </p>
+                    <p>
+                      <span className="text-[#86868b]">Date: </span>
+                      {typeof rankingDate === "string"
+                        ? rankingDate
+                        : "Unavailable"}
+                    </p>
+                    <p>
+                      <span className="text-[#86868b]">Mode: </span>
+                      {GRANULARITY_LABELS[granularity]}
+                    </p>
+                  </div>
+                )}
               </div>
             );
           })}
@@ -202,10 +249,27 @@ export function RankingChart({ players, selectedIds }: RankingChartProps) {
   const chartData = buildChartData(selectedIds, granularity);
   const [, yMax] = getYAxisDomain(chartData, selectedIds);
   const yTicks = getVisibleRankingTicks(yMax);
+  const isYearly = granularity === "yearly";
+  const ageExtent = getAgeExtent(chartData);
+  const xDomain: [number, number] | ["dataMin", "dataMax"] =
+    ageExtent != null
+      ? isYearly
+        ? [Math.round(ageExtent[0]), Math.round(ageExtent[1])]
+        : ageExtent
+      : ["dataMin", "dataMax"];
+  const ageTicks =
+    ageExtent != null
+      ? isYearly
+        ? getYearlyAgeTicks(Math.round(ageExtent[0]), Math.round(ageExtent[1]))
+        : getVisibleAgeTicks(ageExtent[0], ageExtent[1])
+      : [];
 
   if (selectedPlayers.length === 0) {
     return (
-      <div className="flex h-[420px] items-center justify-center rounded-2xl border border-dashed border-black/[0.08] bg-[#fafafa]">
+      <div
+        className="flex items-center justify-center rounded-2xl border border-dashed border-black/[0.08] bg-[#fafafa]"
+        style={{ height: CHART_HEIGHT_PX }}
+      >
         <p className="text-sm text-[#86868b]">
           Select at least one player with chart data to view the chart
         </p>
@@ -215,7 +279,7 @@ export function RankingChart({ players, selectedIds }: RankingChartProps) {
 
   return (
     <div className="rounded-2xl border border-black/[0.06] bg-white p-4 shadow-[0_2px_20px_rgba(0,0,0,0.04)] sm:p-6">
-      <div className="mb-4 flex flex-col gap-4 sm:mb-6 sm:flex-row sm:items-start sm:justify-between">
+      <div className="mb-4 flex flex-col gap-4 sm:mb-5 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-lg font-semibold tracking-tight text-[#1d1d1f]">
             ATP Ranking by Age
@@ -242,11 +306,11 @@ export function RankingChart({ players, selectedIds }: RankingChartProps) {
         </div>
       </div>
 
-      <div className="h-[360px] w-full sm:h-[420px]">
+      <div className="w-full" style={{ height: CHART_HEIGHT_PX }}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={chartData}
-            margin={{ top: 8, right: 12, left: 4, bottom: 8 }}
+            margin={{ top: 20, right: 12, left: 4, bottom: 8 }}
           >
             <CartesianGrid
               strokeDasharray="4 4"
@@ -264,10 +328,16 @@ export function RankingChart({ players, selectedIds }: RankingChartProps) {
             <XAxis
               dataKey="age"
               type="number"
-              domain={["dataMin", "dataMax"]}
+              domain={xDomain}
+              ticks={ageTicks.length > 0 ? ageTicks : undefined}
+              allowDecimals={!isYearly}
               tick={{ fill: "#86868b", fontSize: 12 }}
               axisLine={{ stroke: "#d2d2d7" }}
               tickLine={{ stroke: "#d2d2d7" }}
+              interval={isYearly ? 0 : undefined}
+              tickFormatter={(value: number) =>
+                isYearly ? String(Math.round(value)) : value.toFixed(0)
+              }
               label={{
                 value: "Age",
                 position: "insideBottom",
@@ -275,7 +345,6 @@ export function RankingChart({ players, selectedIds }: RankingChartProps) {
                 fill: "#86868b",
                 fontSize: 12,
               }}
-              tickFormatter={(value: number) => value.toFixed(0)}
             />
             <YAxis
               scale={yScale === "log" ? "log" : "auto"}
@@ -283,6 +352,7 @@ export function RankingChart({ players, selectedIds }: RankingChartProps) {
               domain={[1, yMax]}
               ticks={yTicks}
               allowDataOverflow
+              padding={{ top: 28, bottom: 8 }}
               tick={{ fill: "#86868b", fontSize: 11 }}
               axisLine={{ stroke: "#d2d2d7" }}
               tickLine={{ stroke: "#d2d2d7" }}
@@ -302,19 +372,13 @@ export function RankingChart({ players, selectedIds }: RankingChartProps) {
                 <CustomTooltip players={selectedPlayers} granularity={granularity} />
               }
             />
-            <Legend
-              verticalAlign="top"
-              align="right"
-              iconType="circle"
-              wrapperStyle={{ paddingBottom: 16, fontSize: 13 }}
-            />
             {selectedPlayers.map((player) => {
               const lineStyle = getLineStyle(granularity, player.color);
 
               return (
                 <Line
                   key={player.id}
-                  type="monotone"
+                  type={lineStyle.type}
                   dataKey={player.id}
                   name={player.shortName}
                   stroke={player.color}
@@ -323,6 +387,7 @@ export function RankingChart({ players, selectedIds }: RankingChartProps) {
                   dot={lineStyle.dot}
                   activeDot={lineStyle.activeDot}
                   connectNulls={false}
+                  legendType="none"
                 />
               );
             })}
