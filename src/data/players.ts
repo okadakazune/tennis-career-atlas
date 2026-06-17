@@ -6,6 +6,7 @@ export interface RankingPoint {
   age: number;
   ranking: number;
   points: number | null;
+  consecutiveWeeksAtNo1?: number;
 }
 
 export type TrajectoryGranularity = "weekly" | "monthly" | "yearly";
@@ -44,9 +45,34 @@ export const PLAYER_IDS = PLAYERS.map((player) => player.id);
 
 export const MAX_COMPARISON_PLAYERS = 5;
 
-export const RANKING_AXIS_TICKS = [1, 10, 50, 100, 250, 500, 1000] as const;
+export const MAX_WEEKLY_COMPARISON_PLAYERS = 2;
+
+export function getMaxComparisonPlayers(
+  granularity: TrajectoryGranularity,
+): number {
+  return granularity === "weekly"
+    ? MAX_WEEKLY_COMPARISON_PLAYERS
+    : MAX_COMPARISON_PLAYERS;
+}
+
+export const WEEKLY_LIMIT_WARNING =
+  "Weekly view supports up to 2 players.\nRemove a player before adding another.";
+
+export const RANKING_AXIS_TICKS = [1, 2, 5, 10, 20, 50, 100, 250, 500, 1000] as const;
 
 export const AGE_AXIS_TICKS = [18, 20, 25, 30, 35, 40] as const;
+
+const AUTO_ZOOM_PADDING: Record<TrajectoryGranularity, number> = {
+  yearly: 1,
+  monthly: 0.5,
+  weekly: 1,
+};
+
+const AUTO_ZOOM_MIN_SPAN: Record<TrajectoryGranularity, number> = {
+  yearly: 5,
+  monthly: 3,
+  weekly: 2,
+};
 
 const playersById = new Map(PLAYERS.map((player) => [player.id, player]));
 const playersByAtpId = new Map(PLAYERS.map((player) => [player.atpPlayerId, player]));
@@ -114,6 +140,10 @@ export function chartDateKey(playerId: string): string {
   return `${playerId}__date`;
 }
 
+export function chartStreakKey(playerId: string): string {
+  return `${playerId}__streak`;
+}
+
 export function buildChartData(
   selectedPlayerIds: string[],
   granularity: TrajectoryGranularity = "yearly",
@@ -132,6 +162,9 @@ export function buildChartData(
       const row = rows.get(displayAge)!;
       row[player.id] = point.ranking;
       row[chartDateKey(player.id)] = point.rankingDate;
+      if (point.consecutiveWeeksAtNo1 != null) {
+        row[chartStreakKey(player.id)] = point.consecutiveWeeksAtNo1;
+      }
     });
   });
 
@@ -174,6 +207,46 @@ export function getYearlyAgeTicks(minAge: number, maxAge: number): number[] {
   }
 
   return ticks;
+}
+
+export function getAutoZoomAgeDomain(
+  selectedPlayerIds: string[],
+  granularity: TrajectoryGranularity = "yearly",
+): [number, number] | null {
+  const [minAge, maxAge] = getAgeRange(selectedPlayerIds, granularity);
+  if (!Number.isFinite(minAge) || !Number.isFinite(maxAge)) return null;
+
+  const padding = AUTO_ZOOM_PADDING[granularity];
+  const minSpan = AUTO_ZOOM_MIN_SPAN[granularity];
+
+  let min =
+    granularity === "yearly" ? Math.round(minAge) - padding : minAge - padding;
+  let max =
+    granularity === "yearly" ? Math.round(maxAge) + padding : maxAge + padding;
+
+  if (max - min < minSpan) {
+    const center = (min + max) / 2;
+    min = center - minSpan / 2;
+    max = center + minSpan / 2;
+  }
+
+  if (granularity === "yearly") {
+    return [Math.round(min), Math.round(max)];
+  }
+
+  return [min, max];
+}
+
+export function getAgeTicksForDomain(
+  minAge: number,
+  maxAge: number,
+  granularity: TrajectoryGranularity,
+): number[] {
+  if (granularity === "yearly") {
+    return getYearlyAgeTicks(Math.round(minAge), Math.round(maxAge));
+  }
+
+  return getVisibleAgeTicks(minAge, maxAge);
 }
 
 export function getAgeExtent(

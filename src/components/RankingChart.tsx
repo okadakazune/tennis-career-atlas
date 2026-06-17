@@ -16,9 +16,10 @@ import {
   TrajectoryGranularity,
   buildChartData,
   chartDateKey,
-  getAgeExtent,
-  getYearlyAgeTicks,
-  getVisibleAgeTicks,
+  chartStreakKey,
+  getAutoZoomAgeDomain,
+  getAgeTicksForDomain,
+  getMaxComparisonPlayers,
   getVisibleRankingTicks,
   getYAxisDomain,
 } from "@/data/players";
@@ -26,6 +27,8 @@ import {
 interface RankingChartProps {
   players: Player[];
   selectedIds: string[];
+  granularity: TrajectoryGranularity;
+  onGranularityChange: (granularity: TrajectoryGranularity) => void;
 }
 
 interface TooltipPayloadItem {
@@ -42,28 +45,30 @@ const GRANULARITY_OPTIONS: { value: TrajectoryGranularity; label: string }[] = [
   { value: "weekly", label: "Weekly" },
 ];
 
-const GRANULARITY_LABELS: Record<TrajectoryGranularity, string> = {
-  weekly: "Weekly",
-  monthly: "Monthly",
-  yearly: "Yearly",
-};
-
 const GRANULARITY_DESCRIPTIONS: Record<TrajectoryGranularity, string> = {
   yearly: "Compare careers by integer age with clear trend lines and year-end checkpoints.",
   monthly: "Month-end rankings for a more detailed career view.",
-  weekly: "Full weekly ranking history for deep analysis.",
+  weekly: "Full weekly ranking history for deep analysis. Supports up to 2 players.",
 };
 
 type RankingScale = "linear" | "log";
 
-const SCALE_OPTIONS: { value: RankingScale; label: string }[] = [
-  { value: "log", label: "Log" },
-  { value: "linear", label: "Linear" },
+const SCALE_OPTIONS: { value: RankingScale; label: string; title: string }[] = [
+  {
+    value: "log",
+    label: "Career",
+    title: "Compare overall careers using logarithmic ranking scale.",
+  },
+  {
+    value: "linear",
+    label: "Detail",
+    title: "Compare exact ranking positions using linear scale.",
+  },
 ];
 
-const SCALE_DESCRIPTIONS: Record<RankingScale, string> = {
-  log: "Log scale treats 10× ranking gaps equally (#1→#10, #10→#100).",
-  linear: "Linear scale highlights small differences among top-ranked players.",
+const SCALE_HELP_TEXT: Record<RankingScale, string> = {
+  log: "Compare overall careers using logarithmic ranking scale.",
+  linear: "Compare exact ranking positions using linear scale.",
 };
 
 const CHART_HEIGHT_PX = 520;
@@ -75,7 +80,7 @@ function ChartToggleGroup<T extends string>({
   onChange,
 }: {
   label: string;
-  options: { value: T; label: string }[];
+  options: { value: T; label: string; title?: string }[];
   value: T;
   onChange: (value: T) => void;
 }) {
@@ -93,6 +98,7 @@ function ChartToggleGroup<T extends string>({
             type="button"
             onClick={() => onChange(option.value)}
             aria-pressed={isActive}
+            title={option.title}
             className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-all ${
               isActive
                 ? "bg-white text-[#1d1d1f] shadow-[0_1px_6px_rgba(0,0,0,0.08)]"
@@ -103,6 +109,26 @@ function ChartToggleGroup<T extends string>({
           </button>
         );
       })}
+    </div>
+  );
+}
+
+function ChartLegend({ players }: { players: Player[] }) {
+  return (
+    <div
+      className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 px-0.5"
+      aria-label="Selected players"
+    >
+      {players.map((player) => (
+        <div key={player.id} className="flex items-center gap-1.5">
+          <span
+            className="h-2 w-2 shrink-0 rounded-full"
+            style={{ backgroundColor: player.color }}
+            aria-hidden="true"
+          />
+          <span className="text-xs font-medium text-[#1d1d1f]">{player.name}</span>
+        </div>
+      ))}
     </div>
   );
 }
@@ -142,8 +168,32 @@ function getLineStyle(granularity: TrajectoryGranularity, color: string) {
   }
 }
 
-function formatYearFromDate(rankingDate: string): string {
-  return `${rankingDate.slice(0, 4)}年`;
+function formatTooltipPeriod(
+  rankingDate: string,
+  granularity: TrajectoryGranularity,
+): { label: string; value: string } {
+  if (granularity === "yearly") {
+    return { label: "Year", value: rankingDate.slice(0, 4) };
+  }
+
+  if (granularity === "monthly") {
+    const date = new Date(`${rankingDate}T00:00:00Z`);
+    return {
+      label: "Month",
+      value: date.toLocaleDateString("en-US", {
+        month: "long",
+        year: "numeric",
+        timeZone: "UTC",
+      }),
+    };
+  }
+
+  return { label: "Date", value: rankingDate };
+}
+
+function formatTooltipAge(age: number | null, granularity: TrajectoryGranularity): string {
+  if (age == null) return "—";
+  return granularity === "yearly" ? String(Math.round(age)) : age.toFixed(1);
 }
 
 function CustomTooltip({
@@ -165,7 +215,8 @@ function CustomTooltip({
     (entry) =>
       entry.value != null &&
       !Number.isNaN(entry.value) &&
-      !entry.dataKey.endsWith("__date"),
+      !entry.dataKey.endsWith("__date") &&
+      !entry.dataKey.endsWith("__streak"),
   );
 
   if (!validEntries.length) return null;
@@ -181,12 +232,21 @@ function CustomTooltip({
           .map((entry, index) => {
             const player = players.find((p) => p.id === entry.dataKey);
             const rankingDate = entry.payload?.[chartDateKey(entry.dataKey)];
+            const streakValue = entry.payload?.[chartStreakKey(entry.dataKey)];
             const age =
               typeof hoveredAge === "number"
                 ? hoveredAge
                 : typeof entry.payload?.age === "number"
                   ? entry.payload.age
                   : null;
+            const period =
+              typeof rankingDate === "string"
+                ? formatTooltipPeriod(rankingDate, granularity)
+                : null;
+            const consecutiveWeeksAtNo1 =
+              entry.value === 1 && typeof streakValue === "number"
+                ? streakValue
+                : null;
 
             return (
               <div
@@ -203,37 +263,31 @@ function CustomTooltip({
                   </p>
                 </div>
 
-                {granularity === "yearly" ? (
-                  <div className="space-y-0.5 pl-[18px] text-sm text-[#1d1d1f]">
+                <div className="space-y-0.5 pl-[18px] text-sm text-[#1d1d1f]">
+                  {period ? (
                     <p>
-                      {typeof rankingDate === "string"
-                        ? formatYearFromDate(rankingDate)
-                        : "—"}
+                      <span className="text-[#86868b]">{period.label}: </span>
+                      {period.value}
                     </p>
-                    <p>{age != null ? `${Math.round(age)}歳` : "—"}</p>
-                    <p className="font-medium">ATP Ranking #{entry.value}</p>
-                  </div>
-                ) : (
-                  <div className="space-y-0.5 pl-[18px] text-xs text-[#1d1d1f]">
+                  ) : null}
+                  <p>
+                    <span className="text-[#86868b]">Age: </span>
+                    {formatTooltipAge(
+                      typeof age === "number" ? age : null,
+                      granularity,
+                    )}
+                  </p>
+                  <p className="font-medium">
+                    <span className="font-normal text-[#86868b]">ATP Ranking: </span>#
+                    {entry.value}
+                  </p>
+                  {consecutiveWeeksAtNo1 != null ? (
                     <p>
-                      <span className="text-[#86868b]">Age: </span>
-                      {age != null ? age.toFixed(1) : "—"}
+                      <span className="text-[#86868b]">Consecutive weeks at #1: </span>
+                      {consecutiveWeeksAtNo1}
                     </p>
-                    <p>
-                      <span className="text-[#86868b]">Ranking: </span>#{entry.value}
-                    </p>
-                    <p>
-                      <span className="text-[#86868b]">Date: </span>
-                      {typeof rankingDate === "string"
-                        ? rankingDate
-                        : "Unavailable"}
-                    </p>
-                    <p>
-                      <span className="text-[#86868b]">Mode: </span>
-                      {GRANULARITY_LABELS[granularity]}
-                    </p>
-                  </div>
-                )}
+                  ) : null}
+                </div>
               </div>
             );
           })}
@@ -242,26 +296,25 @@ function CustomTooltip({
   );
 }
 
-export function RankingChart({ players, selectedIds }: RankingChartProps) {
-  const [granularity, setGranularity] = useState<TrajectoryGranularity>("yearly");
+export function RankingChart({
+  players,
+  selectedIds,
+  granularity,
+  onGranularityChange,
+}: RankingChartProps) {
   const [yScale, setYScale] = useState<RankingScale>("log");
+  const maxPlayers = getMaxComparisonPlayers(granularity);
   const selectedPlayers = players.filter((p) => selectedIds.includes(p.id));
   const chartData = buildChartData(selectedIds, granularity);
   const [, yMax] = getYAxisDomain(chartData, selectedIds);
   const yTicks = getVisibleRankingTicks(yMax);
   const isYearly = granularity === "yearly";
-  const ageExtent = getAgeExtent(chartData);
+  const zoomDomain = getAutoZoomAgeDomain(selectedIds, granularity);
   const xDomain: [number, number] | ["dataMin", "dataMax"] =
-    ageExtent != null
-      ? isYearly
-        ? [Math.round(ageExtent[0]), Math.round(ageExtent[1])]
-        : ageExtent
-      : ["dataMin", "dataMax"];
+    zoomDomain ?? ["dataMin", "dataMax"];
   const ageTicks =
-    ageExtent != null
-      ? isYearly
-        ? getYearlyAgeTicks(Math.round(ageExtent[0]), Math.round(ageExtent[1]))
-        : getVisibleAgeTicks(ageExtent[0], ageExtent[1])
+    zoomDomain != null
+      ? getAgeTicksForDomain(zoomDomain[0], zoomDomain[1], granularity)
       : [];
 
   if (selectedPlayers.length === 0) {
@@ -285,8 +338,7 @@ export function RankingChart({ players, selectedIds }: RankingChartProps) {
             ATP Ranking by Age
           </h2>
           <p className="mt-0.5 text-sm text-[#86868b]">
-            Compare up to 5 players. {GRANULARITY_DESCRIPTIONS[granularity]}{" "}
-            {SCALE_DESCRIPTIONS[yScale]}
+            Compare up to {maxPlayers} players. {GRANULARITY_DESCRIPTIONS[granularity]}
           </p>
         </div>
 
@@ -295,16 +347,26 @@ export function RankingChart({ players, selectedIds }: RankingChartProps) {
             label="Ranking granularity"
             options={GRANULARITY_OPTIONS}
             value={granularity}
-            onChange={setGranularity}
+            onChange={onGranularityChange}
           />
-          <ChartToggleGroup
-            label="Y-axis scale"
-            options={SCALE_OPTIONS}
-            value={yScale}
-            onChange={setYScale}
-          />
+          <div className="flex flex-col items-start gap-1 sm:items-end">
+            <ChartToggleGroup
+              label="Y-axis scale"
+              options={SCALE_OPTIONS}
+              value={yScale}
+              onChange={setYScale}
+            />
+            <p className="max-w-[240px] text-left text-[10px] leading-snug text-[#86868b] sm:text-right">
+              <span className="font-medium text-[#1d1d1f]">
+                {yScale === "log" ? "Career" : "Detail"}:
+              </span>{" "}
+              {SCALE_HELP_TEXT[yScale]}
+            </p>
+          </div>
         </div>
       </div>
+
+      <ChartLegend players={selectedPlayers} />
 
       <div className="w-full" style={{ height: CHART_HEIGHT_PX }}>
         <ResponsiveContainer width="100%" height="100%">
@@ -321,7 +383,7 @@ export function RankingChart({ players, selectedIds }: RankingChartProps) {
               <ReferenceLine
                 key={tick}
                 y={tick}
-                stroke={tick <= 100 ? "#d8d8de" : "#ececf0"}
+                stroke={tick <= 20 ? "#d8d8de" : "#ececf0"}
                 strokeDasharray={tick === 1 ? undefined : "4 4"}
               />
             ))}
@@ -359,7 +421,10 @@ export function RankingChart({ players, selectedIds }: RankingChartProps) {
               tickFormatter={(value: number) => `#${value}`}
               width={48}
               label={{
-                value: yScale === "log" ? "ATP Ranking (log)" : "ATP Ranking",
+                value:
+                  yScale === "log"
+                    ? "ATP Ranking (Career)"
+                    : "ATP Ranking (Detail)",
                 angle: -90,
                 position: "insideLeft",
                 fill: "#86868b",

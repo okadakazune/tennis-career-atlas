@@ -1,12 +1,13 @@
 "use client";
 
-import { Player, PlayerIndexEntry } from "@/data/players";
+import { Player, PlayerIndexEntry, TrajectoryGranularity, getMaxComparisonPlayers } from "@/data/players";
 import { PlayerSearch } from "@/components/PlayerSearch";
 
 interface PlayerSelectorProps {
   players: Player[];
   selectedIds: string[];
   comparisonTargets: PlayerIndexEntry[];
+  granularity: TrajectoryGranularity;
   limitWarning: string | null;
   onToggle: (id: string) => void;
   onAddToComparison: (entry: PlayerIndexEntry) => void;
@@ -19,6 +20,7 @@ export function PlayerSelector({
   players,
   selectedIds,
   comparisonTargets,
+  granularity,
   limitWarning,
   onToggle,
   onAddToComparison,
@@ -26,6 +28,8 @@ export function PlayerSelector({
   onSelectAll,
   onClearAll,
 }: PlayerSelectorProps) {
+  const maxPlayers = getMaxComparisonPlayers(granularity);
+
   return (
     <section className="rounded-2xl border border-black/[0.06] bg-white p-5 shadow-[0_2px_20px_rgba(0,0,0,0.04)] sm:p-6">
       <div className="mb-4 flex flex-col gap-3 sm:mb-5 sm:flex-row sm:items-center sm:justify-between">
@@ -34,7 +38,9 @@ export function PlayerSelector({
             Players
           </h2>
           <p className="mt-0.5 text-sm text-[#86868b]">
-            Compare up to 5 players · {comparisonTargets.length}/5 selected
+            Compare up to {maxPlayers} players
+            {granularity === "weekly" ? " in weekly view" : ""} ·{" "}
+            {comparisonTargets.length}/{maxPlayers} selected
           </p>
         </div>
         <div className="flex gap-2">
@@ -57,7 +63,9 @@ export function PlayerSelector({
 
       {limitWarning && (
         <div className="mb-5 rounded-xl border border-[#FFCCBC] bg-[#FFF3E0] px-4 py-3">
-          <p className="text-sm font-medium text-[#E65100]">{limitWarning}</p>
+          <p className="text-sm font-medium text-[#E65100] whitespace-pre-line">
+            {limitWarning}
+          </p>
         </div>
       )}
 
