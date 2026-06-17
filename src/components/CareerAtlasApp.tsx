@@ -5,7 +5,11 @@ import {
   PLAYERS,
   PLAYER_IDS,
   PlayerIndexEntry,
+  TrajectoryGranularity,
   MAX_COMPARISON_PLAYERS,
+  MAX_WEEKLY_COMPARISON_PLAYERS,
+  getMaxComparisonPlayers,
+  WEEKLY_LIMIT_WARNING,
   getIndexEntryByAtpId,
 } from "@/data/players";
 import dataSourceMeta from "@/data/data-source-meta.json";
@@ -34,18 +38,22 @@ export function CareerAtlasApp() {
   const [comparisonTargets, setComparisonTargets] = useState<PlayerIndexEntry[]>(
     buildInitialComparisonTargets,
   );
+  const [granularity, setGranularity] = useState<TrajectoryGranularity>("yearly");
   const [limitWarning, setLimitWarning] = useState<string | null>(null);
   const warningTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const comparisonTargetsRef = useRef(comparisonTargets);
+  const granularityRef = useRef(granularity);
 
   useEffect(() => {
     comparisonTargetsRef.current = comparisonTargets;
   }, [comparisonTargets]);
 
-  const showLimitWarning = useCallback(() => {
-    setLimitWarning(
-      `You can compare up to ${MAX_COMPARISON_PLAYERS} players at a time. Remove one to add another.`,
-    );
+  useEffect(() => {
+    granularityRef.current = granularity;
+  }, [granularity]);
+
+  const showLimitWarning = useCallback((message: string) => {
+    setLimitWarning(message);
 
     if (warningTimeoutRef.current) {
       clearTimeout(warningTimeoutRef.current);
@@ -59,13 +67,19 @@ export function CareerAtlasApp() {
   const tryAddComparisonTarget = useCallback(
     (entry: PlayerIndexEntry): boolean => {
       const current = comparisonTargetsRef.current;
+      const currentGranularity = granularityRef.current;
+      const maxPlayers = getMaxComparisonPlayers(currentGranularity);
 
       if (isAlreadyInComparison(current, entry)) {
         return true;
       }
 
-      if (current.length >= MAX_COMPARISON_PLAYERS) {
-        showLimitWarning();
+      if (current.length >= maxPlayers) {
+        showLimitWarning(
+          currentGranularity === "weekly"
+            ? WEEKLY_LIMIT_WARNING
+            : `You can compare up to ${MAX_COMPARISON_PLAYERS} players at a time. Remove one to add another.`,
+        );
         return false;
       }
 
@@ -125,8 +139,26 @@ export function CareerAtlasApp() {
     }
   }, []);
 
+  const handleGranularityChange = useCallback(
+    (next: TrajectoryGranularity) => {
+      if (
+        next === "weekly" &&
+        comparisonTargetsRef.current.length > MAX_WEEKLY_COMPARISON_PLAYERS
+      ) {
+        showLimitWarning(
+          "Weekly view supports up to 2 players. Remove a player before switching to weekly.",
+        );
+        return;
+      }
+
+      setGranularity(next);
+    },
+    [showLimitWarning],
+  );
+
   const selectAll = useCallback(() => {
-    const limitedIds = PLAYER_IDS.slice(0, MAX_COMPARISON_PLAYERS);
+    const maxPlayers = getMaxComparisonPlayers(granularityRef.current);
+    const limitedIds = PLAYER_IDS.slice(0, maxPlayers);
     setSelectedIds(limitedIds);
     setComparisonTargets(
       limitedIds
@@ -155,7 +187,8 @@ export function CareerAtlasApp() {
         </h1>
         <p className="mt-3 max-w-2xl text-base leading-relaxed text-[#86868b]">
           Compare up to 5 players by age. Start with the yearly view for a
-          career overview, then drill into monthly or weekly detail.
+          career overview, then drill into monthly or weekly detail. Weekly view
+          supports up to 2 players.
         </p>
       </header>
 
@@ -163,6 +196,7 @@ export function CareerAtlasApp() {
         players={PLAYERS}
         selectedIds={selectedIds}
         comparisonTargets={comparisonTargets}
+        granularity={granularity}
         limitWarning={limitWarning}
         onToggle={togglePlayer}
         onAddToComparison={addToComparison}
@@ -171,7 +205,12 @@ export function CareerAtlasApp() {
         onClearAll={clearAll}
       />
 
-      <RankingChart players={PLAYERS} selectedIds={selectedIds} />
+      <RankingChart
+        players={PLAYERS}
+        selectedIds={selectedIds}
+        granularity={granularity}
+        onGranularityChange={handleGranularityChange}
+      />
 
       <footer className="pb-4 text-center text-xs leading-relaxed text-[#86868b] sm:text-left">
         Weekly ATP rankings from {dataSourceMeta.attribution}. Generated{" "}

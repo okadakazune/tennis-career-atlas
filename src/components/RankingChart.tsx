@@ -19,6 +19,7 @@ import {
   chartStreakKey,
   getAutoZoomAgeDomain,
   getAgeTicksForDomain,
+  getMaxComparisonPlayers,
   getVisibleRankingTicks,
   getYAxisDomain,
 } from "@/data/players";
@@ -26,6 +27,8 @@ import {
 interface RankingChartProps {
   players: Player[];
   selectedIds: string[];
+  granularity: TrajectoryGranularity;
+  onGranularityChange: (granularity: TrajectoryGranularity) => void;
 }
 
 interface TooltipPayloadItem {
@@ -45,19 +48,27 @@ const GRANULARITY_OPTIONS: { value: TrajectoryGranularity; label: string }[] = [
 const GRANULARITY_DESCRIPTIONS: Record<TrajectoryGranularity, string> = {
   yearly: "Compare careers by integer age with clear trend lines and year-end checkpoints.",
   monthly: "Month-end rankings for a more detailed career view.",
-  weekly: "Full weekly ranking history for deep analysis.",
+  weekly: "Full weekly ranking history for deep analysis. Supports up to 2 players.",
 };
 
 type RankingScale = "linear" | "log";
 
-const SCALE_OPTIONS: { value: RankingScale; label: string }[] = [
-  { value: "log", label: "Career" },
-  { value: "linear", label: "Detail" },
+const SCALE_OPTIONS: { value: RankingScale; label: string; title: string }[] = [
+  {
+    value: "log",
+    label: "Career",
+    title: "Compare overall careers using logarithmic ranking scale.",
+  },
+  {
+    value: "linear",
+    label: "Detail",
+    title: "Compare exact ranking positions using linear scale.",
+  },
 ];
 
-const SCALE_DESCRIPTIONS: Record<RankingScale, string> = {
-  log: "Career view uses a log scale to compare full careers (#1→#10→#100).",
-  linear: "Rank detail view highlights small differences among top-ranked players.",
+const SCALE_HELP_TEXT: Record<RankingScale, string> = {
+  log: "Compare overall careers using logarithmic ranking scale.",
+  linear: "Compare exact ranking positions using linear scale.",
 };
 
 const CHART_HEIGHT_PX = 520;
@@ -69,7 +80,7 @@ function ChartToggleGroup<T extends string>({
   onChange,
 }: {
   label: string;
-  options: { value: T; label: string }[];
+  options: { value: T; label: string; title?: string }[];
   value: T;
   onChange: (value: T) => void;
 }) {
@@ -87,6 +98,7 @@ function ChartToggleGroup<T extends string>({
             type="button"
             onClick={() => onChange(option.value)}
             aria-pressed={isActive}
+            title={option.title}
             className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-all ${
               isActive
                 ? "bg-white text-[#1d1d1f] shadow-[0_1px_6px_rgba(0,0,0,0.08)]"
@@ -284,9 +296,14 @@ function CustomTooltip({
   );
 }
 
-export function RankingChart({ players, selectedIds }: RankingChartProps) {
-  const [granularity, setGranularity] = useState<TrajectoryGranularity>("yearly");
+export function RankingChart({
+  players,
+  selectedIds,
+  granularity,
+  onGranularityChange,
+}: RankingChartProps) {
   const [yScale, setYScale] = useState<RankingScale>("log");
+  const maxPlayers = getMaxComparisonPlayers(granularity);
   const selectedPlayers = players.filter((p) => selectedIds.includes(p.id));
   const chartData = buildChartData(selectedIds, granularity);
   const [, yMax] = getYAxisDomain(chartData, selectedIds);
@@ -321,8 +338,7 @@ export function RankingChart({ players, selectedIds }: RankingChartProps) {
             ATP Ranking by Age
           </h2>
           <p className="mt-0.5 text-sm text-[#86868b]">
-            Compare up to 5 players. {GRANULARITY_DESCRIPTIONS[granularity]}{" "}
-            {SCALE_DESCRIPTIONS[yScale]}
+            Compare up to {maxPlayers} players. {GRANULARITY_DESCRIPTIONS[granularity]}
           </p>
         </div>
 
@@ -331,14 +347,22 @@ export function RankingChart({ players, selectedIds }: RankingChartProps) {
             label="Ranking granularity"
             options={GRANULARITY_OPTIONS}
             value={granularity}
-            onChange={setGranularity}
+            onChange={onGranularityChange}
           />
-          <ChartToggleGroup
-            label="Y-axis scale"
-            options={SCALE_OPTIONS}
-            value={yScale}
-            onChange={setYScale}
-          />
+          <div className="flex flex-col items-start gap-1 sm:items-end">
+            <ChartToggleGroup
+              label="Y-axis scale"
+              options={SCALE_OPTIONS}
+              value={yScale}
+              onChange={setYScale}
+            />
+            <p className="max-w-[240px] text-left text-[10px] leading-snug text-[#86868b] sm:text-right">
+              <span className="font-medium text-[#1d1d1f]">
+                {yScale === "log" ? "Career" : "Detail"}:
+              </span>{" "}
+              {SCALE_HELP_TEXT[yScale]}
+            </p>
+          </div>
         </div>
       </div>
 

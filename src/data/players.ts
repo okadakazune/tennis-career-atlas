@@ -45,6 +45,19 @@ export const PLAYER_IDS = PLAYERS.map((player) => player.id);
 
 export const MAX_COMPARISON_PLAYERS = 5;
 
+export const MAX_WEEKLY_COMPARISON_PLAYERS = 2;
+
+export function getMaxComparisonPlayers(
+  granularity: TrajectoryGranularity,
+): number {
+  return granularity === "weekly"
+    ? MAX_WEEKLY_COMPARISON_PLAYERS
+    : MAX_COMPARISON_PLAYERS;
+}
+
+export const WEEKLY_LIMIT_WARNING =
+  "Weekly view supports up to 2 players.\nRemove a player before adding another.";
+
 export const RANKING_AXIS_TICKS = [1, 2, 5, 10, 20, 50, 100, 250, 500, 1000] as const;
 
 export const AGE_AXIS_TICKS = [18, 20, 25, 30, 35, 40] as const;
