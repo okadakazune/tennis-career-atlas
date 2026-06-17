@@ -34,3 +34,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# downloaded raw CSVs (generated via npm run data:build)
+data/raw/*
+!data/raw/.gitkeep
