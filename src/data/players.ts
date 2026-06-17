@@ -46,6 +46,8 @@ export const MAX_COMPARISON_PLAYERS = 5;
 
 export const RANKING_AXIS_TICKS = [1, 10, 50, 100, 250, 500, 1000] as const;
 
+export const AGE_AXIS_TICKS = [18, 20, 25, 30, 35, 40] as const;
+
 const playersById = new Map(PLAYERS.map((player) => [player.id, player]));
 const playersByAtpId = new Map(PLAYERS.map((player) => [player.atpPlayerId, player]));
 const indexByAtpId = new Map(PLAYER_INDEX.map((entry) => [entry.atpPlayerId, entry]));
@@ -153,6 +155,19 @@ export function getYAxisDomain(
 
 export function getVisibleRankingTicks(maxRank: number): number[] {
   return RANKING_AXIS_TICKS.filter((tick) => tick <= maxRank);
+}
+
+export function getVisibleAgeTicks(minAge: number, maxAge: number): number[] {
+  return AGE_AXIS_TICKS.filter((tick) => tick >= minAge && tick <= maxAge);
+}
+
+export function getAgeExtent(
+  chartData: ChartRow[],
+): [number, number] | null {
+  if (chartData.length === 0) return null;
+
+  const ages = chartData.map((row) => row.age);
+  return [Math.min(...ages), Math.max(...ages)];
 }
 
 export function getAgeRange(

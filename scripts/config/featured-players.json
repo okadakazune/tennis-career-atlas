@@ -3,90 +3,90 @@
     "id": "federer",
     "atpPlayerId": "103819",
     "shortName": "Federer",
-    "color": "#0071E3"
+    "color": "#0077C8"
   },
   {
     "id": "nadal",
     "atpPlayerId": "104745",
     "shortName": "Nadal",
-    "color": "#FF9500"
+    "color": "#E85D04"
   },
   {
     "id": "djokovic",
     "atpPlayerId": "104925",
     "shortName": "Djokovic",
-    "color": "#34C759"
+    "color": "#2E9E5B"
   },
   {
     "id": "alcaraz",
     "atpPlayerId": "207989",
     "shortName": "Alcaraz",
-    "color": "#AF52DE"
+    "color": "#FFB020"
   },
   {
     "id": "sinner",
     "atpPlayerId": "206173",
     "shortName": "Sinner",
-    "color": "#FF2D55"
+    "color": "#E03C52"
   },
   {
     "id": "murray",
     "atpPlayerId": "104918",
     "shortName": "Murray",
-    "color": "#5856D6"
+    "color": "#5C6BC0"
   },
   {
     "id": "wawrinka",
     "atpPlayerId": "104527",
     "shortName": "Wawrinka",
-    "color": "#FF3B30"
+    "color": "#C62828"
   },
   {
     "id": "nishikori",
     "atpPlayerId": "105453",
     "shortName": "Nishikori",
-    "color": "#FF6482"
+    "color": "#00897B"
   },
   {
     "id": "zverev",
     "atpPlayerId": "100644",
     "shortName": "Zverev",
-    "color": "#64D2FF"
+    "color": "#29B6F6"
   },
   {
     "id": "medvedev",
     "atpPlayerId": "106421",
     "shortName": "Medvedev",
-    "color": "#5AC8FA"
+    "color": "#00695C"
   },
   {
     "id": "tsitsipas",
     "atpPlayerId": "126774",
     "shortName": "Tsitsipas",
-    "color": "#30B0C7"
+    "color": "#8E24AA"
   },
   {
     "id": "rune",
     "atpPlayerId": "208029",
     "shortName": "Rune",
-    "color": "#FFD60A"
+    "color": "#F9A825"
   },
   {
     "id": "ruud",
     "atpPlayerId": "134770",
     "shortName": "Ruud",
-    "color": "#BF5AF2"
+    "color": "#6D4C41"
   },
   {
     "id": "thiem",
     "atpPlayerId": "106233",
     "shortName": "Thiem",
-    "color": "#FF9F0A"
+    "color": "#AD1457"
   },
   {
     "id": "del-potro",
     "atpPlayerId": "105223",
     "shortName": "Del Potro",
-    "color": "#A2845E"
+    "color": "#546E7A"
   }
 ]
