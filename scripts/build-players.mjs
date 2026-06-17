@@ -155,6 +155,45 @@ function finalizeTrajectory(rawTrajectory, birthDate) {
   }));
 }
 
+function monthKey(rankingDateRaw) {
+  const year = Math.floor(rankingDateRaw / 10000);
+  const month = Math.floor((rankingDateRaw % 10000) / 100);
+  return year * 100 + month;
+}
+
+function yearKey(rankingDateRaw) {
+  return Math.floor(rankingDateRaw / 10000);
+}
+
+function aggregateByPeriod(rawTrajectory, keyFn) {
+  const groups = new Map();
+
+  for (const point of rawTrajectory) {
+    const key = keyFn(point.rankingDateRaw);
+    const existing = groups.get(key);
+
+    if (!existing || point.rankingDateRaw > existing.rankingDateRaw) {
+      groups.set(key, point);
+    }
+  }
+
+  return Array.from(groups.values()).sort((a, b) => a.rankingDateRaw - b.rankingDateRaw);
+}
+
+function buildTrajectories(rawTrajectory, birthDate) {
+  const trajectoryWeekly = finalizeTrajectory(rawTrajectory, birthDate);
+  const trajectoryMonthly = finalizeTrajectory(
+    aggregateByPeriod(rawTrajectory, monthKey),
+    birthDate,
+  );
+  const trajectoryYearly = finalizeTrajectory(
+    aggregateByPeriod(rawTrajectory, yearKey),
+    birthDate,
+  );
+
+  return { trajectoryWeekly, trajectoryMonthly, trajectoryYearly };
+}
+
 async function buildFeaturedPlayers(featuredConfig, playerRows, rankingPaths) {
   const playersById = new Map(playerRows.map((row) => [row.player_id, row]));
   const players = [];
@@ -170,12 +209,14 @@ async function buildFeaturedPlayers(featuredConfig, playerRows, rankingPaths) {
       throw new Error(`Missing birth date for featured player: ${featured.atpPlayerId}`);
     }
 
-    console.log(`Building weekly trajectory for ${row.name_first} ${row.name_last}...`);
+    console.log(`Building trajectories for ${row.name_first} ${row.name_last}...`);
     const rawTrajectory = await loadRankingsForPlayer(rankingPaths, featured.atpPlayerId);
 
     if (rawTrajectory.length === 0) {
       throw new Error(`No ranking history found for featured player: ${featured.atpPlayerId}`);
     }
+
+    const trajectories = buildTrajectories(rawTrajectory, birthDate);
 
     players.push({
       id: featured.id,
@@ -185,7 +226,7 @@ async function buildFeaturedPlayers(featuredConfig, playerRows, rankingPaths) {
       birthDate: formatIsoDate(birthDate),
       countryCode: row.ioc || "",
       color: featured.color,
-      trajectory: finalizeTrajectory(rawTrajectory, birthDate),
+      ...trajectories,
     });
   }
 
@@ -228,7 +269,7 @@ async function main() {
         licenseUrl: config.licenseUrl,
         playerIndexCount: playerIndex.length,
         featuredPlayerCount: players.length,
-        rankingGranularity: "weekly",
+        rankingGranularity: ["weekly", "monthly", "yearly"],
       },
       null,
       2,
@@ -238,7 +279,9 @@ async function main() {
   console.log(`Wrote ${playerIndex.length} players to ${indexPath}`);
   console.log(`Wrote ${players.length} featured players to ${playersPathOut}`);
   for (const player of players) {
-    console.log(`  ${player.shortName}: ${player.trajectory.length} weekly ranking points`);
+    console.log(
+      `  ${player.shortName}: weekly=${player.trajectoryWeekly.length}, monthly=${player.trajectoryMonthly.length}, yearly=${player.trajectoryYearly.length}`,
+    );
   }
 }
 

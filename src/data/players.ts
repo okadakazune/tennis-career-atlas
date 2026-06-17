@@ -8,6 +8,8 @@ export interface RankingPoint {
   points: number | null;
 }
 
+export type TrajectoryGranularity = "weekly" | "monthly" | "yearly";
+
 export interface Player {
   id: string;
   atpPlayerId: string;
@@ -16,7 +18,9 @@ export interface Player {
   birthDate: string;
   countryCode: string;
   color: string;
-  trajectory: RankingPoint[];
+  trajectoryWeekly: RankingPoint[];
+  trajectoryMonthly: RankingPoint[];
+  trajectoryYearly: RankingPoint[];
 }
 
 export interface PlayerIndexEntry {
@@ -54,6 +58,20 @@ export function getIndexEntryByAtpId(atpPlayerId: string): PlayerIndexEntry | un
   return indexByAtpId.get(atpPlayerId);
 }
 
+export function getPlayerTrajectory(
+  player: Player,
+  granularity: TrajectoryGranularity,
+): RankingPoint[] {
+  switch (granularity) {
+    case "weekly":
+      return player.trajectoryWeekly;
+    case "monthly":
+      return player.trajectoryMonthly;
+    case "yearly":
+      return player.trajectoryYearly;
+  }
+}
+
 export function searchPlayers(query: string, limit = 20): PlayerIndexEntry[] {
   const normalized = query.trim().toLowerCase();
   if (!normalized) return [];
@@ -86,12 +104,15 @@ export interface ChartRow {
   [playerId: string]: number | null;
 }
 
-export function buildChartData(selectedPlayerIds: string[]): ChartRow[] {
+export function buildChartData(
+  selectedPlayerIds: string[],
+  granularity: TrajectoryGranularity = "yearly",
+): ChartRow[] {
   const selectedPlayers = PLAYERS.filter((player) => selectedPlayerIds.includes(player.id));
   const rows = new Map<number, ChartRow>();
 
   selectedPlayers.forEach((player) => {
-    player.trajectory.forEach((point) => {
+    getPlayerTrajectory(player, granularity).forEach((point) => {
       if (!rows.has(point.age)) {
         rows.set(point.age, { age: point.age });
       }
@@ -102,14 +123,17 @@ export function buildChartData(selectedPlayerIds: string[]): ChartRow[] {
   return Array.from(rows.values()).sort((a, b) => a.age - b.age);
 }
 
-export function getAgeRange(selectedPlayerIds: string[]): [number, number] {
+export function getAgeRange(
+  selectedPlayerIds: string[],
+  granularity: TrajectoryGranularity = "yearly",
+): [number, number] {
   const selectedPlayers = PLAYERS.filter((player) => selectedPlayerIds.includes(player.id));
 
   let minAge = Infinity;
   let maxAge = -Infinity;
 
   selectedPlayers.forEach((player) => {
-    player.trajectory.forEach((point) => {
+    getPlayerTrajectory(player, granularity).forEach((point) => {
       minAge = Math.min(minAge, point.age);
       maxAge = Math.max(maxAge, point.age);
     });

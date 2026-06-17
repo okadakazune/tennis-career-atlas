@@ -6,10 +6,10 @@ import { PlayerSearch } from "@/components/PlayerSearch";
 interface PlayerSelectorProps {
   players: Player[];
   selectedIds: string[];
-  inspectedPlayer: PlayerIndexEntry | null;
+  comparisonTargets: PlayerIndexEntry[];
   onToggle: (id: string) => void;
-  onSelectFeatured: (slug: string) => void;
-  onInspectPlayer: (entry: PlayerIndexEntry | null) => void;
+  onAddToComparison: (entry: PlayerIndexEntry) => void;
+  onRemoveComparisonTarget: (atpPlayerId: string) => void;
   onSelectAll: () => void;
   onClearAll: () => void;
 }
@@ -17,10 +17,10 @@ interface PlayerSelectorProps {
 export function PlayerSelector({
   players,
   selectedIds,
-  inspectedPlayer,
+  comparisonTargets,
   onToggle,
-  onSelectFeatured,
-  onInspectPlayer,
+  onAddToComparison,
+  onRemoveComparisonTarget,
   onSelectAll,
   onClearAll,
 }: PlayerSelectorProps) {
@@ -32,7 +32,7 @@ export function PlayerSelector({
             Players
           </h2>
           <p className="mt-0.5 text-sm text-[#86868b]">
-            Search the full ATP player index or compare featured players
+            Search any ATP player and add them to the comparison
           </p>
         </div>
         <div className="flex gap-2">
@@ -41,7 +41,7 @@ export function PlayerSelector({
             onClick={onSelectAll}
             className="rounded-full bg-[#f5f5f7] px-3.5 py-1.5 text-xs font-medium text-[#1d1d1f] transition-colors hover:bg-[#e8e8ed]"
           >
-            Select all featured
+            Select all charted
           </button>
           <button
             type="button"
@@ -56,35 +56,72 @@ export function PlayerSelector({
       <div className="mb-5">
         <PlayerSearch
           selectedIds={selectedIds}
-          onSelectFeatured={onSelectFeatured}
-          onInspectPlayer={onInspectPlayer}
+          onAddToComparison={onAddToComparison}
         />
       </div>
 
-      {inspectedPlayer && (
-        <div className="mb-5 rounded-xl border border-black/[0.06] bg-[#fafafa] px-4 py-3">
-          <p className="text-sm font-medium text-[#1d1d1f]">{inspectedPlayer.name}</p>
-          <p className="mt-1 text-sm text-[#86868b]">
-            Born{" "}
-            {inspectedPlayer.birthDate
-              ? new Date(`${inspectedPlayer.birthDate}T00:00:00Z`).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                  timeZone: "UTC",
-                })
-              : "Unknown"}
-            {inspectedPlayer.countryCode ? ` · ${inspectedPlayer.countryCode}` : ""}
+      {comparisonTargets.length > 0 && (
+        <div className="mb-5 space-y-2">
+          <p className="text-xs font-medium uppercase tracking-wide text-[#86868b]">
+            Comparison targets
           </p>
-          {!inspectedPlayer.hasRankingData && (
-            <p className="mt-2 text-xs text-[#86868b]">
-              Weekly ranking history is not generated for this player yet. Add them to{" "}
-              <code className="rounded bg-white px-1 py-0.5 text-[11px]">
-                scripts/config/featured-players.json
-              </code>{" "}
-              and run <code className="rounded bg-white px-1 py-0.5 text-[11px]">npm run data:build</code>.
-            </p>
-          )}
+          <div className="flex flex-wrap gap-2">
+            {comparisonTargets.map((entry) => {
+              const chartPlayer = entry.slug
+                ? players.find((player) => player.id === entry.slug)
+                : undefined;
+
+              return (
+                <div
+                  key={entry.atpPlayerId}
+                  className="flex items-center gap-2 rounded-full border border-black/[0.08] bg-[#fafafa] py-1.5 pl-3 pr-1.5"
+                >
+                  {chartPlayer && (
+                    <span
+                      className="h-2.5 w-2.5 rounded-full"
+                      style={{ backgroundColor: chartPlayer.color }}
+                    />
+                  )}
+                  <span className="text-sm font-medium text-[#1d1d1f]">
+                    {entry.shortName ?? entry.name}
+                  </span>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                      entry.hasRankingData
+                        ? "bg-[#E8F5E9] text-[#1B5E20]"
+                        : "bg-[#f5f5f7] text-[#86868b]"
+                    }`}
+                  >
+                    {entry.hasRankingData ? "Chart available" : "Index only"}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => onRemoveComparisonTarget(entry.atpPlayerId)}
+                    className="rounded-full px-2 py-0.5 text-xs text-[#86868b] transition-colors hover:bg-white hover:text-[#1d1d1f]"
+                    aria-label={`Remove ${entry.name} from comparison`}
+                  >
+                    ×
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {comparisonTargets.some((entry) => !entry.hasRankingData) && (
+        <div className="mb-5 rounded-xl border border-[#FFE0B2] bg-[#FFF8E1] px-4 py-3">
+          <p className="text-sm font-medium text-[#E65100]">
+            Ranking history not generated yet
+          </p>
+          <p className="mt-1 text-xs text-[#F57C00]">
+            Some selected players only exist in the search index. Add them to{" "}
+            <code className="rounded bg-white px-1 py-0.5 text-[11px]">
+              scripts/config/featured-players.json
+            </code>{" "}
+            and run <code className="rounded bg-white px-1 py-0.5 text-[11px]">npm run data:build</code>{" "}
+            to include their weekly ranking history.
+          </p>
         </div>
       )}
 

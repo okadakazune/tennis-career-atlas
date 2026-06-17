@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   LineChart,
   Line,
@@ -10,7 +11,11 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { Player, buildChartData } from "@/data/players";
+import {
+  Player,
+  TrajectoryGranularity,
+  buildChartData,
+} from "@/data/players";
 
 interface RankingChartProps {
   players: Player[];
@@ -23,6 +28,18 @@ interface TooltipPayloadItem {
   value: number;
   dataKey: string;
 }
+
+const GRANULARITY_OPTIONS: { value: TrajectoryGranularity; label: string }[] = [
+  { value: "weekly", label: "Weekly" },
+  { value: "monthly", label: "Monthly" },
+  { value: "yearly", label: "Yearly" },
+];
+
+const GRANULARITY_DESCRIPTIONS: Record<TrajectoryGranularity, string> = {
+  weekly: "All weekly ranking snapshots from source data.",
+  monthly: "Last ranking date of each calendar month.",
+  yearly: "Last ranking date of each calendar year.",
+};
 
 function CustomTooltip({
   active,
@@ -79,14 +96,15 @@ function CustomTooltip({
 }
 
 export function RankingChart({ players, selectedIds }: RankingChartProps) {
+  const [granularity, setGranularity] = useState<TrajectoryGranularity>("yearly");
   const selectedPlayers = players.filter((p) => selectedIds.includes(p.id));
-  const chartData = buildChartData(selectedIds);
+  const chartData = buildChartData(selectedIds, granularity);
 
   if (selectedPlayers.length === 0) {
     return (
       <div className="flex h-[420px] items-center justify-center rounded-2xl border border-dashed border-black/[0.08] bg-[#fafafa]">
         <p className="text-sm text-[#86868b]">
-          Select at least one featured player to view the chart
+          Select at least one player with chart data to view the chart
         </p>
       </div>
     );
@@ -94,13 +112,40 @@ export function RankingChart({ players, selectedIds }: RankingChartProps) {
 
   return (
     <div className="rounded-2xl border border-black/[0.06] bg-white p-4 shadow-[0_2px_20px_rgba(0,0,0,0.04)] sm:p-6">
-      <div className="mb-4 sm:mb-6">
-        <h2 className="text-lg font-semibold tracking-tight text-[#1d1d1f]">
-          ATP Ranking by Age
-        </h2>
-        <p className="mt-0.5 text-sm text-[#86868b]">
-          Weekly ranking history from source data. Lower rank numbers sit higher on the chart.
-        </p>
+      <div className="mb-4 flex flex-col gap-4 sm:mb-6 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 className="text-lg font-semibold tracking-tight text-[#1d1d1f]">
+            ATP Ranking by Age
+          </h2>
+          <p className="mt-0.5 text-sm text-[#86868b]">
+            {GRANULARITY_DESCRIPTIONS[granularity]} Lower rank numbers sit higher on the chart.
+          </p>
+        </div>
+
+        <div
+          className="inline-flex self-start rounded-full bg-[#f5f5f7] p-1"
+          role="group"
+          aria-label="Ranking granularity"
+        >
+          {GRANULARITY_OPTIONS.map((option) => {
+            const isActive = granularity === option.value;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setGranularity(option.value)}
+                aria-pressed={isActive}
+                className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-all ${
+                  isActive
+                    ? "bg-white text-[#1d1d1f] shadow-[0_1px_6px_rgba(0,0,0,0.08)]"
+                    : "text-[#86868b] hover:text-[#1d1d1f]"
+                }`}
+              >
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <div className="h-[360px] w-full sm:h-[420px]">
@@ -162,8 +207,8 @@ export function RankingChart({ players, selectedIds }: RankingChartProps) {
                 dataKey={player.id}
                 name={player.shortName}
                 stroke={player.color}
-                strokeWidth={2}
-                dot={false}
+                strokeWidth={granularity === "weekly" ? 1.5 : 2}
+                dot={granularity !== "weekly"}
                 activeDot={{ r: 4, strokeWidth: 2, stroke: "#fff" }}
                 connectNulls={false}
               />

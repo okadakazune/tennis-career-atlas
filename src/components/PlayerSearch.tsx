@@ -10,15 +10,10 @@ import {
 
 interface PlayerSearchProps {
   selectedIds: string[];
-  onSelectFeatured: (slug: string) => void;
-  onInspectPlayer: (entry: PlayerIndexEntry | null) => void;
+  onAddToComparison: (entry: PlayerIndexEntry) => void;
 }
 
-export function PlayerSearch({
-  selectedIds,
-  onSelectFeatured,
-  onInspectPlayer,
-}: PlayerSearchProps) {
+export function PlayerSearch({ selectedIds, onAddToComparison }: PlayerSearchProps) {
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -39,11 +34,7 @@ export function PlayerSearch({
   function handleSelect(entry: PlayerIndexEntry) {
     setQuery(entry.name);
     setIsOpen(false);
-    onInspectPlayer(entry);
-
-    if (entry.hasRankingData && entry.slug) {
-      onSelectFeatured(entry.slug);
-    }
+    onAddToComparison(entry);
   }
 
   return (
@@ -68,7 +59,9 @@ export function PlayerSearch({
         <ul className="absolute z-20 mt-2 max-h-72 w-full overflow-y-auto rounded-xl border border-black/[0.06] bg-white py-2 shadow-[0_12px_40px_rgba(0,0,0,0.12)]">
           {results.map((entry) => {
             const isSelected = entry.slug ? selectedIds.includes(entry.slug) : false;
-            const featuredPlayer = entry.slug ? getPlayerByAtpId(entry.atpPlayerId) : undefined;
+            const featuredPlayer = entry.hasRankingData
+              ? getPlayerByAtpId(entry.atpPlayerId)
+              : undefined;
 
             return (
               <li key={entry.atpPlayerId}>
@@ -90,7 +83,7 @@ export function PlayerSearch({
                         className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
                           isSelected
                             ? "bg-[#1d1d1f] text-white"
-                            : "bg-[#f5f5f7] text-[#1d1d1f]"
+                            : "bg-[#E8F5E9] text-[#1B5E20]"
                         }`}
                       >
                         {featuredPlayer && (
@@ -99,10 +92,12 @@ export function PlayerSearch({
                             style={{ backgroundColor: featuredPlayer.color }}
                           />
                         )}
-                        {entry.shortName ?? "Chart"}
+                        Chart available
                       </span>
                     ) : (
-                      <span className="text-xs text-[#86868b]">Index only</span>
+                      <span className="rounded-full bg-[#f5f5f7] px-2.5 py-1 text-xs font-medium text-[#86868b]">
+                        Index only
+                      </span>
                     )}
                   </div>
                 </button>
