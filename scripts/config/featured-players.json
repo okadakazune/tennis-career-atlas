@@ -1,0 +1,32 @@
+[
+  {
+    "id": "federer",
+    "atpPlayerId": "103819",
+    "shortName": "Federer",
+    "color": "#0071E3"
+  },
+  {
+    "id": "nadal",
+    "atpPlayerId": "104745",
+    "shortName": "Nadal",
+    "color": "#FF9500"
+  },
+  {
+    "id": "djokovic",
+    "atpPlayerId": "104925",
+    "shortName": "Djokovic",
+    "color": "#34C759"
+  },
+  {
+    "id": "alcaraz",
+    "atpPlayerId": "207989",
+    "shortName": "Alcaraz",
+    "color": "#AF52DE"
+  },
+  {
+    "id": "sinner",
+    "atpPlayerId": "206173",
+    "shortName": "Sinner",
+    "color": "#FF2D55"
+  }
+]

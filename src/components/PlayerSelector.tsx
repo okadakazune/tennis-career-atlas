@@ -1,11 +1,15 @@
 "use client";
 
-import { Player } from "@/data/players";
+import { Player, PlayerIndexEntry } from "@/data/players";
+import { PlayerSearch } from "@/components/PlayerSearch";
 
 interface PlayerSelectorProps {
   players: Player[];
   selectedIds: string[];
+  inspectedPlayer: PlayerIndexEntry | null;
   onToggle: (id: string) => void;
+  onSelectFeatured: (slug: string) => void;
+  onInspectPlayer: (entry: PlayerIndexEntry | null) => void;
   onSelectAll: () => void;
   onClearAll: () => void;
 }
@@ -13,7 +17,10 @@ interface PlayerSelectorProps {
 export function PlayerSelector({
   players,
   selectedIds,
+  inspectedPlayer,
   onToggle,
+  onSelectFeatured,
+  onInspectPlayer,
   onSelectAll,
   onClearAll,
 }: PlayerSelectorProps) {
@@ -25,7 +32,7 @@ export function PlayerSelector({
             Players
           </h2>
           <p className="mt-0.5 text-sm text-[#86868b]">
-            Select one or more to compare trajectories
+            Search the full ATP player index or compare featured players
           </p>
         </div>
         <div className="flex gap-2">
@@ -34,7 +41,7 @@ export function PlayerSelector({
             onClick={onSelectAll}
             className="rounded-full bg-[#f5f5f7] px-3.5 py-1.5 text-xs font-medium text-[#1d1d1f] transition-colors hover:bg-[#e8e8ed]"
           >
-            Select all
+            Select all featured
           </button>
           <button
             type="button"
@@ -45,6 +52,41 @@ export function PlayerSelector({
           </button>
         </div>
       </div>
+
+      <div className="mb-5">
+        <PlayerSearch
+          selectedIds={selectedIds}
+          onSelectFeatured={onSelectFeatured}
+          onInspectPlayer={onInspectPlayer}
+        />
+      </div>
+
+      {inspectedPlayer && (
+        <div className="mb-5 rounded-xl border border-black/[0.06] bg-[#fafafa] px-4 py-3">
+          <p className="text-sm font-medium text-[#1d1d1f]">{inspectedPlayer.name}</p>
+          <p className="mt-1 text-sm text-[#86868b]">
+            Born{" "}
+            {inspectedPlayer.birthDate
+              ? new Date(`${inspectedPlayer.birthDate}T00:00:00Z`).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                  timeZone: "UTC",
+                })
+              : "Unknown"}
+            {inspectedPlayer.countryCode ? ` · ${inspectedPlayer.countryCode}` : ""}
+          </p>
+          {!inspectedPlayer.hasRankingData && (
+            <p className="mt-2 text-xs text-[#86868b]">
+              Weekly ranking history is not generated for this player yet. Add them to{" "}
+              <code className="rounded bg-white px-1 py-0.5 text-[11px]">
+                scripts/config/featured-players.json
+              </code>{" "}
+              and run <code className="rounded bg-white px-1 py-0.5 text-[11px]">npm run data:build</code>.
+            </p>
+          )}
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-2.5">
         {players.map((player) => {

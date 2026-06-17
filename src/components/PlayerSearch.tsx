@@ -1,0 +1,122 @@
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  PlayerIndexEntry,
+  formatBirthDate,
+  getPlayerByAtpId,
+  searchPlayers,
+} from "@/data/players";
+
+interface PlayerSearchProps {
+  selectedIds: string[];
+  onSelectFeatured: (slug: string) => void;
+  onInspectPlayer: (entry: PlayerIndexEntry | null) => void;
+}
+
+export function PlayerSearch({
+  selectedIds,
+  onSelectFeatured,
+  onInspectPlayer,
+}: PlayerSearchProps) {
+  const [query, setQuery] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const results = useMemo(() => searchPlayers(query, 12), [query]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (!containerRef.current?.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  function handleSelect(entry: PlayerIndexEntry) {
+    setQuery(entry.name);
+    setIsOpen(false);
+    onInspectPlayer(entry);
+
+    if (entry.hasRankingData && entry.slug) {
+      onSelectFeatured(entry.slug);
+    }
+  }
+
+  return (
+    <div ref={containerRef} className="relative">
+      <label htmlFor="player-search" className="sr-only">
+        Search players
+      </label>
+      <input
+        id="player-search"
+        type="search"
+        value={query}
+        onChange={(event) => {
+          setQuery(event.target.value);
+          setIsOpen(true);
+        }}
+        onFocus={() => setIsOpen(true)}
+        placeholder="Search ATP players by name..."
+        className="w-full rounded-xl border border-black/[0.08] bg-[#fafafa] px-4 py-3 text-sm text-[#1d1d1f] outline-none transition-colors placeholder:text-[#86868b] focus:border-[#0071E3] focus:bg-white"
+      />
+
+      {isOpen && query.trim() && results.length > 0 && (
+        <ul className="absolute z-20 mt-2 max-h-72 w-full overflow-y-auto rounded-xl border border-black/[0.06] bg-white py-2 shadow-[0_12px_40px_rgba(0,0,0,0.12)]">
+          {results.map((entry) => {
+            const isSelected = entry.slug ? selectedIds.includes(entry.slug) : false;
+            const featuredPlayer = entry.slug ? getPlayerByAtpId(entry.atpPlayerId) : undefined;
+
+            return (
+              <li key={entry.atpPlayerId}>
+                <button
+                  type="button"
+                  onClick={() => handleSelect(entry)}
+                  className="flex w-full items-center justify-between gap-4 px-4 py-2.5 text-left transition-colors hover:bg-[#f5f5f7]"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-[#1d1d1f]">{entry.name}</p>
+                    <p className="truncate text-xs text-[#86868b]">
+                      {entry.countryCode || "—"}
+                      {entry.birthDate ? ` · Born ${formatBirthDate(entry.birthDate)}` : ""}
+                    </p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    {entry.hasRankingData ? (
+                      <span
+                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
+                          isSelected
+                            ? "bg-[#1d1d1f] text-white"
+                            : "bg-[#f5f5f7] text-[#1d1d1f]"
+                        }`}
+                      >
+                        {featuredPlayer && (
+                          <span
+                            className="h-2 w-2 rounded-full"
+                            style={{ backgroundColor: featuredPlayer.color }}
+                          />
+                        )}
+                        {entry.shortName ?? "Chart"}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-[#86868b]">Index only</span>
+                    )}
+                  </div>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      {isOpen && query.trim() && results.length === 0 && (
+        <div className="absolute z-20 mt-2 w-full rounded-xl border border-black/[0.06] bg-white px-4 py-3 text-sm text-[#86868b] shadow-[0_12px_40px_rgba(0,0,0,0.12)]">
+          No players found.
+        </div>
+      )}
+    </div>
+  );
+}

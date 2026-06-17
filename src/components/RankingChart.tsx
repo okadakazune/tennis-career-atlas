@@ -46,7 +46,7 @@ function CustomTooltip({
   return (
     <div className="rounded-xl border border-black/[0.06] bg-white/95 px-4 py-3 shadow-[0_8px_30px_rgba(0,0,0,0.12)] backdrop-blur-sm">
       <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[#86868b]">
-        Age {label}
+        Age {typeof label === "number" ? label.toFixed(2) : label}
       </p>
       <div className="space-y-1.5">
         {validEntries
@@ -86,7 +86,7 @@ export function RankingChart({ players, selectedIds }: RankingChartProps) {
     return (
       <div className="flex h-[420px] items-center justify-center rounded-2xl border border-dashed border-black/[0.08] bg-[#fafafa]">
         <p className="text-sm text-[#86868b]">
-          Select at least one player to view the chart
+          Select at least one featured player to view the chart
         </p>
       </div>
     );
@@ -99,7 +99,7 @@ export function RankingChart({ players, selectedIds }: RankingChartProps) {
           ATP Ranking by Age
         </h2>
         <p className="mt-0.5 text-sm text-[#86868b]">
-          Lower rank numbers indicate higher chart position
+          Weekly ranking history from source data. Lower rank numbers sit higher on the chart.
         </p>
       </div>
 
@@ -128,7 +128,7 @@ export function RankingChart({ players, selectedIds }: RankingChartProps) {
                 fill: "#86868b",
                 fontSize: 12,
               }}
-              allowDecimals={false}
+              tickFormatter={(value: number) => value.toFixed(1)}
             />
             <YAxis
               reversed
@@ -162,9 +162,9 @@ export function RankingChart({ players, selectedIds }: RankingChartProps) {
                 dataKey={player.id}
                 name={player.shortName}
                 stroke={player.color}
-                strokeWidth={2.5}
-                dot={{ r: 3, fill: player.color, strokeWidth: 0 }}
-                activeDot={{ r: 5, strokeWidth: 2, stroke: "#fff" }}
+                strokeWidth={2}
+                dot={false}
+                activeDot={{ r: 4, strokeWidth: 2, stroke: "#fff" }}
                 connectNulls={false}
               />
             ))}

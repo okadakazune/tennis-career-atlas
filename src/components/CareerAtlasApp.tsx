@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { PLAYERS, PLAYER_IDS } from "@/data/players";
+import {
+  PLAYERS,
+  PLAYER_IDS,
+  PlayerIndexEntry,
+  getIndexEntryByAtpId,
+} from "@/data/players";
+import dataSourceMeta from "@/data/data-source-meta.json";
 import { PlayerSelector } from "@/components/PlayerSelector";
 import { RankingChart } from "@/components/RankingChart";
 
@@ -11,11 +17,22 @@ export function CareerAtlasApp() {
     "federer",
     "nadal",
   ]);
+  const [inspectedPlayer, setInspectedPlayer] = useState<PlayerIndexEntry | null>(
+    getIndexEntryByAtpId("104925") ?? null,
+  );
 
   const togglePlayer = useCallback((id: string) => {
     setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((pid) => pid !== id) : [...prev, id],
+      prev.includes(id) ? prev.filter((playerId) => playerId !== id) : [...prev, id],
     );
+  }, []);
+
+  const selectFeaturedPlayer = useCallback((slug: string) => {
+    const player = PLAYERS.find((entry) => entry.id === slug);
+    if (!player) return;
+
+    setSelectedIds((prev) => (prev.includes(slug) ? prev : [...prev, slug]));
+    setInspectedPlayer(getIndexEntryByAtpId(player.atpPlayerId) ?? null);
   }, []);
 
   const selectAll = useCallback(() => {
@@ -36,23 +53,32 @@ export function CareerAtlasApp() {
           Compare ATP ranking trajectories
         </h1>
         <p className="mt-3 max-w-2xl text-base leading-relaxed text-[#86868b]">
-          Explore how the world&apos;s greatest players climbed — and held — the
-          ATP rankings across their careers, aligned by age.
+          Explore weekly ATP ranking history aligned by age. Search any player in
+          the ATP index, then compare featured careers on the chart.
         </p>
       </header>
 
       <PlayerSelector
         players={PLAYERS}
         selectedIds={selectedIds}
+        inspectedPlayer={inspectedPlayer}
         onToggle={togglePlayer}
+        onSelectFeatured={selectFeaturedPlayer}
+        onInspectPlayer={setInspectedPlayer}
         onSelectAll={selectAll}
         onClearAll={clearAll}
       />
 
       <RankingChart players={PLAYERS} selectedIds={selectedIds} />
 
-      <footer className="pb-4 text-center text-xs text-[#86868b] sm:text-left">
-        Rankings are approximate year-end values for illustrative comparison.
+      <footer className="pb-4 text-center text-xs leading-relaxed text-[#86868b] sm:text-left">
+        Weekly ATP rankings from {dataSourceMeta.attribution}. Generated{" "}
+        {new Date(dataSourceMeta.generatedAt).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        })}
+        . Source: {dataSourceMeta.source}.
       </footer>
     </div>
   );
