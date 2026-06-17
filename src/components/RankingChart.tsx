@@ -17,6 +17,7 @@ import {
   buildChartData,
   chartDateKey,
   getAgeExtent,
+  getYearlyAgeTicks,
   getVisibleAgeTicks,
   getVisibleRankingTicks,
   getYAxisDomain,
@@ -48,7 +49,7 @@ const GRANULARITY_LABELS: Record<TrajectoryGranularity, string> = {
 };
 
 const GRANULARITY_DESCRIPTIONS: Record<TrajectoryGranularity, string> = {
-  yearly: "Year-end checkpoints with bold dots and light trend lines.",
+  yearly: "Compare careers by integer age with clear trend lines and year-end checkpoints.",
   monthly: "Month-end rankings for a more detailed career view.",
   weekly: "Full weekly ranking history for deep analysis.",
 };
@@ -110,16 +111,17 @@ function getLineStyle(granularity: TrajectoryGranularity, color: string) {
   switch (granularity) {
     case "yearly":
       return {
-        strokeWidth: 2,
-        strokeOpacity: 0.35,
+        strokeWidth: 2.5,
+        strokeOpacity: 0.75,
         dot: {
-          r: 7,
+          r: 5,
           fill: color,
           fillOpacity: 1,
           stroke: "#fff",
           strokeWidth: 2,
         },
-        activeDot: { r: 9, strokeWidth: 2, stroke: "#fff" },
+        activeDot: { r: 7, strokeWidth: 2, stroke: "#fff" },
+        type: "linear" as const,
       };
     case "monthly":
       return {
@@ -127,6 +129,7 @@ function getLineStyle(granularity: TrajectoryGranularity, color: string) {
         strokeOpacity: 1,
         dot: { r: 3.5, fill: color, fillOpacity: 1, strokeWidth: 0 },
         activeDot: { r: 5, strokeWidth: 2, stroke: "#fff" },
+        type: "monotone" as const,
       };
     case "weekly":
       return {
@@ -134,8 +137,13 @@ function getLineStyle(granularity: TrajectoryGranularity, color: string) {
         strokeOpacity: 0.85,
         dot: false as const,
         activeDot: { r: 4, strokeWidth: 2, stroke: "#fff" },
+        type: "monotone" as const,
       };
   }
+}
+
+function formatYearFromDate(rankingDate: string): string {
+  return `${rankingDate.slice(0, 4)}年`;
 }
 
 function CustomTooltip({
@@ -194,25 +202,38 @@ function CustomTooltip({
                     {player?.name ?? entry.name}
                   </p>
                 </div>
-                <div className="space-y-0.5 pl-[18px] text-xs text-[#1d1d1f]">
-                  <p>
-                    <span className="text-[#86868b]">Age: </span>
-                    {age != null ? age.toFixed(1) : "—"}
-                  </p>
-                  <p>
-                    <span className="text-[#86868b]">Ranking: </span>#{entry.value}
-                  </p>
-                  <p>
-                    <span className="text-[#86868b]">Date: </span>
-                    {typeof rankingDate === "string"
-                      ? rankingDate
-                      : "Unavailable"}
-                  </p>
-                  <p>
-                    <span className="text-[#86868b]">Mode: </span>
-                    {GRANULARITY_LABELS[granularity]}
-                  </p>
-                </div>
+
+                {granularity === "yearly" ? (
+                  <div className="space-y-0.5 pl-[18px] text-sm text-[#1d1d1f]">
+                    <p>
+                      {typeof rankingDate === "string"
+                        ? formatYearFromDate(rankingDate)
+                        : "—"}
+                    </p>
+                    <p>{age != null ? `${Math.round(age)}歳` : "—"}</p>
+                    <p className="font-medium">ATP Ranking #{entry.value}</p>
+                  </div>
+                ) : (
+                  <div className="space-y-0.5 pl-[18px] text-xs text-[#1d1d1f]">
+                    <p>
+                      <span className="text-[#86868b]">Age: </span>
+                      {age != null ? age.toFixed(1) : "—"}
+                    </p>
+                    <p>
+                      <span className="text-[#86868b]">Ranking: </span>#{entry.value}
+                    </p>
+                    <p>
+                      <span className="text-[#86868b]">Date: </span>
+                      {typeof rankingDate === "string"
+                        ? rankingDate
+                        : "Unavailable"}
+                    </p>
+                    <p>
+                      <span className="text-[#86868b]">Mode: </span>
+                      {GRANULARITY_LABELS[granularity]}
+                    </p>
+                  </div>
+                )}
               </div>
             );
           })}
@@ -228,10 +249,19 @@ export function RankingChart({ players, selectedIds }: RankingChartProps) {
   const chartData = buildChartData(selectedIds, granularity);
   const [, yMax] = getYAxisDomain(chartData, selectedIds);
   const yTicks = getVisibleRankingTicks(yMax);
+  const isYearly = granularity === "yearly";
   const ageExtent = getAgeExtent(chartData);
+  const xDomain: [number, number] | ["dataMin", "dataMax"] =
+    ageExtent != null
+      ? isYearly
+        ? [Math.round(ageExtent[0]), Math.round(ageExtent[1])]
+        : ageExtent
+      : ["dataMin", "dataMax"];
   const ageTicks =
     ageExtent != null
-      ? getVisibleAgeTicks(ageExtent[0], ageExtent[1])
+      ? isYearly
+        ? getYearlyAgeTicks(Math.round(ageExtent[0]), Math.round(ageExtent[1]))
+        : getVisibleAgeTicks(ageExtent[0], ageExtent[1])
       : [];
 
   if (selectedPlayers.length === 0) {
@@ -298,11 +328,16 @@ export function RankingChart({ players, selectedIds }: RankingChartProps) {
             <XAxis
               dataKey="age"
               type="number"
-              domain={ageExtent ?? ["dataMin", "dataMax"]}
+              domain={xDomain}
               ticks={ageTicks.length > 0 ? ageTicks : undefined}
+              allowDecimals={!isYearly}
               tick={{ fill: "#86868b", fontSize: 12 }}
               axisLine={{ stroke: "#d2d2d7" }}
               tickLine={{ stroke: "#d2d2d7" }}
+              interval={isYearly ? 0 : undefined}
+              tickFormatter={(value: number) =>
+                isYearly ? String(Math.round(value)) : value.toFixed(0)
+              }
               label={{
                 value: "Age",
                 position: "insideBottom",
@@ -343,7 +378,7 @@ export function RankingChart({ players, selectedIds }: RankingChartProps) {
               return (
                 <Line
                   key={player.id}
-                  type="monotone"
+                  type={lineStyle.type}
                   dataKey={player.id}
                   name={player.shortName}
                   stroke={player.color}

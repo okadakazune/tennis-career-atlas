@@ -123,10 +123,13 @@ export function buildChartData(
 
   selectedPlayers.forEach((player) => {
     getPlayerTrajectory(player, granularity).forEach((point) => {
-      if (!rows.has(point.age)) {
-        rows.set(point.age, { age: point.age });
+      const displayAge =
+        granularity === "yearly" ? Math.round(point.age) : point.age;
+
+      if (!rows.has(displayAge)) {
+        rows.set(displayAge, { age: displayAge });
       }
-      const row = rows.get(point.age)!;
+      const row = rows.get(displayAge)!;
       row[player.id] = point.ranking;
       row[chartDateKey(player.id)] = point.rankingDate;
     });
@@ -159,6 +162,18 @@ export function getVisibleRankingTicks(maxRank: number): number[] {
 
 export function getVisibleAgeTicks(minAge: number, maxAge: number): number[] {
   return AGE_AXIS_TICKS.filter((tick) => tick >= minAge && tick <= maxAge);
+}
+
+export function getYearlyAgeTicks(minAge: number, maxAge: number): number[] {
+  const min = Math.round(minAge);
+  const max = Math.round(maxAge);
+  const ticks: number[] = [];
+
+  for (let age = min; age <= max; age++) {
+    ticks.push(age);
+  }
+
+  return ticks;
 }
 
 export function getAgeExtent(
