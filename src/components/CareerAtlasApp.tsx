@@ -15,6 +15,9 @@ import {
 import dataSourceMeta from "@/data/data-source-meta.json";
 import { PlayerSelector } from "@/components/PlayerSelector";
 import { RankingChart } from "@/components/RankingChart";
+import { CareerSummaryCards } from "@/components/CareerSummaryCards";
+import { AgeSnapshotTable } from "@/components/AgeSnapshotTable";
+import { No1StreakTimeline } from "@/components/No1StreakTimeline";
 
 function buildInitialComparisonTargets(): PlayerIndexEntry[] {
   return ["103819", "104745", "104925"]
@@ -176,6 +179,41 @@ export function CareerAtlasApp() {
     setLimitWarning(null);
   }, []);
 
+  const applyPreset = useCallback(
+    (playerIds: string[]) => {
+      if (playerIds.length === 0) {
+        clearAll();
+        return;
+      }
+
+      const maxPlayers = getMaxComparisonPlayers(granularityRef.current);
+      let effectiveIds = playerIds.slice(0, MAX_COMPARISON_PLAYERS);
+
+      if (effectiveIds.length > maxPlayers) {
+        effectiveIds = effectiveIds.slice(0, maxPlayers);
+        showLimitWarning(
+          granularityRef.current === "weekly"
+            ? WEEKLY_LIMIT_WARNING
+            : `You can compare up to ${MAX_COMPARISON_PLAYERS} players at a time. This preset was trimmed to ${effectiveIds.length} players.`,
+        );
+      }
+
+      setSelectedIds(effectiveIds);
+      setComparisonTargets(
+        effectiveIds
+          .map((id) => {
+            const player = PLAYERS.find((entry) => entry.id === id);
+            return player ? getIndexEntryByAtpId(player.atpPlayerId) : undefined;
+          })
+          .filter((entry): entry is PlayerIndexEntry => Boolean(entry)),
+      );
+      setLimitWarning(null);
+    },
+    [clearAll, showLimitWarning],
+  );
+
+  const selectedPlayers = PLAYERS.filter((player) => selectedIds.includes(player.id));
+
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
       <header className="text-center sm:text-left">
@@ -203,6 +241,7 @@ export function CareerAtlasApp() {
         onRemoveComparisonTarget={removeComparisonTarget}
         onSelectAll={selectAll}
         onClearAll={clearAll}
+        onApplyPreset={applyPreset}
       />
 
       <RankingChart
@@ -211,6 +250,12 @@ export function CareerAtlasApp() {
         granularity={granularity}
         onGranularityChange={handleGranularityChange}
       />
+
+      <CareerSummaryCards players={selectedPlayers} />
+
+      <AgeSnapshotTable players={selectedPlayers} />
+
+      <No1StreakTimeline players={selectedPlayers} />
 
       <footer className="pb-4 text-center text-xs leading-relaxed text-[#86868b] sm:text-left">
         Weekly ATP rankings from {dataSourceMeta.attribution}. Generated{" "}

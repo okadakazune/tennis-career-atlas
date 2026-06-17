@@ -2,6 +2,7 @@
 
 import { Player, PlayerIndexEntry, TrajectoryGranularity, getMaxComparisonPlayers } from "@/data/players";
 import { PlayerSearch } from "@/components/PlayerSearch";
+import { ComparisonPresets } from "@/components/ComparisonPresets";
 
 interface PlayerSelectorProps {
   players: Player[];
@@ -14,6 +15,7 @@ interface PlayerSelectorProps {
   onRemoveComparisonTarget: (atpPlayerId: string) => void;
   onSelectAll: () => void;
   onClearAll: () => void;
+  onApplyPreset: (playerIds: string[]) => void;
 }
 
 export function PlayerSelector({
@@ -27,6 +29,7 @@ export function PlayerSelector({
   onRemoveComparisonTarget,
   onSelectAll,
   onClearAll,
+  onApplyPreset,
 }: PlayerSelectorProps) {
   const maxPlayers = getMaxComparisonPlayers(granularity);
 
@@ -68,6 +71,11 @@ export function PlayerSelector({
           </p>
         </div>
       )}
+
+      <ComparisonPresets
+        onApplyPreset={onApplyPreset}
+        onClear={onClearAll}
+      />
 
       <div className="mb-5">
         <PlayerSearch
