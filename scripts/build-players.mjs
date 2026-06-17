@@ -147,12 +147,45 @@ async function loadRankingsForPlayer(rankingPaths, atpPlayerId) {
 }
 
 function finalizeTrajectory(rawTrajectory, birthDate) {
-  return rawTrajectory.map((point) => ({
-    rankingDate: point.rankingDate,
-    age: roundAge(calculateAgeDecimal(birthDate, point.rankingDateObj)),
-    ranking: point.ranking,
-    points: point.points,
-  }));
+  return rawTrajectory.map((point) => {
+    const finalized = {
+      rankingDate: point.rankingDate,
+      age: roundAge(calculateAgeDecimal(birthDate, point.rankingDateObj)),
+      ranking: point.ranking,
+      points: point.points,
+    };
+
+    if (point.consecutiveWeeksAtNo1 != null) {
+      finalized.consecutiveWeeksAtNo1 = point.consecutiveWeeksAtNo1;
+    }
+
+    return finalized;
+  });
+}
+
+function annotateConsecutiveWeeksAtNo1(rawTrajectory) {
+  let streakStart = null;
+
+  const closeStreak = (endExclusive) => {
+    if (streakStart === null) return;
+
+    const length = endExclusive - streakStart;
+    for (let index = streakStart; index < endExclusive; index++) {
+      rawTrajectory[index].consecutiveWeeksAtNo1 = length;
+    }
+    streakStart = null;
+  };
+
+  for (let index = 0; index < rawTrajectory.length; index++) {
+    if (rawTrajectory[index].ranking === 1) {
+      if (streakStart === null) streakStart = index;
+      continue;
+    }
+
+    closeStreak(index);
+  }
+
+  closeStreak(rawTrajectory.length);
 }
 
 function monthKey(rankingDateRaw) {
@@ -181,6 +214,8 @@ function aggregateByPeriod(rawTrajectory, keyFn) {
 }
 
 function buildTrajectories(rawTrajectory, birthDate) {
+  annotateConsecutiveWeeksAtNo1(rawTrajectory);
+
   const trajectoryWeekly = finalizeTrajectory(rawTrajectory, birthDate);
   const trajectoryMonthly = finalizeTrajectory(
     aggregateByPeriod(rawTrajectory, monthKey),
