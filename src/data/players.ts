@@ -60,6 +60,10 @@ export const WEEKLY_LIMIT_WARNING =
 
 export const RANKING_AXIS_TICKS = [1, 2, 5, 10, 20, 50, 100, 250, 500, 1000] as const;
 
+export const CAREER_VIEW_MAX_RANK = 100;
+
+export const CAREER_VIEW_TICKS = [1, 2, 5, 10, 20, 50, 100] as const;
+
 export const AGE_AXIS_TICKS = [18, 20, 25, 30, 35, 40] as const;
 
 const AUTO_ZOOM_PADDING: Record<TrajectoryGranularity, number> = {
@@ -191,6 +195,25 @@ export function getYAxisDomain(
 
 export function getVisibleRankingTicks(maxRank: number): number[] {
   return RANKING_AXIS_TICKS.filter((tick) => tick <= maxRank);
+}
+
+export function getYAxisConfig(
+  chartData: ChartRow[],
+  selectedPlayerIds: string[],
+  scale: "log" | "linear",
+): { domain: [number, number]; ticks: number[] } {
+  if (scale === "log") {
+    return {
+      domain: [1, CAREER_VIEW_MAX_RANK],
+      ticks: [...CAREER_VIEW_TICKS],
+    };
+  }
+
+  const [, yMax] = getYAxisDomain(chartData, selectedPlayerIds);
+  return {
+    domain: [1, yMax],
+    ticks: getVisibleRankingTicks(yMax),
+  };
 }
 
 export function getVisibleAgeTicks(minAge: number, maxAge: number): number[] {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   LineChart,
   Line,
@@ -20,8 +20,7 @@ import {
   getAutoZoomAgeDomain,
   getAgeTicksForDomain,
   getMaxComparisonPlayers,
-  getVisibleRankingTicks,
-  getYAxisDomain,
+  getYAxisConfig,
 } from "@/data/players";
 
 interface RankingChartProps {
@@ -57,18 +56,18 @@ const SCALE_OPTIONS: { value: RankingScale; label: string; title: string }[] = [
   {
     value: "log",
     label: "Career",
-    title: "Compare overall careers using logarithmic ranking scale.",
+    title: "Compare career peaks and longevity. Focus on Top 100 rankings.",
   },
   {
     value: "linear",
     label: "Detail",
-    title: "Compare exact ranking positions using linear scale.",
+    title: "Inspect full ranking history down to Top 1000.",
   },
 ];
 
 const SCALE_HELP_TEXT: Record<RankingScale, string> = {
-  log: "Compare overall careers using logarithmic ranking scale.",
-  linear: "Compare exact ranking positions using linear scale.",
+  log: "Compare career peaks and longevity. Focus on Top 100 rankings.",
+  linear: "Inspect full ranking history down to Top 1000.",
 };
 
 const CHART_HEIGHT_PX = 520;
@@ -196,6 +195,40 @@ function formatTooltipAge(age: number | null, granularity: TrajectoryGranularity
   return granularity === "yearly" ? String(Math.round(age)) : age.toFixed(1);
 }
 
+function ActiveAgeSync({
+  active,
+  label,
+  onChange,
+}: {
+  active?: boolean;
+  label?: number;
+  onChange: (age: number | null) => void;
+}) {
+  useEffect(() => {
+    if (active && typeof label === "number") {
+      onChange(Math.round(label));
+    } else {
+      onChange(null);
+    }
+  }, [active, label, onChange]);
+
+  return null;
+}
+
+function ActiveAgeHeader({ age }: { age: number }) {
+  return (
+    <div
+      className="pointer-events-none absolute left-1/2 top-3 z-10 -translate-x-1/2 rounded-full border border-black/[0.06] bg-white/95 px-4 py-1.5 shadow-[0_4px_16px_rgba(0,0,0,0.08)] backdrop-blur-sm"
+      aria-live="polite"
+      aria-atomic="true"
+    >
+      <p className="text-sm font-semibold tracking-tight text-[#1d1d1f]">
+        Age {age}
+      </p>
+    </div>
+  );
+}
+
 function CustomTooltip({
   active,
   payload,
@@ -303,11 +336,19 @@ export function RankingChart({
   onGranularityChange,
 }: RankingChartProps) {
   const [yScale, setYScale] = useState<RankingScale>("log");
+  const [activeAge, setActiveAge] = useState<number | null>(null);
+  const handleActiveAgeChange = useCallback((age: number | null) => {
+    setActiveAge(age);
+  }, []);
   const maxPlayers = getMaxComparisonPlayers(granularity);
   const selectedPlayers = players.filter((p) => selectedIds.includes(p.id));
   const chartData = buildChartData(selectedIds, granularity);
-  const [, yMax] = getYAxisDomain(chartData, selectedIds);
-  const yTicks = getVisibleRankingTicks(yMax);
+  const { domain: yDomain, ticks: yTicks } = getYAxisConfig(
+    chartData,
+    selectedIds,
+    yScale,
+  );
+  const [, yMax] = yDomain;
   const isYearly = granularity === "yearly";
   const zoomDomain = getAutoZoomAgeDomain(selectedIds, granularity);
   const xDomain: [number, number] | ["dataMin", "dataMax"] =
@@ -368,7 +409,8 @@ export function RankingChart({
 
       <ChartLegend players={selectedPlayers} />
 
-      <div className="w-full" style={{ height: CHART_HEIGHT_PX }}>
+      <div className="relative w-full" style={{ height: CHART_HEIGHT_PX }}>
+        {activeAge != null ? <ActiveAgeHeader age={activeAge} /> : null}
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={chartData}
@@ -433,9 +475,22 @@ export function RankingChart({
               }}
             />
             <Tooltip
-              content={
-                <CustomTooltip players={selectedPlayers} granularity={granularity} />
-              }
+              content={(props) => (
+                <>
+                  <ActiveAgeSync
+                    active={props.active}
+                    label={typeof props.label === "number" ? props.label : undefined}
+                    onChange={handleActiveAgeChange}
+                  />
+                  <CustomTooltip
+                    active={props.active}
+                    payload={props.payload as TooltipPayloadItem[] | undefined}
+                    label={typeof props.label === "number" ? props.label : undefined}
+                    players={selectedPlayers}
+                    granularity={granularity}
+                  />
+                </>
+              )}
             />
             {selectedPlayers.map((player) => {
               const lineStyle = getLineStyle(granularity, player.color);
