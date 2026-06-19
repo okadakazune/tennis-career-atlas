@@ -18,6 +18,7 @@ import { RankingChart } from "@/components/RankingChart";
 import { CareerSummaryCards } from "@/components/CareerSummaryCards";
 import { AgeSnapshotTable } from "@/components/AgeSnapshotTable";
 import { No1StreakTimeline } from "@/components/No1StreakTimeline";
+import { GrandSlamResultsByAge } from "@/components/GrandSlamResultsByAge";
 
 function buildInitialComparisonTargets(): PlayerIndexEntry[] {
   return ["103819", "104745", "104925"]
@@ -42,6 +43,7 @@ export function CareerAtlasApp() {
     buildInitialComparisonTargets,
   );
   const [granularity, setGranularity] = useState<TrajectoryGranularity>("yearly");
+  const [chartHoverAge, setChartHoverAge] = useState<number | null>(null);
   const [limitWarning, setLimitWarning] = useState<string | null>(null);
   const warningTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const comparisonTargetsRef = useRef(comparisonTargets);
@@ -249,11 +251,17 @@ export function CareerAtlasApp() {
         selectedIds={selectedIds}
         granularity={granularity}
         onGranularityChange={handleGranularityChange}
+        onActiveAgeChange={setChartHoverAge}
       />
 
       <CareerSummaryCards players={selectedPlayers} />
 
       <AgeSnapshotTable players={selectedPlayers} />
+
+      <GrandSlamResultsByAge
+        players={selectedPlayers}
+        chartHoverAge={chartHoverAge}
+      />
 
       <No1StreakTimeline players={selectedPlayers} />
 
@@ -264,7 +272,8 @@ export function CareerAtlasApp() {
           month: "short",
           day: "numeric",
         })}
-        . Source: {dataSourceMeta.source}.
+        . Source: {dataSourceMeta.source}. Grand Slam results from{" "}
+        {dataSourceMeta.attribution}.
       </footer>
     </div>
   );
