@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generatedAt": "2026-06-20T03:43:51.838Z",
+    "generatedAt": "2026-06-20T06:46:18.196Z",
     "source": "sacriusdt/tennis-atp-prediction (Sackmann-format mirror)",
     "sourceUrl": "https://raw.githubusercontent.com/sacriusdt/tennis-atp-prediction/master",
     "attribution": "Jeff Sackmann / Tennis Abstract (CC BY-NC-SA 4.0)",
@@ -8,8 +8,13 @@
   },
   "players": {
     "federer": {
+      "1999": {
+        "rg": "R128",
+        "wimbledon": "R128"
+      },
       "2000": {
         "rg": "R16",
+        "wimbledon": "R128",
         "usOpen": "R32",
         "ao": "R32"
       },
@@ -20,10 +25,13 @@
         "ao": "R32"
       },
       "2002": {
+        "rg": "R128",
+        "wimbledon": "R128",
         "usOpen": "R16",
         "ao": "R16"
       },
       "2003": {
+        "rg": "R128",
         "wimbledon": "Winner",
         "usOpen": "R16",
         "ao": "R16"
@@ -184,6 +192,7 @@
       },
       "2013": {
         "rg": "Winner",
+        "wimbledon": "R128",
         "usOpen": "Winner"
       },
       "2014": {
@@ -198,6 +207,7 @@
         "usOpen": "R32"
       },
       "2016": {
+        "ao": "R128",
         "rg": "R32",
         "usOpen": "R16"
       },
@@ -235,18 +245,23 @@
       },
       "2023": {
         "ao": "R64"
+      },
+      "2024": {
+        "rg": "R128"
       }
     },
     "djokovic": {
       "2005": {
         "rg": "R64",
         "wimbledon": "R32",
-        "usOpen": "R32"
+        "usOpen": "R32",
+        "ao": "R128"
       },
       "2006": {
         "rg": "Quarterfinal",
         "wimbledon": "R16",
-        "usOpen": "R32"
+        "usOpen": "R32",
+        "ao": "R128"
       },
       "2007": {
         "rg": "Semifinal",
@@ -379,13 +394,19 @@
       }
     },
     "sinner": {
+      "2019": {
+        "usOpen": "R128"
+      },
       "2020": {
         "ao": "R64",
+        "usOpen": "R128",
         "rg": "Quarterfinal"
       },
       "2021": {
         "rg": "R16",
-        "usOpen": "R16"
+        "wimbledon": "R128",
+        "usOpen": "R16",
+        "ao": "R128"
       },
       "2022": {
         "ao": "Quarterfinal",
@@ -412,8 +433,10 @@
         "usOpen": "R64"
       },
       "2006": {
+        "rg": "R128",
         "wimbledon": "R16",
-        "usOpen": "R16"
+        "usOpen": "R16",
+        "ao": "R128"
       },
       "2007": {
         "usOpen": "R32",
@@ -422,7 +445,8 @@
       "2008": {
         "rg": "R32",
         "wimbledon": "Quarterfinal",
-        "usOpen": "Runner-up"
+        "usOpen": "Runner-up",
+        "ao": "R128"
       },
       "2009": {
         "rg": "Quarterfinal",
@@ -479,11 +503,16 @@
       "2018": {
         "usOpen": "R64"
       },
+      "2019": {
+        "ao": "R128"
+      },
       "2020": {
-        "usOpen": "R64"
+        "usOpen": "R64",
+        "rg": "R128"
       },
       "2021": {
-        "wimbledon": "R32"
+        "wimbledon": "R32",
+        "usOpen": "R128"
       },
       "2022": {
         "ao": "R64",
@@ -494,20 +523,27 @@
         "ao": "R32",
         "wimbledon": "R64",
         "usOpen": "R64"
+      },
+      "2024": {
+        "ao": "R128",
+        "rg": "R128"
       }
     },
     "wawrinka": {
       "2005": {
         "rg": "R32",
+        "wimbledon": "R128",
         "usOpen": "R32"
       },
       "2006": {
+        "rg": "R128",
         "wimbledon": "R32",
         "usOpen": "R32",
         "ao": "R64"
       },
       "2007": {
         "rg": "R64",
+        "wimbledon": "R128",
         "usOpen": "R16",
         "ao": "R32"
       },
@@ -520,11 +556,13 @@
       "2009": {
         "rg": "R32",
         "wimbledon": "R16",
+        "usOpen": "R128",
         "ao": "R32"
       },
       "2010": {
         "ao": "R32",
         "rg": "R16",
+        "wimbledon": "R128",
         "usOpen": "Quarterfinal"
       },
       "2011": {
@@ -536,15 +574,18 @@
       "2012": {
         "ao": "R32",
         "rg": "R16",
+        "wimbledon": "R128",
         "usOpen": "R16"
       },
       "2013": {
         "ao": "R16",
         "rg": "Quarterfinal",
+        "wimbledon": "R128",
         "usOpen": "Semifinal"
       },
       "2014": {
         "ao": "Winner",
+        "rg": "R128",
         "wimbledon": "Quarterfinal",
         "usOpen": "Quarterfinal"
       },
@@ -562,10 +603,12 @@
       },
       "2017": {
         "ao": "Semifinal",
-        "rg": "Runner-up"
+        "rg": "Runner-up",
+        "wimbledon": "R128"
       },
       "2018": {
         "ao": "R64",
+        "rg": "R128",
         "wimbledon": "R64",
         "usOpen": "R32"
       },
@@ -582,27 +625,42 @@
       "2021": {
         "ao": "R64"
       },
+      "2022": {
+        "rg": "R128",
+        "wimbledon": "R128",
+        "usOpen": "R128"
+      },
       "2023": {
+        "ao": "R128",
         "rg": "R64",
         "wimbledon": "R32",
         "usOpen": "R32"
       },
       "2024": {
+        "ao": "R128",
         "rg": "R64",
-        "wimbledon": "R64"
+        "wimbledon": "R64",
+        "usOpen": "R128"
       }
     },
     "nishikori": {
       "2008": {
+        "wimbledon": "R128",
         "usOpen": "R16"
+      },
+      "2009": {
+        "ao": "R128"
       },
       "2010": {
         "rg": "R64",
+        "wimbledon": "R128",
         "usOpen": "R32"
       },
       "2011": {
         "ao": "R32",
-        "rg": "R64"
+        "rg": "R64",
+        "wimbledon": "R128",
+        "usOpen": "R128"
       },
       "2012": {
         "ao": "Quarterfinal",
@@ -612,17 +670,20 @@
       "2013": {
         "ao": "R16",
         "rg": "R16",
-        "wimbledon": "R32"
+        "wimbledon": "R32",
+        "usOpen": "R128"
       },
       "2014": {
         "ao": "R16",
+        "rg": "R128",
         "wimbledon": "R16",
         "usOpen": "Runner-up"
       },
       "2015": {
         "ao": "Quarterfinal",
         "rg": "Quarterfinal",
-        "wimbledon": "R64"
+        "wimbledon": "R64",
+        "usOpen": "R128"
       },
       "2016": {
         "ao": "Quarterfinal",
@@ -652,23 +713,28 @@
       "2021": {
         "rg": "R16",
         "wimbledon": "R64",
-        "usOpen": "R32"
+        "usOpen": "R32",
+        "ao": "R128"
       },
       "2024": {
-        "rg": "R64"
+        "rg": "R64",
+        "wimbledon": "R128"
       }
     },
     "zverev": {
       "2015": {
-        "wimbledon": "R64"
+        "wimbledon": "R64",
+        "usOpen": "R128"
       },
       "2016": {
+        "ao": "R128",
         "rg": "R32",
         "wimbledon": "R32",
         "usOpen": "R64"
       },
       "2017": {
         "ao": "R32",
+        "rg": "R128",
         "wimbledon": "R16",
         "usOpen": "R64"
       },
@@ -681,6 +747,7 @@
       "2019": {
         "ao": "R16",
         "rg": "Quarterfinal",
+        "wimbledon": "R128",
         "usOpen": "R16"
       },
       "2020": {
@@ -713,21 +780,27 @@
     },
     "medvedev": {
       "2017": {
-        "wimbledon": "R64"
+        "ao": "R128",
+        "rg": "R128",
+        "wimbledon": "R64",
+        "usOpen": "R128"
       },
       "2018": {
         "ao": "R64",
+        "rg": "R128",
         "wimbledon": "R32",
         "usOpen": "R32"
       },
       "2019": {
         "ao": "R16",
+        "rg": "R128",
         "wimbledon": "R32",
         "usOpen": "Runner-up"
       },
       "2020": {
         "ao": "R16",
-        "usOpen": "Semifinal"
+        "usOpen": "Semifinal",
+        "rg": "R128"
       },
       "2021": {
         "rg": "Quarterfinal",
@@ -742,6 +815,7 @@
       },
       "2023": {
         "ao": "R32",
+        "rg": "R128",
         "wimbledon": "Semifinal",
         "usOpen": "Runner-up"
       },
@@ -753,14 +827,21 @@
       }
     },
     "tsitsipas": {
+      "2017": {
+        "rg": "R128",
+        "wimbledon": "R128"
+      },
       "2018": {
+        "ao": "R128",
         "rg": "R64",
         "wimbledon": "R16",
         "usOpen": "R64"
       },
       "2019": {
         "ao": "Semifinal",
-        "rg": "R16"
+        "rg": "R16",
+        "wimbledon": "R128",
+        "usOpen": "R128"
       },
       "2020": {
         "ao": "R32",
@@ -769,13 +850,15 @@
       },
       "2021": {
         "rg": "Runner-up",
+        "wimbledon": "R128",
         "usOpen": "R32",
         "ao": "Semifinal"
       },
       "2022": {
         "ao": "Semifinal",
         "rg": "R16",
-        "wimbledon": "R32"
+        "wimbledon": "R32",
+        "usOpen": "R128"
       },
       "2023": {
         "ao": "Runner-up",
@@ -786,39 +869,52 @@
       "2024": {
         "ao": "R16",
         "rg": "Quarterfinal",
-        "wimbledon": "R64"
+        "wimbledon": "R64",
+        "usOpen": "R128"
       }
     },
     "rune": {
+      "2021": {
+        "usOpen": "R128"
+      },
       "2022": {
+        "ao": "R128",
         "rg": "Quarterfinal",
+        "wimbledon": "R128",
         "usOpen": "R32"
       },
       "2023": {
         "ao": "R16",
         "rg": "Quarterfinal",
-        "wimbledon": "Quarterfinal"
+        "wimbledon": "Quarterfinal",
+        "usOpen": "R128"
       },
       "2024": {
         "ao": "R64",
         "rg": "R16",
-        "wimbledon": "R16"
+        "wimbledon": "R16",
+        "usOpen": "R128"
       }
     },
     "ruud": {
       "2018": {
         "ao": "R64",
-        "rg": "R64"
+        "rg": "R64",
+        "usOpen": "R128"
       },
       "2019": {
-        "rg": "R32"
+        "rg": "R32",
+        "wimbledon": "R128",
+        "usOpen": "R128"
       },
       "2020": {
+        "ao": "R128",
         "usOpen": "R32",
         "rg": "R32"
       },
       "2021": {
         "rg": "R32",
+        "wimbledon": "R128",
         "usOpen": "R64",
         "ao": "R16"
       },
@@ -844,9 +940,11 @@
       "2014": {
         "ao": "R64",
         "rg": "R64",
+        "wimbledon": "R128",
         "usOpen": "R16"
       },
       "2015": {
+        "ao": "R128",
         "rg": "R64",
         "wimbledon": "R64",
         "usOpen": "R32"
@@ -866,11 +964,14 @@
       "2018": {
         "ao": "R16",
         "rg": "Runner-up",
+        "wimbledon": "R128",
         "usOpen": "Quarterfinal"
       },
       "2019": {
         "ao": "R64",
-        "rg": "Runner-up"
+        "rg": "Runner-up",
+        "wimbledon": "R128",
+        "usOpen": "R128"
       },
       "2020": {
         "ao": "Runner-up",
@@ -878,14 +979,31 @@
         "rg": "Quarterfinal"
       },
       "2021": {
+        "rg": "R128",
         "ao": "R16"
       },
+      "2022": {
+        "rg": "R128",
+        "usOpen": "R128"
+      },
       "2023": {
+        "ao": "R128",
+        "rg": "R128",
+        "wimbledon": "R128",
         "usOpen": "R64"
+      },
+      "2024": {
+        "ao": "R128",
+        "usOpen": "R128"
       }
     },
     "del-potro": {
+      "2006": {
+        "rg": "R128",
+        "usOpen": "R128"
+      },
       "2007": {
+        "rg": "R128",
         "wimbledon": "R64",
         "usOpen": "R32",
         "ao": "R64"

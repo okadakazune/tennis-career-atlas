@@ -21,6 +21,7 @@ export interface Player {
   countryCode: string;
   color: string;
   imageUrl?: string;
+  imageAttribution?: string;
   trajectoryWeekly: RankingPoint[];
   trajectoryMonthly: RankingPoint[];
   trajectoryYearly: RankingPoint[];

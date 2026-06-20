@@ -78,6 +78,7 @@ function deriveSlamResult(matches, playerId) {
   if (bestRound === "R16") return "R16";
   if (bestRound === "R32") return "R32";
   if (bestRound === "R64") return "R64";
+  if (bestRound === "R128") return "R128";
 
   return null;
 }
