@@ -1,18 +1,20 @@
 "use client";
 
 import { Player } from "@/data/players";
-import { SnapshotAge, buildAgeSnapshot } from "@/data/career-stats";
+import { buildAgeSnapshot } from "@/data/career-stats";
 import { AgeSelector } from "@/components/AgeSelector";
 
 interface AgeSnapshotTableProps {
   players: Player[];
+  ages: number[];
   displayAge: number;
-  onAgeChange: (age: SnapshotAge) => void;
+  onAgeChange: (age: number) => void;
   isSyncedFromChart?: boolean;
 }
 
 export function AgeSnapshotTable({
   players,
+  ages,
   displayAge,
   onAgeChange,
   isSyncedFromChart = false,
@@ -34,6 +36,7 @@ export function AgeSnapshotTable({
         </div>
 
         <AgeSelector
+          ages={ages}
           displayAge={displayAge}
           onAgeChange={onAgeChange}
           isSyncedFromChart={isSyncedFromChart}

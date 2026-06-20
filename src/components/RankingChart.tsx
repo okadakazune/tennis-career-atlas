@@ -16,12 +16,14 @@ import {
   TrajectoryGranularity,
   buildChartData,
   chartDateKey,
+  chartLatestWeekKey,
   chartStreakKey,
   getAutoZoomAgeDomain,
   getAgeTicksForDomain,
   getMaxComparisonPlayers,
   getYAxisConfig,
 } from "@/data/players";
+import { PlayerAvatar } from "@/components/PlayerAvatar";
 
 interface RankingChartProps {
   players: Player[];
@@ -36,7 +38,7 @@ interface TooltipPayloadItem {
   name: string;
   value: number;
   dataKey: string;
-  payload?: Record<string, number | string | null | undefined>;
+  payload?: Record<string, number | string | boolean | null | undefined>;
 }
 
 const GRANULARITY_OPTIONS: { value: TrajectoryGranularity; label: string }[] = [
@@ -46,7 +48,7 @@ const GRANULARITY_OPTIONS: { value: TrajectoryGranularity; label: string }[] = [
 ];
 
 const GRANULARITY_DESCRIPTIONS: Record<TrajectoryGranularity, string> = {
-  yearly: "Compare careers by integer age with clear trend lines and year-end checkpoints.",
+  yearly: "Compare careers by integer age. The latest calendar year uses the most recent week in the CSV.",
   monthly: "Month-end rankings for a more detailed career view.",
   weekly: "Full weekly ranking history for deep analysis. Supports up to 2 players.",
 };
@@ -121,10 +123,11 @@ function ChartLegend({ players }: { players: Player[] }) {
     >
       {players.map((player) => (
         <div key={player.id} className="flex items-center gap-1.5">
-          <span
-            className="h-2 w-2 shrink-0 rounded-full"
-            style={{ backgroundColor: player.color }}
-            aria-hidden="true"
+          <PlayerAvatar
+            name={player.name}
+            color={player.color}
+            imageUrl={player.imageUrl}
+            size="sm"
           />
           <span className="text-xs font-medium text-[#1d1d1f]">{player.name}</span>
         </div>
@@ -171,9 +174,23 @@ function getLineStyle(granularity: TrajectoryGranularity, color: string) {
 function formatTooltipPeriod(
   rankingDate: string,
   granularity: TrajectoryGranularity,
+  isLatestWeek = false,
 ): { label: string; value: string } {
   if (granularity === "yearly") {
-    return { label: "Year", value: rankingDate.slice(0, 4) };
+    if (isLatestWeek) {
+      const date = new Date(`${rankingDate}T00:00:00Z`);
+      return {
+        label: "Latest week",
+        value: date.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          timeZone: "UTC",
+        }),
+      };
+    }
+
+    return { label: "Year-end week", value: rankingDate.slice(0, 4) };
   }
 
   if (granularity === "monthly") {
@@ -266,6 +283,8 @@ function CustomTooltip({
           .map((entry, index) => {
             const player = players.find((p) => p.id === entry.dataKey);
             const rankingDate = entry.payload?.[chartDateKey(entry.dataKey)];
+            const isLatestWeek =
+              entry.payload?.[chartLatestWeekKey(entry.dataKey)] === true;
             const streakValue = entry.payload?.[chartStreakKey(entry.dataKey)];
             const age =
               typeof hoveredAge === "number"
@@ -275,7 +294,7 @@ function CustomTooltip({
                   : null;
             const period =
               typeof rankingDate === "string"
-                ? formatTooltipPeriod(rankingDate, granularity)
+                ? formatTooltipPeriod(rankingDate, granularity, isLatestWeek)
                 : null;
             const consecutiveWeeksAtNo1 =
               entry.value === 1 && typeof streakValue === "number"
@@ -288,9 +307,11 @@ function CustomTooltip({
                 className={index > 0 ? "border-t border-black/[0.06] pt-3" : ""}
               >
                 <div className="mb-1.5 flex items-center gap-2">
-                  <span
-                    className="h-2.5 w-2.5 rounded-full"
-                    style={{ backgroundColor: entry.color }}
+                  <PlayerAvatar
+                    name={player?.name ?? entry.name}
+                    color={player?.color ?? entry.color}
+                    imageUrl={player?.imageUrl}
+                    size="sm"
                   />
                   <p className="text-sm font-semibold text-[#1d1d1f]">
                     {player?.name ?? entry.name}

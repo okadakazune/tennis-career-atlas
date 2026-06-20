@@ -3,6 +3,7 @@
 import { Player, PlayerIndexEntry, TrajectoryGranularity, getMaxComparisonPlayers } from "@/data/players";
 import { PlayerSearch } from "@/components/PlayerSearch";
 import { ComparisonPresets } from "@/components/ComparisonPresets";
+import { PlayerAvatar } from "@/components/PlayerAvatar";
 
 interface PlayerSelectorProps {
   players: Player[];
@@ -100,12 +101,14 @@ export function PlayerSelector({
                   key={entry.atpPlayerId}
                   className="flex items-center gap-2 rounded-full border border-black/[0.08] bg-[#fafafa] py-1.5 pl-3 pr-1.5"
                 >
-                  {chartPlayer && (
-                    <span
-                      className="h-2.5 w-2.5 rounded-full"
-                      style={{ backgroundColor: chartPlayer.color }}
+                  {chartPlayer ? (
+                    <PlayerAvatar
+                      name={chartPlayer.name}
+                      color={chartPlayer.color}
+                      imageUrl={chartPlayer.imageUrl}
+                      size="sm"
                     />
-                  )}
+                  ) : null}
                   <span className="text-sm font-medium text-[#1d1d1f]">
                     {entry.shortName ?? entry.name}
                   </span>
@@ -164,9 +167,12 @@ export function PlayerSelector({
                   : "border-black/[0.08] bg-[#fafafa] text-[#1d1d1f] hover:border-black/[0.12] hover:bg-white"
               }`}
             >
-              <span
-                className="h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-white/30"
-                style={{ backgroundColor: player.color }}
+              <PlayerAvatar
+                name={player.name}
+                color={player.color}
+                imageUrl={player.imageUrl}
+                size="sm"
+                className={isSelected ? "ring-2 ring-white/30" : undefined}
               />
               {player.shortName}
             </button>

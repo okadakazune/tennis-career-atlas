@@ -111,6 +111,7 @@ function buildPlayerIndex(rows, featuredByAtpId) {
         slug: featured?.id,
         shortName: featured?.shortName,
         color: featured?.color,
+        imageUrl: featured?.imageUrl,
       };
     })
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -221,12 +222,43 @@ function buildTrajectories(rawTrajectory, birthDate) {
     aggregateByPeriod(rawTrajectory, monthKey),
     birthDate,
   );
-  const trajectoryYearly = finalizeTrajectory(
+  const yearlyAggregated = finalizeTrajectory(
     aggregateByPeriod(rawTrajectory, yearKey),
+    birthDate,
+  );
+  const trajectoryYearly = applyLatestWeekYearlyPoint(
+    rawTrajectory,
+    yearlyAggregated,
     birthDate,
   );
 
   return { trajectoryWeekly, trajectoryMonthly, trajectoryYearly };
+}
+
+function yearFromRankingDate(dateStr) {
+  return Number(dateStr.slice(0, 4));
+}
+
+function applyLatestWeekYearlyPoint(rawTrajectory, yearlyPoints, birthDate) {
+  if (rawTrajectory.length === 0) return yearlyPoints;
+
+  const latestRaw = rawTrajectory[rawTrajectory.length - 1];
+  const latestYear = yearKey(latestRaw.rankingDateRaw);
+  const [latestPoint] = finalizeTrajectory([latestRaw], birthDate);
+  latestPoint.isLatestWeek = true;
+
+  const nextYearly = yearlyPoints.map((point) => ({ ...point }));
+  const existingIndex = nextYearly.findIndex(
+    (point) => yearFromRankingDate(point.rankingDate) === latestYear,
+  );
+
+  if (existingIndex >= 0) {
+    nextYearly[existingIndex] = latestPoint;
+  } else {
+    nextYearly.push(latestPoint);
+  }
+
+  return nextYearly.sort((a, b) => a.rankingDate.localeCompare(b.rankingDate));
 }
 
 async function buildFeaturedPlayers(featuredConfig, playerRows, rankingPaths) {
@@ -261,6 +293,7 @@ async function buildFeaturedPlayers(featuredConfig, playerRows, rankingPaths) {
       birthDate: formatIsoDate(birthDate),
       countryCode: row.ioc || "",
       color: featured.color,
+      ...(featured.imageUrl ? { imageUrl: featured.imageUrl } : {}),
       ...trajectories,
     });
   }

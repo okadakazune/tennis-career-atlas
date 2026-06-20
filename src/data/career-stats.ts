@@ -26,9 +26,45 @@ export interface No1Streak {
 
 export const MIN_NO1_STREAK_WEEKS = 4;
 
-export const SNAPSHOT_AGES = [18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40] as const;
+export const DEFAULT_SNAPSHOT_AGE = 24;
 
-export type SnapshotAge = (typeof SNAPSHOT_AGES)[number];
+export function getAvailableAgesForPlayers(players: Player[]): number[] {
+  if (players.length === 0) return [];
+
+  let minAge = Infinity;
+  let maxAge = -Infinity;
+
+  for (const player of players) {
+    for (const point of player.trajectoryYearly) {
+      const age = Math.round(point.age);
+      minAge = Math.min(minAge, age);
+      maxAge = Math.max(maxAge, age);
+    }
+  }
+
+  if (!Number.isFinite(minAge) || !Number.isFinite(maxAge)) {
+    return [];
+  }
+
+  const ages: number[] = [];
+  for (let age = minAge; age <= maxAge; age += 1) {
+    ages.push(age);
+  }
+
+  return ages;
+}
+
+export function clampAgeToAvailable(
+  age: number,
+  availableAges: number[],
+): number {
+  if (availableAges.length === 0) return age;
+  if (availableAges.includes(age)) return age;
+
+  return availableAges.reduce((closest, candidate) =>
+    Math.abs(candidate - age) < Math.abs(closest - age) ? candidate : closest,
+  );
+}
 
 function formatAge(value: number | null): string {
   if (value == null) return "N/A";
