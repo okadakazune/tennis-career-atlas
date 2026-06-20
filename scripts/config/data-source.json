@@ -23,6 +23,11 @@
       "atp_rankings_10s.csv",
       "atp_rankings_20s.csv",
       "atp_rankings_current.csv"
-    ]
+    ],
+    "matches": {
+      "firstYear": 1968,
+      "lastYear": 2024,
+      "filePattern": "atp_matches_{year}.csv"
+    }
   }
 }

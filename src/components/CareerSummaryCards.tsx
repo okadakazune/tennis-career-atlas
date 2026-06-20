@@ -26,6 +26,10 @@ function formatRank(value: number | null): string {
   return value == null ? "N/A" : `#${value}`;
 }
 
+function formatCount(value: number): string {
+  return value > 0 ? String(value) : "0";
+}
+
 function formatWeeks(value: number): string {
   return value > 0 ? String(value) : "N/A";
 }
@@ -64,6 +68,22 @@ function CareerSummaryCard({
           value={formatWeeks(stats.longestConsecutiveWeeksAtNo1)}
         />
         <StatItem
+          label="Grand Slam titles"
+          value={formatCount(stats.grandSlamTitles)}
+        />
+        <StatItem
+          label="Grand Slam finals"
+          value={formatCount(stats.grandSlamFinals)}
+        />
+        <StatItem
+          label="Years in Top 10"
+          value={formatCount(stats.yearsInTop10)}
+        />
+        <StatItem
+          label="Years in Top 5"
+          value={formatCount(stats.yearsInTop5)}
+        />
+        <StatItem
           label="First age Top 100"
           value={formatCareerStatAge(stats.firstAgeTop100)}
         />
@@ -90,7 +110,7 @@ export function CareerSummaryCards({ players }: CareerSummaryCardsProps) {
           Career Summary
         </h2>
         <p className="mt-0.5 text-sm text-[#86868b]">
-          Key milestones calculated from weekly ATP ranking history.
+          Key milestones from ATP rankings and Grand Slam match results.
         </p>
       </div>
 

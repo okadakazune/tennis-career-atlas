@@ -28,6 +28,7 @@ interface RankingChartProps {
   selectedIds: string[];
   granularity: TrajectoryGranularity;
   onGranularityChange: (granularity: TrajectoryGranularity) => void;
+  onActiveAgeChange?: (age: number | null) => void;
 }
 
 interface TooltipPayloadItem {
@@ -334,12 +335,17 @@ export function RankingChart({
   selectedIds,
   granularity,
   onGranularityChange,
+  onActiveAgeChange,
 }: RankingChartProps) {
   const [yScale, setYScale] = useState<RankingScale>("log");
   const [activeAge, setActiveAge] = useState<number | null>(null);
-  const handleActiveAgeChange = useCallback((age: number | null) => {
-    setActiveAge(age);
-  }, []);
+  const handleActiveAgeChange = useCallback(
+    (age: number | null) => {
+      setActiveAge(age);
+      onActiveAgeChange?.(age);
+    },
+    [onActiveAgeChange],
+  );
   const maxPlayers = getMaxComparisonPlayers(granularity);
   const selectedPlayers = players.filter((p) => selectedIds.includes(p.id));
   const chartData = buildChartData(selectedIds, granularity);
