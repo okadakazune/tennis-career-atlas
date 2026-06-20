@@ -261,7 +261,17 @@ function applyLatestWeekYearlyPoint(rawTrajectory, yearlyPoints, birthDate) {
   return nextYearly.sort((a, b) => a.rankingDate.localeCompare(b.rankingDate));
 }
 
-async function buildFeaturedPlayers(featuredConfig, playerRows, rankingPaths) {
+async function loadPlayerImages() {
+  try {
+    const text = await readFile(path.join(OUT_DIR, "player-images.generated.json"), "utf8");
+    const payload = JSON.parse(text);
+    return payload.players ?? {};
+  } catch {
+    return {};
+  }
+}
+
+async function buildFeaturedPlayers(featuredConfig, playerRows, rankingPaths, playerImages) {
   const playersById = new Map(playerRows.map((row) => [row.player_id, row]));
   const players = [];
 
@@ -284,6 +294,7 @@ async function buildFeaturedPlayers(featuredConfig, playerRows, rankingPaths) {
     }
 
     const trajectories = buildTrajectories(rawTrajectory, birthDate);
+    const imageRecord = playerImages[featured.id];
 
     players.push({
       id: featured.id,
@@ -294,6 +305,10 @@ async function buildFeaturedPlayers(featuredConfig, playerRows, rankingPaths) {
       countryCode: row.ioc || "",
       color: featured.color,
       ...(featured.imageUrl ? { imageUrl: featured.imageUrl } : {}),
+      ...(imageRecord?.imageUrl ? { imageUrl: imageRecord.imageUrl } : {}),
+      ...(imageRecord?.imageAttribution
+        ? { imageAttribution: imageRecord.imageAttribution }
+        : {}),
       ...trajectories,
     });
   }
@@ -316,7 +331,13 @@ async function main() {
   const featuredByAtpId = new Map(featuredConfig.map((player) => [player.atpPlayerId, player]));
 
   const playerIndex = buildPlayerIndex(playerRows, featuredByAtpId);
-  const players = await buildFeaturedPlayers(featuredConfig, playerRows, rankingPaths);
+  const playerImages = await loadPlayerImages();
+  const players = await buildFeaturedPlayers(
+    featuredConfig,
+    playerRows,
+    rankingPaths,
+    playerImages,
+  );
 
   await mkdir(OUT_DIR, { recursive: true });
 

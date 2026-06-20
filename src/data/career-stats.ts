@@ -247,3 +247,51 @@ export function getCareerTimelineBounds(players: Player[]): {
     maxDate: new Date(maxMs).toISOString().slice(0, 10),
   };
 }
+
+export interface Top10LongevityStats {
+  totalYearsInTop10: number;
+  consecutiveYearsInTop10: number;
+  firstAgeTop10: number | null;
+  lastAgeTop10: number | null;
+}
+
+export function computeTop10Longevity(player: Player): Top10LongevityStats {
+  const yearsInTop10 = new Set<number>();
+  let firstAgeTop10: number | null = null;
+  let lastAgeTop10: number | null = null;
+
+  for (const point of player.trajectoryWeekly) {
+    if (point.ranking > 10) continue;
+
+    yearsInTop10.add(Number(point.rankingDate.slice(0, 4)));
+    const roundedAge = Math.round(point.age);
+
+    if (firstAgeTop10 === null) {
+      firstAgeTop10 = roundedAge;
+    }
+    lastAgeTop10 = roundedAge;
+  }
+
+  const sortedYears = Array.from(yearsInTop10).sort((a, b) => a - b);
+  let consecutiveYearsInTop10 = 0;
+  let currentStreak = 0;
+  let previousYear: number | null = null;
+
+  for (const year of sortedYears) {
+    if (previousYear != null && year === previousYear + 1) {
+      currentStreak += 1;
+    } else {
+      currentStreak = 1;
+    }
+
+    consecutiveYearsInTop10 = Math.max(consecutiveYearsInTop10, currentStreak);
+    previousYear = year;
+  }
+
+  return {
+    totalYearsInTop10: sortedYears.length,
+    consecutiveYearsInTop10,
+    firstAgeTop10,
+    lastAgeTop10,
+  };
+}

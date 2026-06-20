@@ -12,6 +12,7 @@ export type GrandSlamResultLabel =
   | "R16"
   | "R32"
   | "R64"
+  | "R128"
   | "Did not play";
 
 export interface GrandSlamSeasonResults {
@@ -42,11 +43,11 @@ export interface GrandSlamCareerTotals {
   finals: number;
 }
 
-export const GRAND_SLAM_TOURNAMENTS: { key: GrandSlamKey; label: string; shortLabel: string }[] = [
-  { key: "ao", label: "Australian Open", shortLabel: "AO" },
-  { key: "rg", label: "Roland Garros", shortLabel: "RG" },
-  { key: "wimbledon", label: "Wimbledon", shortLabel: "Wimbledon" },
-  { key: "usOpen", label: "US Open", shortLabel: "US Open" },
+export const GRAND_SLAM_TOURNAMENTS: { key: GrandSlamKey; label: string; shortLabel: string; timelineLabel: string }[] = [
+  { key: "ao", label: "Australian Open", shortLabel: "AO", timelineLabel: "AO" },
+  { key: "rg", label: "Roland Garros", shortLabel: "RG", timelineLabel: "RG" },
+  { key: "wimbledon", label: "Wimbledon", shortLabel: "Wimbledon", timelineLabel: "WB" },
+  { key: "usOpen", label: "US Open", shortLabel: "US Open", timelineLabel: "USO" },
 ];
 
 const DID_NOT_PLAY: GrandSlamResultLabel = "Did not play";
@@ -72,6 +73,8 @@ export function formatGrandSlamResultShort(result: GrandSlamResultLabel): string
       return "R32";
     case "R64":
       return "R64";
+    case "R128":
+      return "R128";
     case "Did not play":
       return "DNP";
     default:
@@ -110,6 +113,7 @@ export function getGrandSlamResultDisplay(
     case "R16":
     case "R32":
     case "R64":
+    case "R128":
       return {
         shortLabel: formatGrandSlamResultShort(result),
         className: "bg-[#f0f0f2] text-[#636366] ring-1 ring-black/[0.06]",
@@ -130,6 +134,19 @@ function getCalendarYearForAge(player: Player, age: number): string | null {
     (point) => Math.round(point.age) === age,
   );
   return yearlyPoint ? yearlyPoint.rankingDate.slice(0, 4) : null;
+}
+
+export function getAgeForCalendarYear(player: Player, year: string): number | null {
+  const yearlyPoint = player.trajectoryYearly.find(
+    (point) => point.rankingDate.slice(0, 4) === year,
+  );
+  return yearlyPoint ? Math.round(yearlyPoint.age) : null;
+}
+
+function seasonHasGrandSlamActivity(results: GrandSlamSeasonResults): boolean {
+  return GRAND_SLAM_TOURNAMENTS.some(
+    (tournament) => results[tournament.key] !== DID_NOT_PLAY,
+  );
 }
 
 function buildSeasonResults(
@@ -205,6 +222,96 @@ export function buildGrandSlamPlayerCards(
       gsTitlesThisSeason: countGrandSlamTitlesInSeason(results),
     };
   });
+}
+
+export interface GrandSlamCareerTimelineRow {
+  age: number;
+  year: string;
+  results: GrandSlamSeasonResults;
+}
+
+export function buildGrandSlamCareerTimeline(
+  player: Player,
+): GrandSlamCareerTimelineRow[] {
+  const seasons = resultsByPlayer[player.id] ?? {};
+  const rows: GrandSlamCareerTimelineRow[] = [];
+
+  for (const year of Object.keys(seasons).sort()) {
+    const results = buildSeasonResults(player.id, year);
+    if (!seasonHasGrandSlamActivity(results)) continue;
+
+    const age = getAgeForCalendarYear(player, year);
+    if (age == null) continue;
+
+    rows.push({ age, year, results });
+  }
+
+  return rows.sort((a, b) => a.age - b.age || a.year.localeCompare(b.year));
+}
+
+export interface GrandSlamTitlesChartRow {
+  age: number;
+  [playerId: string]: number;
+}
+
+export function countGrandSlamTitlesThroughAge(
+  player: Player,
+  age: number,
+): number {
+  const seasons = resultsByPlayer[player.id] ?? {};
+  let total = 0;
+
+  for (const [year, season] of Object.entries(seasons)) {
+    const seasonAge = getAgeForCalendarYear(player, year);
+    if (seasonAge == null || seasonAge > age) continue;
+
+    for (const result of Object.values(season)) {
+      if (result === "Winner") total += 1;
+    }
+  }
+
+  return total;
+}
+
+export function buildGrandSlamTitlesChartData(
+  players: Player[],
+): GrandSlamTitlesChartRow[] {
+  if (players.length === 0) return [];
+
+  let minAge = Infinity;
+  let maxAge = -Infinity;
+
+  for (const player of players) {
+    for (const point of player.trajectoryYearly) {
+      const age = Math.round(point.age);
+      minAge = Math.min(minAge, age);
+      maxAge = Math.max(maxAge, age);
+    }
+  }
+
+  if (!Number.isFinite(minAge) || !Number.isFinite(maxAge)) {
+    return [];
+  }
+
+  const rows: GrandSlamTitlesChartRow[] = [];
+
+  for (let age = minAge; age <= maxAge; age += 1) {
+    const row: GrandSlamTitlesChartRow = { age };
+    for (const player of players) {
+      row[player.id] = countGrandSlamTitlesThroughAge(player, age);
+    }
+    rows.push(row);
+  }
+
+  return rows;
+}
+
+export function formatTimelineResultLabel(result: GrandSlamResultLabel): string {
+  const display = getGrandSlamResultDisplay(result);
+  if (display.showTrophy) {
+    return `🏆 ${display.shortLabel}`;
+  }
+  return display.shortLabel;
 }
 
 export { DEFAULT_SNAPSHOT_AGE };

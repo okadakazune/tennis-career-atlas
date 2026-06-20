@@ -3,31 +3,36 @@
     "id": "federer",
     "atpPlayerId": "103819",
     "shortName": "Federer",
-    "color": "#1E88E5"
+    "color": "#1E88E5",
+    "wikidataSearch": "Roger Federer"
   },
   {
     "id": "nadal",
     "atpPlayerId": "104745",
     "shortName": "Nadal",
-    "color": "#FB8C00"
+    "color": "#FB8C00",
+    "wikidataSearch": "Rafael Nadal"
   },
   {
     "id": "djokovic",
     "atpPlayerId": "104925",
     "shortName": "Djokovic",
-    "color": "#43A047"
+    "color": "#43A047",
+    "wikidataSearch": "Novak Djokovic"
   },
   {
     "id": "alcaraz",
     "atpPlayerId": "207989",
     "shortName": "Alcaraz",
-    "color": "#FBC02D"
+    "color": "#FBC02D",
+    "wikidataSearch": "Carlos Alcaraz"
   },
   {
     "id": "sinner",
     "atpPlayerId": "206173",
     "shortName": "Sinner",
-    "color": "#E53935"
+    "color": "#E53935",
+    "wikidataSearch": "Jannik Sinner"
   },
   {
     "id": "murray",

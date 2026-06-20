@@ -19,6 +19,9 @@ import { CareerSummaryCards } from "@/components/CareerSummaryCards";
 import { AgeSnapshotTable } from "@/components/AgeSnapshotTable";
 import { No1StreakTimeline } from "@/components/No1StreakTimeline";
 import { GrandSlamResultsByAge } from "@/components/GrandSlamResultsByAge";
+import { GrandSlamCareerTimeline } from "@/components/GrandSlamCareerTimeline";
+import { GrandSlamTitlesByAgeChart } from "@/components/GrandSlamTitlesByAgeChart";
+import { Top10LongevityCards } from "@/components/Top10LongevityCards";
 import { DEFAULT_SNAPSHOT_AGE, resolveDisplayAge } from "@/data/grand-slam";
 import {
   clampAgeToAvailable,
@@ -278,6 +281,8 @@ export function CareerAtlasApp() {
 
       <CareerSummaryCards players={selectedPlayers} />
 
+      <Top10LongevityCards players={selectedPlayers} />
+
       <AgeSnapshotTable
         players={selectedPlayers}
         ages={availableAges}
@@ -294,6 +299,10 @@ export function CareerAtlasApp() {
         isSyncedFromChart={isAgeSyncedFromChart}
       />
 
+      <GrandSlamCareerTimeline players={selectedPlayers} />
+
+      <GrandSlamTitlesByAgeChart players={selectedPlayers} />
+
       <No1StreakTimeline players={selectedPlayers} />
 
       <footer className="pb-4 text-center text-xs leading-relaxed text-[#86868b] sm:text-left">
@@ -304,7 +313,8 @@ export function CareerAtlasApp() {
           day: "numeric",
         })}
         . Source: {dataSourceMeta.source}. Grand Slam results from{" "}
-        {dataSourceMeta.attribution}.
+        {dataSourceMeta.attribution}. Player photos from Wikimedia Commons via
+        Wikidata when available.
       </footer>
     </div>
   );

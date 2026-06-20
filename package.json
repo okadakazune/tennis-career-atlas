@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "data:build": "node scripts/build-players.mjs && node scripts/build-grand-slam-results.mjs"
+    "data:build": "node scripts/fetch-player-images.mjs --pilot && node scripts/build-players.mjs && node scripts/build-grand-slam-results.mjs",
+    "data:images": "node scripts/fetch-player-images.mjs --pilot",
+    "data:images:all": "node scripts/fetch-player-images.mjs"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",
