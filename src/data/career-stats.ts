@@ -1,4 +1,9 @@
 import { Player } from "@/data/players";
+import {
+  computeGrandSlamCareerTotals,
+  countGrandSlamTitlesInSeason,
+  getGrandSlamResultsAtAge,
+} from "@/data/grand-slam";
 
 export interface CareerStats {
   bestRank: number | null;
@@ -7,6 +12,10 @@ export interface CareerStats {
   firstAgeTop100: number | null;
   firstAgeTop10: number | null;
   firstAgeNo1: number | null;
+  grandSlamTitles: number;
+  grandSlamFinals: number;
+  yearsInTop10: number;
+  yearsInTop5: number;
 }
 
 export interface No1Streak {
@@ -14,6 +23,8 @@ export interface No1Streak {
   endDate: string;
   weeks: number;
 }
+
+export const MIN_NO1_STREAK_WEEKS = 4;
 
 export const SNAPSHOT_AGES = [18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40] as const;
 
@@ -28,8 +39,21 @@ export function formatCareerStatAge(value: number | null): string {
   return formatAge(value);
 }
 
+export function countYearsAtOrAboveRank(player: Player, maxRank: number): number {
+  const years = new Set<string>();
+
+  for (const point of player.trajectoryYearly) {
+    if (point.ranking <= maxRank) {
+      years.add(point.rankingDate.slice(0, 4));
+    }
+  }
+
+  return years.size;
+}
+
 export function computeCareerStats(player: Player): CareerStats {
   const weekly = player.trajectoryWeekly;
+  const gsTotals = computeGrandSlamCareerTotals(player.id);
 
   let bestRank: number | null = null;
   let totalWeeksAtNo1 = 0;
@@ -72,6 +96,10 @@ export function computeCareerStats(player: Player): CareerStats {
     firstAgeTop100,
     firstAgeTop10,
     firstAgeNo1,
+    grandSlamTitles: gsTotals.titles,
+    grandSlamFinals: gsTotals.finals,
+    yearsInTop10: countYearsAtOrAboveRank(player, 10),
+    yearsInTop5: countYearsAtOrAboveRank(player, 5),
   };
 }
 
@@ -108,6 +136,18 @@ export function extractNo1Streaks(player: Player): No1Streak[] {
   return streaks;
 }
 
+export function extractSignificantNo1Streaks(player: Player): No1Streak[] {
+  return extractNo1Streaks(player).filter(
+    (streak) => streak.weeks >= MIN_NO1_STREAK_WEEKS,
+  );
+}
+
+export function formatNo1StreakEra(streak: No1Streak): string {
+  const startYear = streak.startDate.slice(0, 4);
+  const endYear = streak.endDate.slice(0, 4);
+  return startYear === endYear ? startYear : `${startYear}–${endYear}`;
+}
+
 export function getYearlyRankingAtAge(player: Player, age: number): number | null {
   const point = player.trajectoryYearly.find(
     (entry) => Math.round(entry.age) === age,
@@ -121,6 +161,7 @@ export interface AgeSnapshotRow {
   shortName: string;
   color: string;
   ranking: number | null;
+  gsTitlesThisSeason: number;
 }
 
 export function buildAgeSnapshot(
@@ -128,13 +169,17 @@ export function buildAgeSnapshot(
   age: number,
 ): AgeSnapshotRow[] {
   return players
-    .map((player) => ({
-      playerId: player.id,
-      name: player.name,
-      shortName: player.shortName,
-      color: player.color,
-      ranking: getYearlyRankingAtAge(player, age),
-    }))
+    .map((player) => {
+      const gsResults = getGrandSlamResultsAtAge(player, age);
+      return {
+        playerId: player.id,
+        name: player.name,
+        shortName: player.shortName,
+        color: player.color,
+        ranking: getYearlyRankingAtAge(player, age),
+        gsTitlesThisSeason: countGrandSlamTitlesInSeason(gsResults),
+      };
+    })
     .sort((a, b) => {
       if (a.ranking == null && b.ranking == null) return 0;
       if (a.ranking == null) return 1;

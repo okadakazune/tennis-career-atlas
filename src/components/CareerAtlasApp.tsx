@@ -19,6 +19,8 @@ import { CareerSummaryCards } from "@/components/CareerSummaryCards";
 import { AgeSnapshotTable } from "@/components/AgeSnapshotTable";
 import { No1StreakTimeline } from "@/components/No1StreakTimeline";
 import { GrandSlamResultsByAge } from "@/components/GrandSlamResultsByAge";
+import { DEFAULT_SNAPSHOT_AGE, resolveDisplayAge } from "@/data/grand-slam";
+import { SnapshotAge } from "@/data/career-stats";
 
 function buildInitialComparisonTargets(): PlayerIndexEntry[] {
   return ["103819", "104745", "104925"]
@@ -43,7 +45,10 @@ export function CareerAtlasApp() {
     buildInitialComparisonTargets,
   );
   const [granularity, setGranularity] = useState<TrajectoryGranularity>("yearly");
+  const [selectedAge, setSelectedAge] = useState<SnapshotAge>(DEFAULT_SNAPSHOT_AGE);
   const [chartHoverAge, setChartHoverAge] = useState<number | null>(null);
+  const displayAge = resolveDisplayAge(selectedAge, chartHoverAge);
+  const isAgeSyncedFromChart = chartHoverAge != null;
   const [limitWarning, setLimitWarning] = useState<string | null>(null);
   const warningTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const comparisonTargetsRef = useRef(comparisonTargets);
@@ -256,11 +261,18 @@ export function CareerAtlasApp() {
 
       <CareerSummaryCards players={selectedPlayers} />
 
-      <AgeSnapshotTable players={selectedPlayers} />
+      <AgeSnapshotTable
+        players={selectedPlayers}
+        displayAge={displayAge}
+        onAgeChange={setSelectedAge}
+        isSyncedFromChart={isAgeSyncedFromChart}
+      />
 
       <GrandSlamResultsByAge
         players={selectedPlayers}
-        chartHoverAge={chartHoverAge}
+        displayAge={displayAge}
+        onAgeChange={setSelectedAge}
+        isSyncedFromChart={isAgeSyncedFromChart}
       />
 
       <No1StreakTimeline players={selectedPlayers} />
