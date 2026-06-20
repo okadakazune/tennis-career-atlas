@@ -1,6 +1,6 @@
 import grandSlamData from "@/data/grand-slam-results.generated.json";
 import { Player } from "@/data/players";
-import { SNAPSHOT_AGES, SnapshotAge } from "@/data/career-stats";
+import { DEFAULT_SNAPSHOT_AGE } from "@/data/career-stats";
 
 export type GrandSlamKey = "ao" | "rg" | "wimbledon" | "usOpen";
 
@@ -207,12 +207,10 @@ export function buildGrandSlamPlayerCards(
   });
 }
 
-export { SNAPSHOT_AGES, type SnapshotAge };
-
-export const DEFAULT_SNAPSHOT_AGE: SnapshotAge = 24;
+export { DEFAULT_SNAPSHOT_AGE };
 
 export function resolveDisplayAge(
-  selectedAge: SnapshotAge,
+  selectedAge: number,
   chartHoverAge: number | null,
 ): number {
   if (chartHoverAge != null) {

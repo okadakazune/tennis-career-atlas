@@ -7,6 +7,7 @@ export interface RankingPoint {
   ranking: number;
   points: number | null;
   consecutiveWeeksAtNo1?: number;
+  isLatestWeek?: boolean;
 }
 
 export type TrajectoryGranularity = "weekly" | "monthly" | "yearly";
@@ -19,6 +20,7 @@ export interface Player {
   birthDate: string;
   countryCode: string;
   color: string;
+  imageUrl?: string;
   trajectoryWeekly: RankingPoint[];
   trajectoryMonthly: RankingPoint[];
   trajectoryYearly: RankingPoint[];
@@ -36,6 +38,7 @@ export interface PlayerIndexEntry {
   slug?: string;
   shortName?: string;
   color?: string;
+  imageUrl?: string;
 }
 
 export const PLAYER_INDEX: PlayerIndexEntry[] = playerIndexData as PlayerIndexEntry[];
@@ -137,7 +140,7 @@ export function formatBirthDate(birthDate: string | null): string {
 
 export interface ChartRow {
   age: number;
-  [key: string]: number | string | null | undefined;
+  [key: string]: number | string | boolean | null | undefined;
 }
 
 export function chartDateKey(playerId: string): string {
@@ -146,6 +149,10 @@ export function chartDateKey(playerId: string): string {
 
 export function chartStreakKey(playerId: string): string {
   return `${playerId}__streak`;
+}
+
+export function chartLatestWeekKey(playerId: string): string {
+  return `${playerId}__latestWeek`;
 }
 
 export function buildChartData(
@@ -166,6 +173,9 @@ export function buildChartData(
       const row = rows.get(displayAge)!;
       row[player.id] = point.ranking;
       row[chartDateKey(player.id)] = point.rankingDate;
+      if (point.isLatestWeek) {
+        row[chartLatestWeekKey(player.id)] = true;
+      }
       if (point.consecutiveWeeksAtNo1 != null) {
         row[chartStreakKey(player.id)] = point.consecutiveWeeksAtNo1;
       }

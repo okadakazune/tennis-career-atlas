@@ -6,6 +6,7 @@ import {
   computeCareerStats,
   formatCareerStatAge,
 } from "@/data/career-stats";
+import { PlayerAvatar } from "@/components/PlayerAvatar";
 
 interface CareerSummaryCardsProps {
   players: Player[];
@@ -44,10 +45,11 @@ function CareerSummaryCard({
   return (
     <article className="rounded-2xl border border-black/[0.06] bg-white p-4 shadow-[0_2px_20px_rgba(0,0,0,0.04)] sm:p-5">
       <div className="mb-4 flex items-center gap-2.5">
-        <span
-          className="h-3 w-3 shrink-0 rounded-full"
-          style={{ backgroundColor: player.color }}
-          aria-hidden="true"
+        <PlayerAvatar
+          name={player.name}
+          color={player.color}
+          imageUrl={player.imageUrl}
+          size="lg"
         />
         <div>
           <h3 className="text-base font-semibold text-[#1d1d1f]">{player.name}</h3>

@@ -1,7 +1,6 @@
 "use client";
 
 import { Player } from "@/data/players";
-import { SnapshotAge } from "@/data/career-stats";
 import {
   GRAND_SLAM_TOURNAMENTS,
   buildGrandSlamPlayerCards,
@@ -11,13 +10,15 @@ import { AgeSelector } from "@/components/AgeSelector";
 
 interface GrandSlamResultsByAgeProps {
   players: Player[];
+  ages: number[];
   displayAge: number;
-  onAgeChange: (age: SnapshotAge) => void;
+  onAgeChange: (age: number) => void;
   isSyncedFromChart?: boolean;
 }
 
 export function GrandSlamResultsByAge({
   players,
+  ages,
   displayAge,
   onAgeChange,
   isSyncedFromChart = false,
@@ -40,6 +41,7 @@ export function GrandSlamResultsByAge({
         </div>
 
         <AgeSelector
+          ages={ages}
           displayAge={displayAge}
           onAgeChange={onAgeChange}
           isSyncedFromChart={isSyncedFromChart}
