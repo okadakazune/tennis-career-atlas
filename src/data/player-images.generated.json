@@ -10,7 +10,7 @@
       "playerId": "federer",
       "wikidataId": "Q1426",
       "imageFile": "Federer WM16 (37) (28136155830).jpg",
-      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Federer_WM16_(37)_(28136155830).jpg?width=256",
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Federer_WM16_(37)_(28136155830).jpg?width=384",
       "imageAttribution": "Wikimedia Commons (Federer WM16 (37) (28136155830).jpg)",
       "imageLicenseNote": "Verify license on Wikimedia Commons before commercial use. Attribution may be required.",
       "status": "ok"
@@ -19,7 +19,7 @@
       "playerId": "nadal",
       "wikidataId": "Q10132",
       "imageFile": "Rafael Nadal en 2024 (cropped).jpg",
-      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Rafael_Nadal_en_2024_(cropped).jpg?width=256",
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Rafael_Nadal_en_2024_(cropped).jpg?width=384",
       "imageAttribution": "Wikimedia Commons (Rafael Nadal en 2024 (cropped).jpg)",
       "imageLicenseNote": "Verify license on Wikimedia Commons before commercial use. Attribution may be required.",
       "status": "ok"
@@ -28,7 +28,7 @@
       "playerId": "djokovic",
       "wikidataId": "Q5812",
       "imageFile": "Novak Djokovic Paris 2024 Olympic Games (cropped).jpg",
-      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Novak_Djokovic_Paris_2024_Olympic_Games_(cropped).jpg?width=256",
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Novak_Djokovic_Paris_2024_Olympic_Games_(cropped).jpg?width=384",
       "imageAttribution": "Wikimedia Commons (Novak Djokovic Paris 2024 Olympic Games (cropped).jpg)",
       "imageLicenseNote": "Verify license on Wikimedia Commons before commercial use. Attribution may be required.",
       "status": "ok"
@@ -37,7 +37,7 @@
       "playerId": "alcaraz",
       "wikidataId": "Q85518537",
       "imageFile": "Carlos Alcaraz Roland Garros 2025 (cropped).jpg",
-      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Carlos_Alcaraz_Roland_Garros_2025_(cropped).jpg?width=256",
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Carlos_Alcaraz_Roland_Garros_2025_(cropped).jpg?width=384",
       "imageAttribution": "Wikimedia Commons (Carlos Alcaraz Roland Garros 2025 (cropped).jpg)",
       "imageLicenseNote": "Verify license on Wikimedia Commons before commercial use. Attribution may be required.",
       "status": "ok"
@@ -46,7 +46,7 @@
       "playerId": "sinner",
       "wikidataId": "Q54812588",
       "imageFile": "Jannik Sinner US Open 2025 (cropped).jpg",
-      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Jannik_Sinner_US_Open_2025_(cropped).jpg?width=256",
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Jannik_Sinner_US_Open_2025_(cropped).jpg?width=384",
       "imageAttribution": "Wikimedia Commons (Jannik Sinner US Open 2025 (cropped).jpg)",
       "imageLicenseNote": "Verify license on Wikimedia Commons before commercial use. Attribution may be required.",
       "status": "ok"

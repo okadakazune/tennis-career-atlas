@@ -1,12 +1,9 @@
-import { createWriteStream } from "node:fs";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { access, readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { pipeline } from "node:stream/promises";
+import { ROOT } from "./lib/paths.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(__dirname, "..");
-const RAW_DIR = path.join(ROOT, "data", "raw");
 const OUT_DIR = path.join(ROOT, "src", "data");
 
 const ROUND_DEPTH = {
@@ -83,52 +80,18 @@ function deriveSlamResult(matches, playerId) {
   return null;
 }
 
-async function downloadFile(url, destination) {
-  const response = await fetch(url);
-  if (response.status === 404) {
-    return false;
-  }
-  if (!response.ok) {
-    throw new Error(`Failed to download ${url}: ${response.status} ${response.statusText}`);
-  }
-  await pipeline(response.body, createWriteStream(destination));
-  return true;
-}
-
-async function resolveDataSource(config) {
-  for (const source of config.sources) {
-    const probeUrl = `${source.baseUrl}/${config.files.players}`;
-    try {
-      const response = await fetch(probeUrl, { method: "HEAD" });
-      if (response.ok) {
-        console.log(`Using data source: ${source.label}`);
-        return source;
-      }
-    } catch {
-      // try next source
-    }
-  }
-
-  throw new Error("No accessible Sackmann-format data source found.");
-}
-
-async function ensureMatchFiles(source, config) {
-  await mkdir(RAW_DIR, { recursive: true });
-
-  const { firstYear, lastYear, filePattern } = config.files.matches;
+async function resolveLocalMatchPaths(config) {
+  const matchDir = path.join(ROOT, config.matches.directory ?? "data/raw");
+  const { firstYear, lastYear, filePattern } = config.matches;
   const paths = [];
 
-  for (let year = firstYear; year <= lastYear; year++) {
-    const filename = filePattern.replace("{year}", String(year));
-    const destination = path.join(RAW_DIR, filename);
-    const url = `${source.baseUrl}/${filename}`;
-
-    console.log(`Downloading ${filename}...`);
-    const downloaded = await downloadFile(url, destination);
-    if (downloaded) {
-      paths.push(destination);
-    } else {
-      console.warn(`Skipping missing file: ${filename}`);
+  for (let year = firstYear; year <= lastYear; year += 1) {
+    const filePath = path.join(matchDir, filePattern.replace("{year}", String(year)));
+    try {
+      await access(filePath);
+      paths.push(filePath);
+    } catch {
+      console.warn(`Skipping missing local match file: ${filePath}`);
     }
   }
 
@@ -137,7 +100,6 @@ async function ensureMatchFiles(source, config) {
 
 async function buildResultsForFeatured(featuredConfig, matchPaths) {
   const featuredIds = new Set(featuredConfig.map((player) => player.atpPlayerId));
-
   const matchesByPlayerYearSlam = new Map();
 
   const registerMatch = (playerId, year, slamKey, match) => {
@@ -211,18 +173,22 @@ async function main() {
     await readFile(path.join(__dirname, "config", "featured-players.json"), "utf8"),
   );
 
-  const source = await resolveDataSource(config);
-  const matchPaths = await ensureMatchFiles(source, config);
-  const players = await buildResultsForFeatured(featuredConfig, matchPaths);
+  console.log(`Using local match files from ${config.matches.directory ?? "data/raw"}`);
+  const matchPaths = await resolveLocalMatchPaths(config);
 
+  if (matchPaths.length === 0) {
+    console.warn("No local match CSV files found. Grand Slam results will be empty.");
+  }
+
+  const players = await buildResultsForFeatured(featuredConfig, matchPaths);
   await mkdir(OUT_DIR, { recursive: true });
 
   const outputPath = path.join(OUT_DIR, "grand-slam-results.generated.json");
   const payload = {
     meta: {
       generatedAt: new Date().toISOString(),
-      source: source.label,
-      sourceUrl: source.baseUrl,
+      source: "Local Sackmann-format match archive (data/raw)",
+      sourceUrl: config.matches.directory ?? "data/raw",
       attribution: config.attribution,
       licenseUrl: config.licenseUrl,
     },

@@ -37,7 +37,8 @@ function Top10LongevityCard({
           name={player.name}
           color={player.color}
           imageUrl={player.imageUrl}
-          size="lg"
+          imagePosition={player.imagePosition}
+          size="summary"
         />
         <h3 className="text-base font-semibold text-[#1d1d1f]">{player.name}</h3>
       </div>

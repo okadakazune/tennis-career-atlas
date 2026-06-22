@@ -127,7 +127,8 @@ function ChartLegend({ players }: { players: Player[] }) {
             name={player.name}
             color={player.color}
             imageUrl={player.imageUrl}
-            size="sm"
+            imagePosition={player.imagePosition}
+            size="chip"
           />
           <span className="text-xs font-medium text-[#1d1d1f]">{player.name}</span>
         </div>
@@ -306,19 +307,20 @@ function CustomTooltip({
                 key={entry.dataKey}
                 className={index > 0 ? "border-t border-black/[0.06] pt-3" : ""}
               >
-                <div className="mb-1.5 flex items-center gap-2">
+                <div className="mb-1.5 flex items-center gap-2.5">
                   <PlayerAvatar
                     name={player?.name ?? entry.name}
                     color={player?.color ?? entry.color}
                     imageUrl={player?.imageUrl}
-                    size="sm"
+                    imagePosition={player?.imagePosition}
+                    size="tooltip"
                   />
                   <p className="text-sm font-semibold text-[#1d1d1f]">
                     {player?.name ?? entry.name}
                   </p>
                 </div>
 
-                <div className="space-y-0.5 pl-[18px] text-sm text-[#1d1d1f]">
+                <div className="space-y-0.5 pl-0 text-sm text-[#1d1d1f] sm:pl-1">
                   {period ? (
                     <p>
                       <span className="text-[#86868b]">{period.label}: </span>

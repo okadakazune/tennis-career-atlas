@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tennis-career-atlas.local/schemas/ranking-point.v1.json",
+  "title": "RankingPointV1",
+  "description": "Minimal weekly ranking delta. Never store raw BallDontLie API responses.",
+  "type": "object",
+  "required": ["playerId", "date", "rank", "points", "source"],
+  "additionalProperties": false,
+  "properties": {
+    "playerId": {
+      "type": "string",
+      "description": "Sackmann atpPlayerId (matches featured-players.json atpPlayerId)."
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Ranking week date (ISO YYYY-MM-DD)."
+    },
+    "rank": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "points": {
+      "type": ["integer", "null"],
+      "minimum": 0
+    },
+    "source": {
+      "type": "string",
+      "const": "balldontlie"
+    }
+  }
+}

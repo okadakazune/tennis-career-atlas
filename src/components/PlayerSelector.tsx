@@ -106,7 +106,8 @@ export function PlayerSelector({
                       name={chartPlayer.name}
                       color={chartPlayer.color}
                       imageUrl={chartPlayer.imageUrl}
-                      size="sm"
+                      imagePosition={chartPlayer.imagePosition}
+                      size="chip"
                     />
                   ) : null}
                   <span className="text-sm font-medium text-[#1d1d1f]">
@@ -171,7 +172,8 @@ export function PlayerSelector({
                 name={player.name}
                 color={player.color}
                 imageUrl={player.imageUrl}
-                size="sm"
+                imagePosition={player.imagePosition}
+                size="chip"
                 className={isSelected ? "ring-2 ring-white/30" : undefined}
               />
               {player.shortName}

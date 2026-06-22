@@ -257,6 +257,16 @@ export function CareerAtlasApp() {
         </p>
       </header>
 
+      {dataSourceMeta.isLatestWeekStale ? (
+        <div
+          role="status"
+          className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+        >
+          {dataSourceMeta.staleWarning ??
+            `Recent ranking updates may be stale. Latest week: ${dataSourceMeta.latestWeek ?? "unknown"}`}
+        </div>
+      ) : null}
+
       <PlayerSelector
         players={PLAYERS}
         selectedIds={selectedIds}
@@ -306,15 +316,28 @@ export function CareerAtlasApp() {
       <No1StreakTimeline players={selectedPlayers} />
 
       <footer className="pb-4 text-center text-xs leading-relaxed text-[#86868b] sm:text-left">
-        Weekly ATP rankings from {dataSourceMeta.attribution}. Generated{" "}
-        {new Date(dataSourceMeta.generatedAt).toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        })}
-        . Source: {dataSourceMeta.source}. Grand Slam results from{" "}
-        {dataSourceMeta.attribution}. Player photos from Wikimedia Commons via
-        Wikidata when available.
+        <p>
+          Historical ATP rankings are based on Jeff Sackmann archives. Recent weekly
+          ranking updates are derived from BallDontLie API when available. This site
+          is unofficial and is not affiliated with ATP.
+        </p>
+        <p className="mt-2">
+          Archive: {dataSourceMeta.sources.archive.attribution}. Latest provider:{" "}
+          {dataSourceMeta.sources.latest.enabled
+            ? dataSourceMeta.sources.latest.provider
+            : "not configured"}
+          . Generated{" "}
+          {new Date(dataSourceMeta.generatedAt).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          })}
+          {dataSourceMeta.latestWeek
+            ? `. Latest ranking week: ${dataSourceMeta.latestWeek}.`
+            : "."}{" "}
+          Grand Slam results from Jeff Sackmann archives. Player photos from
+          Wikimedia Commons via Wikidata when available.
+        </p>
       </footer>
     </div>
   );
