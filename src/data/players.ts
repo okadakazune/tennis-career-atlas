@@ -21,6 +21,7 @@ export interface Player {
   countryCode: string;
   color: string;
   imageUrl?: string;
+  imagePosition?: string;
   imageAttribution?: string;
   trajectoryWeekly: RankingPoint[];
   trajectoryMonthly: RankingPoint[];
@@ -40,6 +41,7 @@ export interface PlayerIndexEntry {
   shortName?: string;
   color?: string;
   imageUrl?: string;
+  imagePosition?: string;
 }
 
 export const PLAYER_INDEX: PlayerIndexEntry[] = playerIndexData as PlayerIndexEntry[];

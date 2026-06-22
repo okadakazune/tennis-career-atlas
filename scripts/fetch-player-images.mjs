@@ -9,7 +9,7 @@ const CONFIG_PATH = path.join(__dirname, "config", "featured-players.json");
 
 const WIKIDATA_API = "https://www.wikidata.org/w/api.php";
 const COMMONS_FILE_PATH = "https://commons.wikimedia.org/wiki/Special:FilePath";
-const IMAGE_WIDTH = 256;
+const IMAGE_WIDTH = 384;
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));

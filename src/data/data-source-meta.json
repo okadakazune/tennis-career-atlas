@@ -1,14 +1,37 @@
 {
-  "generatedAt": "2026-06-20T06:45:54.210Z",
-  "source": "sacriusdt/tennis-atp-prediction (Sackmann-format mirror)",
-  "sourceUrl": "https://raw.githubusercontent.com/sacriusdt/tennis-atp-prediction/master",
-  "attribution": "Jeff Sackmann / Tennis Abstract (CC BY-NC-SA 4.0)",
-  "licenseUrl": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "generatedAt": "2026-06-22T13:43:39.600Z",
+  "sources": {
+    "archive": {
+      "label": "Jeff Sackmann / Tennis Abstract (Sackmann-format frozen archive)",
+      "directory": "data/archive",
+      "coverage": {
+        "from": "1973-08-27",
+        "to": "2024-12-30"
+      },
+      "attribution": "Jeff Sackmann / Tennis Abstract (CC BY-NC-SA 4.0)",
+      "licenseUrl": "https://creativecommons.org/licenses/by-nc-sa/4.0/"
+    },
+    "latest": {
+      "enabled": true,
+      "provider": "BallDontLie ATP API",
+      "directory": "data/latest",
+      "from": "2025-01-01",
+      "to": null,
+      "attribution": "BallDontLie (unofficial aggregated data, not ATP official statistics)",
+      "deltaCount": 0
+    }
+  },
+  "latestWeek": "2024-12-30",
+  "latestWeekAgeDays": 539,
+  "isLatestWeekStale": true,
+  "staleThresholdDays": 14,
+  "staleWarning": "Recent ranking updates may be stale. Latest week: 2024-12-30",
   "playerIndexCount": 65989,
   "featuredPlayerCount": 15,
   "rankingGranularity": [
     "weekly",
     "monthly",
     "yearly"
-  ]
+  ],
+  "disclaimer": "Unofficial site. Not affiliated with ATP. Historical rankings from Jeff Sackmann archives; recent updates from BallDontLie API when available."
 }

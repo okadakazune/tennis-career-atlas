@@ -1,18 +1,21 @@
 {
   "attribution": "Jeff Sackmann / Tennis Abstract (CC BY-NC-SA 4.0)",
   "licenseUrl": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
-  "sources": [
-    {
-      "id": "jeff-sackmann",
-      "label": "JeffSackmann/tennis_atp",
-      "baseUrl": "https://raw.githubusercontent.com/JeffSackmann/tennis_atp/master"
-    },
-    {
-      "id": "sacriusdt-mirror",
-      "label": "sacriusdt/tennis-atp-prediction (Sackmann-format mirror)",
-      "baseUrl": "https://raw.githubusercontent.com/sacriusdt/tennis-atp-prediction/master"
-    }
-  ],
+  "archive": {
+    "directory": "data/archive",
+    "metaFile": "archive-meta.json"
+  },
+  "latest": {
+    "directory": "data/latest",
+    "rankingsSubdir": "rankings",
+    "schemaFile": "ranking-point.v1.schema.json",
+    "playerIdMapFile": "scripts/config/player-id-map.json",
+    "enabled": true,
+    "minDate": "2025-01-01",
+    "archiveCutoffDate": "2024-12-30",
+    "provider": "BallDontLie ATP API",
+    "providerAttribution": "BallDontLie (unofficial aggregated data, not ATP official statistics)"
+  },
   "files": {
     "players": "atp_players.csv",
     "rankings": [
@@ -23,11 +26,15 @@
       "atp_rankings_10s.csv",
       "atp_rankings_20s.csv",
       "atp_rankings_current.csv"
-    ],
-    "matches": {
-      "firstYear": 1968,
-      "lastYear": 2024,
-      "filePattern": "atp_matches_{year}.csv"
-    }
+    ]
+  },
+  "matches": {
+    "directory": "data/raw",
+    "firstYear": 1968,
+    "lastYear": 2024,
+    "filePattern": "atp_matches_{year}.csv"
+  },
+  "quality": {
+    "staleThresholdDays": 14
   }
 }

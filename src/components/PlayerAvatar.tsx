@@ -2,24 +2,31 @@
 
 import { useState } from "react";
 
+export type PlayerAvatarSize = "chip" | "tooltip" | "summary" | "sm" | "md" | "lg";
+
 interface PlayerAvatarProps {
   name: string;
   color: string;
   imageUrl?: string;
-  size?: "sm" | "md" | "lg";
+  imagePosition?: string;
+  size?: PlayerAvatarSize;
   className?: string;
 }
 
-const SIZE_CLASSES = {
-  sm: "h-2.5 w-2.5",
-  md: "h-3 w-3",
-  lg: "h-8 w-8",
-} as const;
+const SIZE_CLASSES: Record<PlayerAvatarSize, string> = {
+  chip: "h-7 w-7",
+  tooltip: "h-10 w-10",
+  summary: "h-[72px] w-[72px] sm:h-24 sm:w-24",
+  sm: "h-7 w-7",
+  md: "h-10 w-10",
+  lg: "h-[72px] w-[72px] sm:h-24 sm:w-24",
+};
 
 export function PlayerAvatar({
   name,
   color,
   imageUrl,
+  imagePosition = "center center",
   size = "md",
   className = "",
 }: PlayerAvatarProps) {
@@ -34,6 +41,7 @@ export function PlayerAvatar({
         src={imageUrl}
         alt={name}
         className={`${sizeClass} shrink-0 rounded-full object-cover ring-1 ring-black/[0.08] ${className}`}
+        style={{ objectPosition: imagePosition }}
         onError={() => setImageFailed(true)}
       />
     );

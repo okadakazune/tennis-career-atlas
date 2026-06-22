@@ -1,0 +1,22 @@
+{
+  "label": "Jeff Sackmann / Tennis Abstract (Sackmann-format frozen archive)",
+  "attribution": "Jeff Sackmann / Tennis Abstract (CC BY-NC-SA 4.0)",
+  "licenseUrl": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "sourceNote": "Pinned from sacriusdt/tennis-atp-prediction mirror snapshot (2026-06). Rankings coverage 1973-08-27 through 2024-12-30.",
+  "rankingsCoverage": {
+    "from": "1973-08-27",
+    "to": "2024-12-30"
+  },
+  "files": {
+    "players": "atp_players.csv",
+    "rankings": [
+      "atp_rankings_70s.csv",
+      "atp_rankings_80s.csv",
+      "atp_rankings_90s.csv",
+      "atp_rankings_00s.csv",
+      "atp_rankings_10s.csv",
+      "atp_rankings_20s.csv",
+      "atp_rankings_current.csv"
+    ]
+  }
+}
