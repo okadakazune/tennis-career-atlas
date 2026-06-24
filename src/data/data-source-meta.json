@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-22T13:43:39.600Z",
+  "generatedAt": "2026-06-24T15:36:49.897Z",
   "sources": {
     "archive": {
       "label": "Jeff Sackmann / Tennis Abstract (Sackmann-format frozen archive)",
@@ -16,16 +16,16 @@
       "provider": "BallDontLie ATP API",
       "directory": "data/latest",
       "from": "2025-01-01",
-      "to": null,
+      "to": "2026-06-22",
       "attribution": "BallDontLie (unofficial aggregated data, not ATP official statistics)",
-      "deltaCount": 0
+      "deltaCount": 791
     }
   },
-  "latestWeek": "2024-12-30",
-  "latestWeekAgeDays": 539,
-  "isLatestWeekStale": true,
+  "latestWeek": "2026-06-22",
+  "latestWeekAgeDays": 2,
+  "isLatestWeekStale": false,
   "staleThresholdDays": 14,
-  "staleWarning": "Recent ranking updates may be stale. Latest week: 2024-12-30",
+  "staleWarning": null,
   "playerIndexCount": 65989,
   "featuredPlayerCount": 15,
   "rankingGranularity": [
