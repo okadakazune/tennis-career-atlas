@@ -33,9 +33,9 @@ export function AgeSnapshotTable({
   const summary = generateAgeSnapshotSummary(rows, displayAge);
 
   return (
-    <section className="rounded-2xl border border-black/[0.06] bg-white p-4 shadow-[0_2px_20px_rgba(0,0,0,0.04)] sm:p-6">
-      <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
+    <section className="w-full rounded-2xl border border-black/[0.06] bg-white p-4 shadow-[0_2px_20px_rgba(0,0,0,0.04)] sm:p-6">
+      <header className="mb-5 flex w-full flex-col gap-4">
+        <div className="w-full min-w-0">
           <h2 className="text-lg font-semibold tracking-tight text-[#1d1d1f]">
             Age Snapshot Comparison
           </h2>
@@ -52,15 +52,15 @@ export function AgeSnapshotTable({
           isSyncedFromChart={isSyncedFromChart}
           ariaLabel="Select age for comparison"
         />
-      </div>
+      </header>
 
       {summary ? (
-        <p className="mb-5 rounded-xl bg-[#fafafa] px-4 py-3 text-sm leading-relaxed text-[#1d1d1f]">
+        <p className="mb-5 w-full rounded-xl bg-[#fafafa] px-4 py-3 text-sm leading-relaxed text-[#1d1d1f]">
           {summary}
         </p>
       ) : null}
 
-      <div className="hidden overflow-x-auto lg:block">
+      <div className="hidden w-full overflow-x-auto md:block">
         <table className="w-full min-w-[640px] text-left text-sm">
           <thead>
             <tr className="border-b border-black/[0.06] text-xs uppercase tracking-wide text-[#86868b]">
@@ -111,7 +111,7 @@ export function AgeSnapshotTable({
         </table>
       </div>
 
-      <div className="flex flex-col gap-3 lg:hidden">
+      <div className="flex w-full flex-col gap-3 md:hidden">
         {rows.map((row) => (
           <article
             key={row.playerId}

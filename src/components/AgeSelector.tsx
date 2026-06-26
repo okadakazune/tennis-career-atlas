@@ -18,8 +18,8 @@ export function AgeSelector({
   if (ages.length === 0) return null;
 
   return (
-    <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
-      <div className="-mx-1 max-w-full overflow-x-auto px-1 pb-1 sm:mx-0 sm:overflow-visible sm:pb-0">
+    <div className="flex w-full flex-col gap-2">
+      <div className="w-full max-w-full overflow-x-auto pb-1">
         <div
           className="inline-flex min-w-max gap-1 rounded-full bg-[#f5f5f7] p-1"
           role="group"
