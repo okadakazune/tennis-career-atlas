@@ -23,13 +23,18 @@ export const COMPARE_DASHBOARD_TABS: {
 interface CompareTabNavProps {
   activeTab: CompareDashboardTab;
   onTabChange: (tab: CompareDashboardTab) => void;
+  embedded?: boolean;
 }
 
-export function CompareTabNav({ activeTab, onTabChange }: CompareTabNavProps) {
+export function CompareTabNav({
+  activeTab,
+  onTabChange,
+  embedded = false,
+}: CompareTabNavProps) {
   return (
     <nav
       aria-label="Compare dashboard views"
-      className="border-b border-black/[0.08]"
+      className={embedded ? "" : "border-b border-black/[0.08]"}
     >
       <div
         role="tablist"

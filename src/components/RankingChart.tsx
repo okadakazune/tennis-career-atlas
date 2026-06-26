@@ -24,6 +24,12 @@ import {
   getYAxisConfig,
 } from "@/data/players";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
+import {
+  ChartTooltipCard,
+  TooltipPlayerHeader,
+  TooltipStatRow,
+} from "@/components/ChartTooltipCard";
+import { getLineHighlightStyle } from "@/lib/chart-line-highlight";
 
 interface RankingChartProps {
   players: Player[];
@@ -281,7 +287,10 @@ function CustomTooltip({
     typeof label === "number" ? label : validEntries[0]?.payload?.age;
 
   return (
-    <div className="rounded-xl border border-black/[0.06] bg-white/95 px-4 py-3 shadow-[0_8px_30px_rgba(0,0,0,0.12)] backdrop-blur-sm max-w-[min(calc(100vw-2rem),320px)]">
+    <ChartTooltipCard active={active}>
+      <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[#86868b]">
+        Age {formatTooltipAge(typeof hoveredAge === "number" ? hoveredAge : null, granularity)}
+      </p>
       <div className="space-y-3">
         {validEntries
           .sort((a, b) => a.value - b.value)
@@ -291,12 +300,6 @@ function CustomTooltip({
             const isLatestWeek =
               entry.payload?.[chartLatestWeekKey(entry.dataKey)] === true;
             const streakValue = entry.payload?.[chartStreakKey(entry.dataKey)];
-            const age =
-              typeof hoveredAge === "number"
-                ? hoveredAge
-                : typeof entry.payload?.age === "number"
-                  ? entry.payload.age
-                  : null;
             const period =
               typeof rankingDate === "string"
                 ? formatTooltipPeriod(rankingDate, granularity, isLatestWeek)
@@ -305,55 +308,47 @@ function CustomTooltip({
               entry.value === 1 && typeof streakValue === "number"
                 ? streakValue
                 : null;
+            const rankAmong =
+              validEntries.findIndex((item) => item.dataKey === entry.dataKey) + 1;
 
             return (
               <div
                 key={entry.dataKey}
                 className={index > 0 ? "border-t border-black/[0.06] pt-3" : ""}
               >
-                <div className="mb-1.5 flex items-center gap-2.5">
-                  <PlayerAvatar
-                    name={player?.name ?? entry.name}
-                    color={player?.color ?? entry.color}
-                    imageUrl={player?.imageUrl}
-                    imagePosition={player?.imagePosition}
-                    size="tooltip"
-                  />
-                  <p className="text-sm font-semibold text-[#1d1d1f]">
-                    {player?.name ?? entry.name}
-                  </p>
-                </div>
+                <TooltipPlayerHeader
+                  name={player?.name ?? entry.name}
+                  subtitle={player?.shortName}
+                  color={player?.color ?? entry.color}
+                  imageUrl={player?.imageUrl}
+                  imagePosition={player?.imagePosition}
+                />
 
-                <div className="space-y-0.5 pl-0 text-sm text-[#1d1d1f] sm:pl-1">
+                <div className="space-y-1">
+                  <TooltipStatRow
+                    label="ATP ranking"
+                    value={`#${entry.value}`}
+                    highlight
+                  />
+                  <TooltipStatRow
+                    label="Rank among selected"
+                    value={`#${rankAmong} of ${validEntries.length}`}
+                  />
                   {period ? (
-                    <p>
-                      <span className="text-[#86868b]">{period.label}: </span>
-                      {period.value}
-                    </p>
+                    <TooltipStatRow label={period.label} value={period.value} />
                   ) : null}
-                  <p>
-                    <span className="text-[#86868b]">Age: </span>
-                    {formatTooltipAge(
-                      typeof age === "number" ? age : null,
-                      granularity,
-                    )}
-                  </p>
-                  <p className="font-medium">
-                    <span className="font-normal text-[#86868b]">ATP Ranking: </span>#
-                    {entry.value}
-                  </p>
                   {consecutiveWeeksAtNo1 != null ? (
-                    <p>
-                      <span className="text-[#86868b]">Consecutive weeks at #1: </span>
-                      {consecutiveWeeksAtNo1}
-                    </p>
+                    <TooltipStatRow
+                      label="Consecutive weeks at #1"
+                      value={consecutiveWeeksAtNo1}
+                    />
                   ) : null}
                 </div>
               </div>
             );
           })}
       </div>
-    </div>
+    </ChartTooltipCard>
   );
 }
 
@@ -367,6 +362,7 @@ export function RankingChart({
   onYScaleChange,
 }: RankingChartProps) {
   const [internalYScale, setInternalYScale] = useState<RankingScale>("log");
+  const [hoveredPlayerId, setHoveredPlayerId] = useState<string | null>(null);
   const yScale = yScaleProp ?? internalYScale;
   const setYScale = onYScaleChange ?? setInternalYScale;
   const [activeAge, setActiveAge] = useState<number | null>(null);
@@ -537,6 +533,12 @@ export function RankingChart({
             />
             {selectedPlayers.map((player) => {
               const lineStyle = getLineStyle(granularity, player.color);
+              const highlight = getLineHighlightStyle(
+                player.id,
+                hoveredPlayerId,
+                lineStyle.strokeOpacity,
+                lineStyle.strokeWidth,
+              );
 
               return (
                 <Line
@@ -545,12 +547,14 @@ export function RankingChart({
                   dataKey={player.id}
                   name={player.shortName}
                   stroke={player.color}
-                  strokeWidth={lineStyle.strokeWidth}
-                  strokeOpacity={lineStyle.strokeOpacity}
+                  strokeWidth={highlight.strokeWidth}
+                  strokeOpacity={highlight.strokeOpacity}
                   dot={lineStyle.dot}
                   activeDot={lineStyle.activeDot}
                   connectNulls={false}
                   legendType="none"
+                  onMouseEnter={() => setHoveredPlayerId(player.id)}
+                  onMouseLeave={() => setHoveredPlayerId(null)}
                 />
               );
             })}

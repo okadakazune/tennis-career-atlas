@@ -42,8 +42,8 @@ import {
 import { ShareLinkButton } from "@/components/ShareLinkButton";
 import {
   CompareDashboardTab,
-  CompareTabNav,
 } from "@/components/CompareTabNav";
+import { CompareDashboardStickyHeader } from "@/components/CompareDashboardStickyHeader";
 
 function normalizePlayerIdsForMode(
   playerIds: string[],
@@ -392,7 +392,14 @@ function CareerAtlasAppMain() {
       />
 
       <div className="flex flex-col gap-4">
-        <CompareTabNav activeTab={activeTab} onTabChange={handleTabChange} />
+        <CompareDashboardStickyHeader
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          ages={snapshotAges}
+          displayAge={displayAge}
+          onAgeChange={setSelectedAge}
+          isSyncedFromChart={isAgeSyncedFromChart}
+        />
 
         <div
           ref={dashboardPanelRef}
@@ -441,6 +448,7 @@ function CareerAtlasAppMain() {
                 displayAge={displayAge}
                 onAgeChange={setSelectedAge}
                 isSyncedFromChart={isAgeSyncedFromChart}
+                showAgeSelector={false}
               />
             </div>
           ) : null}
@@ -454,10 +462,7 @@ function CareerAtlasAppMain() {
             >
               <GrandSlamTabContent
                 players={selectedPlayers}
-                ages={snapshotAges}
                 displayAge={displayAge}
-                onAgeChange={setSelectedAge}
-                isSyncedFromChart={isAgeSyncedFromChart}
               />
             </div>
           ) : null}
@@ -478,7 +483,10 @@ function CareerAtlasAppMain() {
               id="compare-panel-no1"
               aria-labelledby="compare-tab-no1"
             >
-              <No1StreakTimeline players={selectedPlayers} />
+              <No1StreakTimeline
+                players={selectedPlayers}
+                displayAge={displayAge}
+              />
             </div>
           ) : null}
         </div>

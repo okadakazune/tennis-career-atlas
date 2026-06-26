@@ -2,25 +2,18 @@
 
 import { Player } from "@/data/players";
 import { countGrandSlamTitlesThroughAge } from "@/data/grand-slam";
-import { AgeSelector } from "@/components/AgeSelector";
 import { GrandSlamTitlesByAgeChart } from "@/components/GrandSlamTitlesByAgeChart";
 import { GrandSlamResultsByAge } from "@/components/GrandSlamResultsByAge";
 import { GrandSlamCareerTimeline } from "@/components/GrandSlamCareerTimeline";
 
 interface GrandSlamTabContentProps {
   players: Player[];
-  ages: number[];
   displayAge: number;
-  onAgeChange: (age: number) => void;
-  isSyncedFromChart?: boolean;
 }
 
 export function GrandSlamTabContent({
   players,
-  ages,
   displayAge,
-  onAgeChange,
-  isSyncedFromChart = false,
 }: GrandSlamTabContentProps) {
   if (players.length === 0) return null;
 
@@ -37,23 +30,13 @@ export function GrandSlamTabContent({
   return (
     <div className="flex flex-col gap-6">
       <section className="w-full rounded-2xl border border-black/[0.06] bg-white p-4 shadow-[0_2px_20px_rgba(0,0,0,0.04)] sm:p-6">
-        <header className="mb-4 flex w-full flex-col gap-4">
-          <div className="w-full min-w-0">
-            <h2 className="text-lg font-semibold tracking-tight text-[#1d1d1f]">
-              Grand Slam Comparison
-            </h2>
-            <p className="mt-0.5 text-sm text-[#86868b]">
-              Compare major results and cumulative titles at the same age.
-            </p>
-          </div>
-
-          <AgeSelector
-            ages={ages}
-            displayAge={displayAge}
-            onAgeChange={onAgeChange}
-            isSyncedFromChart={isSyncedFromChart}
-            ariaLabel="Select age for Grand Slam comparison"
-          />
+        <header className="mb-4">
+          <h2 className="text-lg font-semibold tracking-tight text-[#1d1d1f]">
+            Grand Slam Comparison
+          </h2>
+          <p className="mt-0.5 text-sm text-[#86868b]">
+            Cumulative titles and major results at age {displayAge}.
+          </p>
         </header>
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -63,7 +46,7 @@ export function GrandSlamTabContent({
             return (
               <div
                 key={player.id}
-                className={`rounded-xl border px-4 py-3 ${
+                className={`rounded-xl border px-4 py-3 transition-shadow hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] ${
                   isLeader
                     ? "border-[#34c759]/30 bg-[#f3fbf5]"
                     : "border-black/[0.06] bg-[#fafafa]"
@@ -98,15 +81,9 @@ export function GrandSlamTabContent({
 
       <GrandSlamTitlesByAgeChart players={players} displayAge={displayAge} />
 
-      <GrandSlamResultsByAge
-        players={players}
-        displayAge={displayAge}
-      />
+      <GrandSlamResultsByAge players={players} displayAge={displayAge} />
 
-      <GrandSlamCareerTimeline
-        players={players}
-        displayAge={displayAge}
-      />
+      <GrandSlamCareerTimeline players={players} displayAge={displayAge} />
     </div>
   );
 }

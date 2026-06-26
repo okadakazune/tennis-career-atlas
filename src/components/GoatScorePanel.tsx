@@ -9,6 +9,7 @@ import {
   findTopGoatScorePlayerId,
 } from "@/data/goat-score";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
+import { ChartTooltipCard, TooltipStatRow } from "@/components/ChartTooltipCard";
 
 interface GoatScorePanelProps {
   players: Player[];
@@ -20,6 +21,7 @@ function formatScore(value: number): string {
 
 export function GoatScorePanel({ players }: GoatScorePanelProps) {
   const [showMethodology, setShowMethodology] = useState(false);
+  const [hoveredPlayerId, setHoveredPlayerId] = useState<string | null>(null);
 
   const rows = useMemo(() => buildGoatScores(players), [players]);
   const topPlayerId = useMemo(() => findTopGoatScorePlayerId(rows), [rows]);
@@ -75,11 +77,20 @@ export function GoatScorePanel({ players }: GoatScorePanelProps) {
       <div className="flex w-full flex-col gap-4 md:flex-row md:flex-wrap">
         {rows.map((row) => {
           const isTop = topPlayerId === row.playerId;
+          const isHovered = hoveredPlayerId === row.playerId;
+          const isDimmed =
+            hoveredPlayerId != null && hoveredPlayerId !== row.playerId;
 
           return (
             <article
               key={row.playerId}
-              className="flex w-full min-w-0 flex-col rounded-2xl border border-black/[0.06] bg-[#fafafa] p-4 sm:p-5 md:min-w-[240px] md:flex-1"
+              className={`relative flex w-full min-w-0 flex-col rounded-2xl border bg-[#fafafa] p-4 transition-all duration-200 sm:p-5 md:min-w-[240px] md:flex-1 ${
+                isHovered
+                  ? "border-[#0071e3]/30 shadow-[0_12px_40px_rgba(0,0,0,0.08)]"
+                  : "border-black/[0.06]"
+              } ${isDimmed ? "opacity-40" : "opacity-100"}`}
+              onMouseEnter={() => setHoveredPlayerId(row.playerId)}
+              onMouseLeave={() => setHoveredPlayerId(null)}
             >
               <div className="mb-4 flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-3">
@@ -112,6 +123,33 @@ export function GoatScorePanel({ players }: GoatScorePanelProps) {
                   ) : null}
                 </div>
               </div>
+
+              {isHovered ? (
+                <div className="pointer-events-none absolute -top-2 left-1/2 z-20 w-[min(300px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-full">
+                  <ChartTooltipCard active>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#86868b]">
+                      GOAT score breakdown
+                    </p>
+                    <div className="space-y-1">
+                      <TooltipStatRow
+                        label="Total score"
+                        value={formatScore(row.totalScore)}
+                        highlight
+                      />
+                      {row.breakdown
+                        .filter((item) => item.included)
+                        .slice(0, 5)
+                        .map((item) => (
+                          <TooltipStatRow
+                            key={item.key}
+                            label={item.label}
+                            value={`${item.rawFormatted} · ${formatScore(item.weightedPoints ?? 0)} pts`}
+                          />
+                        ))}
+                    </div>
+                  </ChartTooltipCard>
+                </div>
+              ) : null}
 
               <details className="group rounded-xl border border-black/[0.06] bg-white">
                 <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium text-[#1d1d1f] marker:content-none [&::-webkit-details-marker]:hidden">

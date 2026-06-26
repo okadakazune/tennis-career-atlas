@@ -16,6 +16,7 @@ interface AgeSnapshotTableProps {
   displayAge: number;
   onAgeChange: (age: number) => void;
   isSyncedFromChart?: boolean;
+  showAgeSelector?: boolean;
 }
 
 export function AgeSnapshotTable({
@@ -24,6 +25,7 @@ export function AgeSnapshotTable({
   displayAge,
   onAgeChange,
   isSyncedFromChart = false,
+  showAgeSelector = true,
 }: AgeSnapshotTableProps) {
   if (players.length === 0) return null;
 
@@ -44,13 +46,15 @@ export function AgeSnapshotTable({
           </p>
         </div>
 
-        <AgeSelector
-          ages={ages}
-          displayAge={displayAge}
-          onAgeChange={onAgeChange}
-          isSyncedFromChart={isSyncedFromChart}
-          ariaLabel="Select age for comparison"
-        />
+        {showAgeSelector ? (
+          <AgeSelector
+            ages={ages}
+            displayAge={displayAge}
+            onAgeChange={onAgeChange}
+            isSyncedFromChart={isSyncedFromChart}
+            ariaLabel="Select age for comparison"
+          />
+        ) : null}
       </header>
 
       {summary ? (

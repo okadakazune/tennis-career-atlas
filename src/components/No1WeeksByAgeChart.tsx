@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   LineChart,
   Line,
@@ -13,12 +13,7 @@ import {
   ReferenceLine,
 } from "recharts";
 import { Player } from "@/data/players";
-import {
-  GRAND_SLAM_TOURNAMENTS,
-  buildGrandSlamTitlesChartData,
-  formatGrandSlamResultShort,
-  getGrandSlamResultsAtAge,
-} from "@/data/grand-slam";
+import { countWeeksAtNo1ThroughAge } from "@/data/compare-stats";
 import {
   ChartTooltipCard,
   TooltipPlayerHeader,
@@ -26,9 +21,14 @@ import {
 } from "@/components/ChartTooltipCard";
 import { getLineHighlightStyle } from "@/lib/chart-line-highlight";
 
-interface GrandSlamTitlesByAgeChartProps {
+interface No1WeeksByAgeChartProps {
   players: Player[];
   displayAge: number;
+}
+
+interface ChartRow {
+  age: number;
+  [playerId: string]: number;
 }
 
 interface TooltipPayloadItem {
@@ -36,6 +36,37 @@ interface TooltipPayloadItem {
   name: string;
   value: number;
   dataKey: string;
+}
+
+function buildNo1WeeksChartData(players: Player[]): ChartRow[] {
+  if (players.length === 0) return [];
+
+  let minAge = Infinity;
+  let maxAge = -Infinity;
+
+  for (const player of players) {
+    for (const point of player.trajectoryYearly) {
+      const age = Math.round(point.age);
+      minAge = Math.min(minAge, age);
+      maxAge = Math.max(maxAge, age);
+    }
+  }
+
+  if (!Number.isFinite(minAge) || !Number.isFinite(maxAge)) {
+    return [];
+  }
+
+  const rows: ChartRow[] = [];
+
+  for (let age = minAge; age <= maxAge; age += 1) {
+    const row: ChartRow = { age };
+    for (const player of players) {
+      row[player.id] = countWeeksAtNo1ThroughAge(player, age);
+    }
+    rows.push(row);
+  }
+
+  return rows;
 }
 
 function CustomTooltip({
@@ -69,7 +100,6 @@ function CustomTooltip({
           const player = players.find((item) => item.id === entry.dataKey);
           if (!player) return null;
 
-          const season = getGrandSlamResultsAtAge(player, label);
           const rankAmong =
             sorted.findIndex((item) => item.dataKey === entry.dataKey) + 1;
 
@@ -85,10 +115,9 @@ function CustomTooltip({
                 imageUrl={player.imageUrl}
                 imagePosition={player.imagePosition}
               />
-
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 <TooltipStatRow
-                  label="Total GS titles"
+                  label="Cumulative weeks at #1"
                   value={entry.value}
                   highlight
                 />
@@ -96,26 +125,6 @@ function CustomTooltip({
                   label="Rank among selected"
                   value={`#${rankAmong} of ${sorted.length}`}
                 />
-
-                {season ? (
-                  <div className="grid grid-cols-4 gap-1.5 pt-1">
-                    {GRAND_SLAM_TOURNAMENTS.map((tournament) => (
-                      <div
-                        key={tournament.key}
-                        className="rounded-lg bg-[#fafafa] px-1.5 py-1.5 text-center"
-                      >
-                        <p className="text-[10px] font-semibold uppercase text-[#86868b]">
-                          {tournament.timelineLabel}
-                        </p>
-                        <p className="mt-0.5 text-xs font-semibold text-[#1d1d1f]">
-                          {season[tournament.key] === "Winner"
-                            ? "🏆"
-                            : formatGrandSlamResultShort(season[tournament.key])}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                ) : null}
               </div>
             </div>
           );
@@ -125,16 +134,16 @@ function CustomTooltip({
   );
 }
 
-export function GrandSlamTitlesByAgeChart({
+export function No1WeeksByAgeChart({
   players,
   displayAge,
-}: GrandSlamTitlesByAgeChartProps) {
+}: No1WeeksByAgeChartProps) {
   const [hoveredPlayerId, setHoveredPlayerId] = useState<string | null>(null);
+  const chartData = useMemo(() => buildNo1WeeksChartData(players), [players]);
 
-  if (players.length === 0) return null;
+  if (players.length === 0 || chartData.length === 0) return null;
 
-  const chartData = buildGrandSlamTitlesChartData(players);
-  const maxTitles = chartData.reduce((max, row) => {
+  const maxWeeks = chartData.reduce((max, row) => {
     const rowMax = players.reduce((innerMax, player) => {
       const value = row[player.id];
       return typeof value === "number" ? Math.max(innerMax, value) : innerMax;
@@ -146,10 +155,10 @@ export function GrandSlamTitlesByAgeChart({
     <section className="rounded-2xl border border-black/[0.06] bg-white p-4 shadow-[0_2px_20px_rgba(0,0,0,0.04)] sm:p-6">
       <div className="mb-4 sm:mb-6">
         <h2 className="text-lg font-semibold tracking-tight text-[#1d1d1f]">
-          Grand Slam Titles by Age
+          Weeks at World No. 1 by Age
         </h2>
         <p className="mt-0.5 text-sm text-[#86868b]">
-          Cumulative Grand Slam titles at each age. The dashed line marks age{" "}
+          Cumulative weeks ranked #1 through each age. The dashed line marks age{" "}
           {displayAge}.
         </p>
       </div>
@@ -173,40 +182,19 @@ export function GrandSlamTitlesByAgeChart({
               axisLine={{ stroke: "#d2d2d7" }}
               tickLine={{ stroke: "#d2d2d7" }}
               allowDecimals={false}
-              label={{
-                value: "Age",
-                position: "insideBottom",
-                offset: -2,
-                fill: "#86868b",
-                fontSize: 12,
-              }}
             />
             <YAxis
               allowDecimals={false}
-              domain={[0, Math.max(maxTitles, 1)]}
+              domain={[0, Math.max(maxWeeks, 1)]}
               tick={{ fill: "#86868b", fontSize: 12 }}
               axisLine={{ stroke: "#d2d2d7" }}
               tickLine={{ stroke: "#d2d2d7" }}
-              label={{
-                value: "Cumulative GS titles",
-                angle: -90,
-                position: "insideLeft",
-                fill: "#86868b",
-                fontSize: 12,
-                dx: 10,
-              }}
             />
             <ReferenceLine
               x={displayAge}
               stroke="#0071e3"
               strokeDasharray="4 4"
               strokeWidth={1.5}
-              label={{
-                value: `Age ${displayAge}`,
-                position: "insideTopRight",
-                fill: "#0071e3",
-                fontSize: 11,
-              }}
             />
             <Tooltip
               wrapperStyle={{ zIndex: 30, pointerEvents: "none" }}
