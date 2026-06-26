@@ -13,13 +13,14 @@ interface PlayerAvatarProps {
   className?: string;
 }
 
-const SIZE_CLASSES: Record<PlayerAvatarSize, string> = {
-  chip: "h-7 w-7",
-  tooltip: "h-10 w-10",
-  summary: "h-[72px] w-[72px] sm:h-24 sm:w-24",
-  sm: "h-7 w-7",
-  md: "h-10 w-10",
-  lg: "h-[72px] w-[72px] sm:h-24 sm:w-24",
+/** Fixed pixel sizes — inline styles avoid Tailwind preflight `img { max-width: 100% }` blow-ups. */
+const SIZE_PX: Record<PlayerAvatarSize, number> = {
+  chip: 28,
+  sm: 28,
+  md: 40,
+  tooltip: 64,
+  summary: 96,
+  lg: 96,
 };
 
 export function PlayerAvatar({
@@ -31,7 +32,14 @@ export function PlayerAvatar({
   className = "",
 }: PlayerAvatarProps) {
   const [imageFailed, setImageFailed] = useState(false);
-  const sizeClass = SIZE_CLASSES[size];
+  const px = SIZE_PX[size];
+  const dimensionStyle = {
+    width: px,
+    height: px,
+    minWidth: px,
+    minHeight: px,
+    maxWidth: px,
+  } as const;
   const showImage = Boolean(imageUrl) && !imageFailed;
 
   if (showImage && imageUrl) {
@@ -40,8 +48,13 @@ export function PlayerAvatar({
       <img
         src={imageUrl}
         alt={name}
-        className={`${sizeClass} shrink-0 rounded-full object-cover ring-1 ring-black/[0.08] ${className}`}
-        style={{ objectPosition: imagePosition }}
+        width={px}
+        height={px}
+        className={`shrink-0 rounded-full object-cover ring-1 ring-black/[0.08] ${className}`}
+        style={{
+          ...dimensionStyle,
+          objectPosition: imagePosition,
+        }}
         onError={() => setImageFailed(true)}
       />
     );
@@ -49,8 +62,8 @@ export function PlayerAvatar({
 
   return (
     <span
-      className={`${sizeClass} shrink-0 rounded-full ${className}`}
-      style={{ backgroundColor: color }}
+      className={`inline-block shrink-0 rounded-full ${className}`}
+      style={{ ...dimensionStyle, backgroundColor: color }}
       aria-hidden="true"
     />
   );

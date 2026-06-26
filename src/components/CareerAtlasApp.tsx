@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import { Suspense, useState, useCallback, useRef, useEffect, useMemo } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   PLAYERS,
   PLAYER_IDS,
@@ -14,7 +15,8 @@ import {
 } from "@/data/players";
 import dataSourceMeta from "@/data/data-source-meta.json";
 import { PlayerSelector } from "@/components/PlayerSelector";
-import { RankingChart } from "@/components/RankingChart";
+import { RankingChart, RankingScale } from "@/components/RankingChart";
+import { CompareOverview } from "@/components/CompareOverview";
 import { CareerSummaryCards } from "@/components/CareerSummaryCards";
 import { AgeSnapshotTable } from "@/components/AgeSnapshotTable";
 import { No1StreakTimeline } from "@/components/No1StreakTimeline";
@@ -22,15 +24,33 @@ import { GrandSlamResultsByAge } from "@/components/GrandSlamResultsByAge";
 import { GrandSlamCareerTimeline } from "@/components/GrandSlamCareerTimeline";
 import { GrandSlamTitlesByAgeChart } from "@/components/GrandSlamTitlesByAgeChart";
 import { Top10LongevityCards } from "@/components/Top10LongevityCards";
-import { DEFAULT_SNAPSHOT_AGE, resolveDisplayAge } from "@/data/grand-slam";
+import { resolveDisplayAge } from "@/data/grand-slam";
 import {
-  clampAgeToAvailable,
-  getAvailableAgesForPlayers,
+  DEFAULT_SNAPSHOT_AGE,
+  getSnapshotAgeOptions,
 } from "@/data/career-stats";
+import {
+  buildCompareSharePath,
+  clampSnapshotAge,
+  parseCompareUrlState,
+  RankingScaleMode,
+} from "@/data/compare-url-state";
 
-function buildInitialComparisonTargets(): PlayerIndexEntry[] {
-  return ["103819", "104745", "104925"]
-    .map((atpPlayerId) => getIndexEntryByAtpId(atpPlayerId))
+function normalizePlayerIdsForMode(
+  playerIds: string[],
+  mode: TrajectoryGranularity,
+): string[] {
+  const max =
+    mode === "weekly" ? MAX_WEEKLY_COMPARISON_PLAYERS : MAX_COMPARISON_PLAYERS;
+  return playerIds.slice(0, max);
+}
+
+function buildComparisonTargetsFromIds(playerIds: string[]): PlayerIndexEntry[] {
+  return playerIds
+    .map((id) => {
+      const player = PLAYERS.find((entry) => entry.id === id);
+      return player ? getIndexEntryByAtpId(player.atpPlayerId) : undefined;
+    })
     .filter((entry): entry is PlayerIndexEntry => Boolean(entry));
 }
 
@@ -41,36 +61,66 @@ function isAlreadyInComparison(
   return targets.some((target) => target.atpPlayerId === entry.atpPlayerId);
 }
 
-export function CareerAtlasApp() {
-  const [selectedIds, setSelectedIds] = useState<string[]>([
-    "federer",
-    "nadal",
-    "djokovic",
-  ]);
-  const [comparisonTargets, setComparisonTargets] = useState<PlayerIndexEntry[]>(
-    buildInitialComparisonTargets,
+function toRankingScale(mode: RankingScaleMode): RankingScale {
+  return mode === "career" ? "log" : "linear";
+}
+
+function fromRankingScale(scale: RankingScale): RankingScaleMode {
+  return scale === "log" ? "career" : "detail";
+}
+
+function CareerAtlasAppContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const snapshotAges = useMemo(() => getSnapshotAgeOptions(), []);
+  const urlBootstrapRef = useRef(
+    parseCompareUrlState(searchParams) ?? undefined,
   );
-  const [granularity, setGranularity] = useState<TrajectoryGranularity>("yearly");
-  const [selectedAge, setSelectedAge] = useState<number>(DEFAULT_SNAPSHOT_AGE);
+  const skipUrlSyncRef = useRef(true);
+
+  const initialMode = urlBootstrapRef.current?.mode ?? "yearly";
+  const initialPlayerIds = normalizePlayerIdsForMode(
+    urlBootstrapRef.current?.playerIds ?? ["federer", "nadal", "djokovic"],
+    initialMode,
+  );
+
+  const [selectedIds, setSelectedIds] = useState<string[]>(() => initialPlayerIds);
+  const [comparisonTargets, setComparisonTargets] = useState<PlayerIndexEntry[]>(
+    () => buildComparisonTargetsFromIds(initialPlayerIds),
+  );
+  const [granularity, setGranularity] = useState<TrajectoryGranularity>(
+    () => initialMode,
+  );
+  const [selectedAge, setSelectedAge] = useState<number>(
+    () => urlBootstrapRef.current?.age ?? DEFAULT_SNAPSHOT_AGE,
+  );
+  const [yScale, setYScale] = useState<RankingScale>(() =>
+    toRankingScale(urlBootstrapRef.current?.scale ?? "career"),
+  );
   const [chartHoverAge, setChartHoverAge] = useState<number | null>(null);
   const selectedPlayers = useMemo(
     () => PLAYERS.filter((player) => selectedIds.includes(player.id)),
     [selectedIds],
   );
-  const availableAges = useMemo(
-    () => getAvailableAgesForPlayers(selectedPlayers),
-    [selectedPlayers],
-  );
-  const displayAge = resolveDisplayAge(
-    clampAgeToAvailable(selectedAge, availableAges),
-    chartHoverAge,
+  const displayAge = clampSnapshotAge(
+    resolveDisplayAge(selectedAge, chartHoverAge),
   );
   const isAgeSyncedFromChart = chartHoverAge != null;
 
   useEffect(() => {
-    if (availableAges.length === 0) return;
-    setSelectedAge((current) => clampAgeToAvailable(current, availableAges));
-  }, [availableAges]);
+    if (skipUrlSyncRef.current) {
+      skipUrlSyncRef.current = false;
+      return;
+    }
+
+    const nextPath = buildCompareSharePath({
+      playerIds: selectedIds,
+      age: selectedAge,
+      mode: granularity,
+      scale: fromRankingScale(yScale),
+    });
+    router.replace(nextPath, { scroll: false });
+  }, [selectedIds, selectedAge, granularity, yScale, router]);
   const [limitWarning, setLimitWarning] = useState<string | null>(null);
   const warningTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const comparisonTargetsRef = useRef(comparisonTargets);
@@ -287,7 +337,11 @@ export function CareerAtlasApp() {
         granularity={granularity}
         onGranularityChange={handleGranularityChange}
         onActiveAgeChange={setChartHoverAge}
+        yScale={yScale}
+        onYScaleChange={setYScale}
       />
+
+      <CompareOverview players={selectedPlayers} displayAge={displayAge} />
 
       <CareerSummaryCards players={selectedPlayers} />
 
@@ -295,7 +349,7 @@ export function CareerAtlasApp() {
 
       <AgeSnapshotTable
         players={selectedPlayers}
-        ages={availableAges}
+        ages={snapshotAges}
         displayAge={displayAge}
         onAgeChange={setSelectedAge}
         isSyncedFromChart={isAgeSyncedFromChart}
@@ -303,7 +357,7 @@ export function CareerAtlasApp() {
 
       <GrandSlamResultsByAge
         players={selectedPlayers}
-        ages={availableAges}
+        ages={snapshotAges}
         displayAge={displayAge}
         onAgeChange={setSelectedAge}
         isSyncedFromChart={isAgeSyncedFromChart}
@@ -340,5 +394,19 @@ export function CareerAtlasApp() {
         </p>
       </footer>
     </div>
+  );
+}
+
+export function CareerAtlasApp() {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto flex min-h-[40vh] w-full max-w-6xl items-center justify-center text-sm text-[#86868b]">
+          Loading comparison…
+        </div>
+      }
+    >
+      <CareerAtlasAppContent />
+    </Suspense>
   );
 }

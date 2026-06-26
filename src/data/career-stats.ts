@@ -26,7 +26,17 @@ export interface No1Streak {
 
 export const MIN_NO1_STREAK_WEEKS = 4;
 
-export const DEFAULT_SNAPSHOT_AGE = 24;
+export const SNAPSHOT_AGE_MIN = 16;
+export const SNAPSHOT_AGE_MAX = 42;
+export const DEFAULT_SNAPSHOT_AGE = 22;
+
+export function getSnapshotAgeOptions(): number[] {
+  const ages: number[] = [];
+  for (let age = SNAPSHOT_AGE_MIN; age <= SNAPSHOT_AGE_MAX; age += 1) {
+    ages.push(age);
+  }
+  return ages;
+}
 
 export function getAvailableAgesForPlayers(players: Player[]): number[] {
   if (players.length === 0) return [];
@@ -185,10 +195,14 @@ export function formatNo1StreakEra(streak: No1Streak): string {
 }
 
 export function getYearlyRankingAtAge(player: Player, age: number): number | null {
-  const point = player.trajectoryYearly.find(
+  const matches = player.trajectoryYearly.filter(
     (entry) => Math.round(entry.age) === age,
   );
-  return point?.ranking ?? null;
+  if (matches.length === 0) return null;
+
+  const point =
+    matches.find((entry) => entry.isLatestWeek) ?? matches[matches.length - 1];
+  return point.ranking ?? null;
 }
 
 export interface AgeSnapshotRow {

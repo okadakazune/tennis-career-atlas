@@ -1,7 +1,11 @@
 "use client";
 
 import { Player } from "@/data/players";
-import { buildAgeSnapshot } from "@/data/career-stats";
+import {
+  buildEnhancedAgeSnapshot,
+  generateAgeSnapshotSummary,
+} from "@/data/compare-stats";
+import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { AgeSelector } from "@/components/AgeSelector";
 
 interface AgeSnapshotTableProps {
@@ -10,6 +14,10 @@ interface AgeSnapshotTableProps {
   displayAge: number;
   onAgeChange: (age: number) => void;
   isSyncedFromChart?: boolean;
+}
+
+function formatRank(value: number | null): string {
+  return value == null ? "—" : `#${value}`;
 }
 
 export function AgeSnapshotTable({
@@ -21,17 +29,19 @@ export function AgeSnapshotTable({
 }: AgeSnapshotTableProps) {
   if (players.length === 0) return null;
 
-  const rows = buildAgeSnapshot(players, displayAge);
+  const rows = buildEnhancedAgeSnapshot(players, displayAge);
+  const summary = generateAgeSnapshotSummary(rows, displayAge);
 
   return (
     <section className="rounded-2xl border border-black/[0.06] bg-white p-4 shadow-[0_2px_20px_rgba(0,0,0,0.04)] sm:p-6">
       <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-lg font-semibold tracking-tight text-[#1d1d1f]">
-            Age Snapshot
+            Age Snapshot Comparison
           </h2>
           <p className="mt-0.5 text-sm text-[#86868b]">
-            Year-end ranking and Grand Slam titles at the selected age.
+            Who was ahead at the same age? Rankings, Grand Slams, and #1 weeks
+            compared at one age.
           </p>
         </div>
 
@@ -40,17 +50,26 @@ export function AgeSnapshotTable({
           displayAge={displayAge}
           onAgeChange={onAgeChange}
           isSyncedFromChart={isSyncedFromChart}
-          ariaLabel="Select age for snapshot"
+          ariaLabel="Select age for comparison"
         />
       </div>
 
-      <div className="hidden overflow-x-auto md:block">
-        <table className="w-full min-w-[420px] text-left text-sm">
+      {summary ? (
+        <p className="mb-5 rounded-xl bg-[#fafafa] px-4 py-3 text-sm leading-relaxed text-[#1d1d1f]">
+          {summary}
+        </p>
+      ) : null}
+
+      <div className="hidden overflow-x-auto lg:block">
+        <table className="w-full min-w-[640px] text-left text-sm">
           <thead>
             <tr className="border-b border-black/[0.06] text-xs uppercase tracking-wide text-[#86868b]">
               <th className="pb-3 pr-4 font-medium">Player</th>
-              <th className="pb-3 pr-4 font-medium">Ranking</th>
-              <th className="pb-3 font-medium">GS titles this season</th>
+              <th className="pb-3 pr-4 font-medium">ATP rank at age</th>
+              <th className="pb-3 pr-4 font-medium">GS titles by age</th>
+              <th className="pb-3 pr-4 font-medium">GS finals by age</th>
+              <th className="pb-3 pr-4 font-medium">Weeks at #1 by age</th>
+              <th className="pb-3 font-medium">Top 10 at age</th>
             </tr>
           </thead>
           <tbody>
@@ -60,20 +79,31 @@ export function AgeSnapshotTable({
                 className="border-b border-black/[0.04] last:border-0"
               >
                 <td className="py-3 pr-4">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="h-2.5 w-2.5 shrink-0 rounded-full"
-                      style={{ backgroundColor: row.color }}
-                      aria-hidden="true"
+                  <div className="flex items-center gap-2.5">
+                    <PlayerAvatar
+                      name={row.name}
+                      color={row.color}
+                      imageUrl={row.imageUrl}
+                      imagePosition={row.imagePosition}
+                      size="chip"
                     />
-                    <span className="font-medium text-[#1d1d1f]">{row.name}</span>
+                    <span className="font-medium text-[#1d1d1f]">{row.shortName}</span>
                   </div>
                 </td>
+                <td className="py-3 pr-4 font-semibold text-[#1d1d1f]">
+                  {formatRank(row.rankingAtAge)}
+                </td>
                 <td className="py-3 pr-4 font-medium text-[#1d1d1f]">
-                  {row.ranking != null ? `#${row.ranking}` : "N/A"}
+                  {row.gsTitlesByAge}
+                </td>
+                <td className="py-3 pr-4 font-medium text-[#1d1d1f]">
+                  {row.gsFinalsByAge}
+                </td>
+                <td className="py-3 pr-4 font-medium text-[#1d1d1f]">
+                  {row.weeksAtNo1ByAge}
                 </td>
                 <td className="py-3 font-medium text-[#1d1d1f]">
-                  {row.gsTitlesThisSeason}
+                  {row.inTop10AtAge ? "Yes" : "No"}
                 </td>
               </tr>
             ))}
@@ -81,17 +111,19 @@ export function AgeSnapshotTable({
         </table>
       </div>
 
-      <div className="flex flex-col gap-3 md:hidden">
+      <div className="flex flex-col gap-3 lg:hidden">
         {rows.map((row) => (
           <article
             key={row.playerId}
             className="rounded-xl border border-black/[0.06] bg-[#fafafa] p-4"
           >
-            <div className="mb-3 flex items-center gap-2.5">
-              <span
-                className="h-3 w-3 shrink-0 rounded-full"
-                style={{ backgroundColor: row.color }}
-                aria-hidden="true"
+            <div className="mb-3 flex items-center gap-3">
+              <PlayerAvatar
+                name={row.name}
+                color={row.color}
+                imageUrl={row.imageUrl}
+                imagePosition={row.imagePosition}
+                size="chip"
               />
               <h3 className="text-base font-semibold text-[#1d1d1f]">
                 {row.shortName}
@@ -100,18 +132,42 @@ export function AgeSnapshotTable({
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <p className="text-[10px] font-medium uppercase tracking-wide text-[#86868b]">
-                  Ranking
+                  ATP rank
                 </p>
-                <p className="mt-0.5 font-semibold text-[#1d1d1f]">
-                  {row.ranking != null ? `#${row.ranking}` : "N/A"}
+                <p className="mt-0.5 text-lg font-semibold text-[#1d1d1f]">
+                  {formatRank(row.rankingAtAge)}
                 </p>
               </div>
               <div>
                 <p className="text-[10px] font-medium uppercase tracking-wide text-[#86868b]">
                   GS titles
                 </p>
+                <p className="mt-0.5 text-lg font-semibold text-[#1d1d1f]">
+                  {row.gsTitlesByAge}
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] font-medium uppercase tracking-wide text-[#86868b]">
+                  GS finals
+                </p>
                 <p className="mt-0.5 font-semibold text-[#1d1d1f]">
-                  {row.gsTitlesThisSeason}
+                  {row.gsFinalsByAge}
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] font-medium uppercase tracking-wide text-[#86868b]">
+                  Weeks at #1
+                </p>
+                <p className="mt-0.5 font-semibold text-[#1d1d1f]">
+                  {row.weeksAtNo1ByAge}
+                </p>
+              </div>
+              <div className="col-span-2">
+                <p className="text-[10px] font-medium uppercase tracking-wide text-[#86868b]">
+                  Top 10 at age {displayAge}
+                </p>
+                <p className="mt-0.5 font-semibold text-[#1d1d1f]">
+                  {row.inTop10AtAge ? "Yes" : "No"}
                 </p>
               </div>
             </div>

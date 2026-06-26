@@ -1,5 +1,21 @@
 {
-  "sackmannToBalldontlie": {},
-  "resolvedAt": null,
-  "notes": "Populated by npm run data:update-latest via BallDontLie player search."
+  "sackmannToBalldontlie": {
+    "100644": 3,
+    "103819": 222129,
+    "104527": 256,
+    "104745": 222119,
+    "104918": 222122,
+    "104925": 4,
+    "105223": 222162,
+    "105453": 338,
+    "106233": 222118,
+    "106421": 13,
+    "126774": 34,
+    "134770": 12,
+    "206173": 2,
+    "207989": 1,
+    "208029": 15
+  },
+  "resolvedAt": "2026-06-26T00:12:45.335Z",
+  "notes": "Sackmann atpPlayerId → BallDontLie numeric player id."
 }

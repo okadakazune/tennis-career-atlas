@@ -23,6 +23,11 @@ export const COMPARISON_PRESETS: ComparisonPreset[] = [
   {
     id: "2010s-rivals",
     label: "2010s Rivals",
-    playerIds: ["murray", "wawrinka", "nishikori", "del-potro"],
+    playerIds: ["djokovic", "nadal", "federer", "murray", "wawrinka"],
+  },
+  {
+    id: "japan-context",
+    label: "Japan Context",
+    playerIds: ["nishikori", "murray", "wawrinka", "del-potro"],
   },
 ];
