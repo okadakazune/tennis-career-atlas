@@ -1,0 +1,152 @@
+[
+  {
+    "id": "federer",
+    "atpPlayerId": "103819",
+    "name": "Roger Federer",
+    "shortName": "Federer",
+    "birthDate": "1981-08-08",
+    "countryCode": "SUI",
+    "color": "#1E88E5",
+    "imagePosition": "center 18%",
+    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Federer_WM16_(37)_(28136155830).jpg?width=384",
+    "imageAttribution": "Wikimedia Commons (Federer WM16 (37) (28136155830).jpg)"
+  },
+  {
+    "id": "nadal",
+    "atpPlayerId": "104745",
+    "name": "Rafael Nadal",
+    "shortName": "Nadal",
+    "birthDate": "1986-06-03",
+    "countryCode": "ESP",
+    "color": "#FB8C00",
+    "imagePosition": "center 22%",
+    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Rafael_Nadal_en_2024_(cropped).jpg?width=384",
+    "imageAttribution": "Wikimedia Commons (Rafael Nadal en 2024 (cropped).jpg)"
+  },
+  {
+    "id": "djokovic",
+    "atpPlayerId": "104925",
+    "name": "Novak Djokovic",
+    "shortName": "Djokovic",
+    "birthDate": "1987-05-22",
+    "countryCode": "SRB",
+    "color": "#43A047",
+    "imagePosition": "center 20%",
+    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Novak_Djokovic_Paris_2024_Olympic_Games_(cropped).jpg?width=384",
+    "imageAttribution": "Wikimedia Commons (Novak Djokovic Paris 2024 Olympic Games (cropped).jpg)"
+  },
+  {
+    "id": "alcaraz",
+    "atpPlayerId": "207989",
+    "name": "Carlos Alcaraz",
+    "shortName": "Alcaraz",
+    "birthDate": "2003-05-05",
+    "countryCode": "ESP",
+    "color": "#FBC02D",
+    "imagePosition": "center 24%",
+    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Carlos_Alcaraz_Roland_Garros_2025_(cropped).jpg?width=384",
+    "imageAttribution": "Wikimedia Commons (Carlos Alcaraz Roland Garros 2025 (cropped).jpg)"
+  },
+  {
+    "id": "sinner",
+    "atpPlayerId": "206173",
+    "name": "Jannik Sinner",
+    "shortName": "Sinner",
+    "birthDate": "2001-08-16",
+    "countryCode": "ITA",
+    "color": "#E53935",
+    "imagePosition": "center 22%",
+    "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Jannik_Sinner_US_Open_2025_(cropped).jpg?width=384",
+    "imageAttribution": "Wikimedia Commons (Jannik Sinner US Open 2025 (cropped).jpg)"
+  },
+  {
+    "id": "murray",
+    "atpPlayerId": "104918",
+    "name": "Andy Murray",
+    "shortName": "Murray",
+    "birthDate": "1987-05-15",
+    "countryCode": "GBR",
+    "color": "#5E60CE"
+  },
+  {
+    "id": "wawrinka",
+    "atpPlayerId": "104527",
+    "name": "Stan Wawrinka",
+    "shortName": "Wawrinka",
+    "birthDate": "1985-03-28",
+    "countryCode": "SUI",
+    "color": "#8E2430"
+  },
+  {
+    "id": "nishikori",
+    "atpPlayerId": "105453",
+    "name": "Kei Nishikori",
+    "shortName": "Nishikori",
+    "birthDate": "1989-12-29",
+    "countryCode": "JPN",
+    "color": "#EC407A"
+  },
+  {
+    "id": "zverev",
+    "atpPlayerId": "100644",
+    "name": "Alexander Zverev",
+    "shortName": "Zverev",
+    "birthDate": "1997-04-20",
+    "countryCode": "GER",
+    "color": "#546E7A"
+  },
+  {
+    "id": "medvedev",
+    "atpPlayerId": "106421",
+    "name": "Daniil Medvedev",
+    "shortName": "Medvedev",
+    "birthDate": "1996-02-11",
+    "countryCode": "RUS",
+    "color": "#29B6F6"
+  },
+  {
+    "id": "tsitsipas",
+    "atpPlayerId": "126774",
+    "name": "Stefanos Tsitsipas",
+    "shortName": "Tsitsipas",
+    "birthDate": "1998-08-12",
+    "countryCode": "GRE",
+    "color": "#00ACC1"
+  },
+  {
+    "id": "rune",
+    "atpPlayerId": "208029",
+    "name": "Holger Rune",
+    "shortName": "Rune",
+    "birthDate": "2003-04-29",
+    "countryCode": "DEN",
+    "color": "#7CB342"
+  },
+  {
+    "id": "ruud",
+    "atpPlayerId": "134770",
+    "name": "Casper Ruud",
+    "shortName": "Ruud",
+    "birthDate": "1998-12-22",
+    "countryCode": "NOR",
+    "color": "#AB47BC"
+  },
+  {
+    "id": "thiem",
+    "atpPlayerId": "106233",
+    "name": "Dominic Thiem",
+    "shortName": "Thiem",
+    "birthDate": "1993-09-03",
+    "countryCode": "AUT",
+    "color": "#6D4C41"
+  },
+  {
+    "id": "del-potro",
+    "atpPlayerId": "105223",
+    "name": "Juan Martin del Potro",
+    "shortName": "Del Potro",
+    "birthDate": "1988-09-23",
+    "countryCode": "ARG",
+    "color": "#424242"
+  }
+]

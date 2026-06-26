@@ -1,4 +1,4 @@
-import playersGenerated from "@/data/players.generated.json";
+import playersMeta from "@/data/players-meta.json";
 
 export interface RankingPoint {
   rankingDate: string;
@@ -27,6 +27,19 @@ export interface Player {
   trajectoryYearly: RankingPoint[];
 }
 
+export interface PlayerMeta {
+  id: string;
+  atpPlayerId: string;
+  name: string;
+  shortName: string;
+  birthDate: string;
+  countryCode: string;
+  color: string;
+  imageUrl?: string;
+  imagePosition?: string;
+  imageAttribution?: string;
+}
+
 export interface PlayerIndexEntry {
   atpPlayerId: string;
   name: string;
@@ -43,13 +56,90 @@ export interface PlayerIndexEntry {
   imagePosition?: string;
 }
 
-export const PLAYERS: Player[] = playersGenerated as Player[];
+const PLAYERS_DATA_URL = "/data/players.generated.json";
 
-export const PLAYER_IDS = PLAYERS.map((player) => player.id);
+export const PLAYER_IDS = playersMeta.map((player) => player.id);
 
 export const MAX_COMPARISON_PLAYERS = 5;
 
 export const MAX_WEEKLY_COMPARISON_PLAYERS = 2;
+
+let playersCache: Player[] | null = null;
+let loadPromise: Promise<Player[]> | null = null;
+
+let playersById = new Map<string, Player>();
+let playersByAtpId = new Map<string, Player>();
+let featuredIndexByAtpId = new Map<string, PlayerIndexEntry>();
+
+function metaToIndexEntry(meta: PlayerMeta): PlayerIndexEntry {
+  const [nameFirst, ...nameRest] = meta.name.split(" ");
+  return {
+    atpPlayerId: meta.atpPlayerId,
+    name: meta.name,
+    nameFirst: nameFirst ?? meta.name,
+    nameLast: nameRest.join(" ") || meta.shortName,
+    birthDate: meta.birthDate,
+    countryCode: meta.countryCode,
+    hand: "U",
+    hasRankingData: true,
+    slug: meta.id,
+    shortName: meta.shortName,
+    color: meta.color,
+    imageUrl: meta.imageUrl,
+    imagePosition: meta.imagePosition,
+  };
+}
+
+function playerToIndexEntry(player: Player): PlayerIndexEntry {
+  return metaToIndexEntry(player);
+}
+
+function rebuildPlayerMaps(players: Player[]) {
+  playersById = new Map(players.map((player) => [player.id, player]));
+  playersByAtpId = new Map(players.map((player) => [player.atpPlayerId, player]));
+  featuredIndexByAtpId = new Map(
+    players.map((player) => [player.atpPlayerId, playerToIndexEntry(player)]),
+  );
+}
+
+for (const meta of playersMeta as PlayerMeta[]) {
+  featuredIndexByAtpId.set(meta.atpPlayerId, metaToIndexEntry(meta));
+}
+
+export function loadPlayers(): Promise<Player[]> {
+  if (playersCache) {
+    return Promise.resolve(playersCache);
+  }
+
+  if (!loadPromise) {
+    loadPromise = fetch(PLAYERS_DATA_URL)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Failed to load player data (${response.status})`);
+        }
+        return response.json() as Promise<Player[]>;
+      })
+      .then((players) => {
+        playersCache = players;
+        rebuildPlayerMaps(players);
+        return players;
+      })
+      .catch((error) => {
+        loadPromise = null;
+        throw error;
+      });
+  }
+
+  return loadPromise;
+}
+
+export function getPlayers(): Player[] {
+  if (!playersCache) {
+    throw new Error("Player data has not been loaded yet");
+  }
+
+  return playersCache;
+}
 
 export function getMaxComparisonPlayers(
   granularity: TrajectoryGranularity,
@@ -81,31 +171,6 @@ const AUTO_ZOOM_MIN_SPAN: Record<TrajectoryGranularity, number> = {
   monthly: 3,
   weekly: 2,
 };
-
-const playersById = new Map(PLAYERS.map((player) => [player.id, player]));
-const playersByAtpId = new Map(PLAYERS.map((player) => [player.atpPlayerId, player]));
-const featuredIndexByAtpId = new Map(
-  PLAYERS.map((player) => [player.atpPlayerId, playerToIndexEntry(player)]),
-);
-
-function playerToIndexEntry(player: Player): PlayerIndexEntry {
-  const [nameFirst, ...nameRest] = player.name.split(" ");
-  return {
-    atpPlayerId: player.atpPlayerId,
-    name: player.name,
-    nameFirst: nameFirst ?? player.name,
-    nameLast: nameRest.join(" ") || player.shortName,
-    birthDate: player.birthDate,
-    countryCode: player.countryCode,
-    hand: "U",
-    hasRankingData: true,
-    slug: player.id,
-    shortName: player.shortName,
-    color: player.color,
-    imageUrl: player.imageUrl,
-    imagePosition: player.imagePosition,
-  };
-}
 
 export function getPlayerById(id: string): Player | undefined {
   return playersById.get(id);
@@ -165,7 +230,9 @@ export function buildChartData(
   selectedPlayerIds: string[],
   granularity: TrajectoryGranularity = "yearly",
 ): ChartRow[] {
-  const selectedPlayers = PLAYERS.filter((player) => selectedPlayerIds.includes(player.id));
+  const selectedPlayers = getPlayers().filter((player) =>
+    selectedPlayerIds.includes(player.id),
+  );
   const rows = new Map<number, ChartRow>();
 
   selectedPlayers.forEach((player) => {
@@ -312,7 +379,9 @@ export function getAgeRange(
   selectedPlayerIds: string[],
   granularity: TrajectoryGranularity = "yearly",
 ): [number, number] {
-  const selectedPlayers = PLAYERS.filter((player) => selectedPlayerIds.includes(player.id));
+  const selectedPlayers = getPlayers().filter((player) =>
+    selectedPlayerIds.includes(player.id),
+  );
 
   let minAge = Infinity;
   let maxAge = -Infinity;

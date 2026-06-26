@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { ChunkLoadRecovery } from "@/components/ChunkLoadRecovery";
 import { VercelAnalytics } from "@/components/VercelAnalytics";
 import "./globals.css";
 
@@ -25,6 +26,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
+        <ChunkLoadRecovery />
         {children}
         <VercelAnalytics />
       </body>

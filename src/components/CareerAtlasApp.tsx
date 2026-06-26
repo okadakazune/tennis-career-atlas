@@ -3,7 +3,6 @@
 import { Suspense, useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  PLAYERS,
   PLAYER_IDS,
   PlayerIndexEntry,
   TrajectoryGranularity,
@@ -12,6 +11,9 @@ import {
   getMaxComparisonPlayers,
   WEEKLY_LIMIT_WARNING,
   getIndexEntryByAtpId,
+  getPlayerById,
+  getPlayers,
+  loadPlayers,
 } from "@/data/players";
 import dataSourceMeta from "@/data/data-source-meta.json";
 import { PlayerSelector } from "@/components/PlayerSelector";
@@ -53,7 +55,7 @@ function normalizePlayerIdsForMode(
 function buildComparisonTargetsFromIds(playerIds: string[]): PlayerIndexEntry[] {
   return playerIds
     .map((id) => {
-      const player = PLAYERS.find((entry) => entry.id === id);
+      const player = getPlayerById(id);
       return player ? getIndexEntryByAtpId(player.atpPlayerId) : undefined;
     })
     .filter((entry): entry is PlayerIndexEntry => Boolean(entry));
@@ -86,7 +88,7 @@ function buildDefaultComparisonState(granularity: TrajectoryGranularity = "yearl
   };
 }
 
-function CareerAtlasAppContent() {
+function CareerAtlasAppMain() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const snapshotAges = useMemo(() => getSnapshotAgeOptions(), []);
@@ -119,7 +121,7 @@ function CareerAtlasAppContent() {
   );
   const [chartHoverAge, setChartHoverAge] = useState<number | null>(null);
   const selectedPlayers = useMemo(
-    () => PLAYERS.filter((player) => selectedIds.includes(player.id)),
+    () => getPlayers().filter((player) => selectedIds.includes(player.id)),
     [selectedIds],
   );
   const displayAge = clampSnapshotAge(
@@ -215,7 +217,7 @@ function CareerAtlasAppContent() {
 
   const togglePlayer = useCallback(
     (id: string) => {
-      const player = PLAYERS.find((entry) => entry.id === id);
+      const player = getPlayerById(id);
       if (!player) return;
 
       const indexEntry = getIndexEntryByAtpId(player.atpPlayerId);
@@ -287,7 +289,7 @@ function CareerAtlasAppContent() {
     setComparisonTargets(
       limitedIds
         .map((id) => {
-          const player = PLAYERS.find((entry) => entry.id === id);
+          const player = getPlayerById(id);
           return player ? getIndexEntryByAtpId(player.atpPlayerId) : undefined;
         })
         .filter((entry): entry is PlayerIndexEntry => Boolean(entry)),
@@ -324,7 +326,7 @@ function CareerAtlasAppContent() {
       setComparisonTargets(
         effectiveIds
           .map((id) => {
-            const player = PLAYERS.find((entry) => entry.id === id);
+            const player = getPlayerById(id);
             return player ? getIndexEntryByAtpId(player.atpPlayerId) : undefined;
           })
           .filter((entry): entry is PlayerIndexEntry => Boolean(entry)),
@@ -361,7 +363,7 @@ function CareerAtlasAppContent() {
       ) : null}
 
       <PlayerSelector
-        players={PLAYERS}
+        players={getPlayers()}
         selectedIds={selectedIds}
         comparisonTargets={comparisonTargets}
         granularity={granularity}
@@ -376,7 +378,7 @@ function CareerAtlasAppContent() {
       />
 
       <RankingChart
-        players={PLAYERS}
+        players={getPlayers()}
         selectedIds={selectedIds}
         granularity={granularity}
         onGranularityChange={handleGranularityChange}
@@ -441,6 +443,48 @@ function CareerAtlasAppContent() {
       </footer>
     </div>
   );
+}
+
+function CareerAtlasAppContent() {
+  const [isReady, setIsReady] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadPlayers()
+      .then(() => setIsReady(true))
+      .catch((error: unknown) => {
+        const message =
+          error instanceof Error ? error.message : "Failed to load player data";
+        setLoadError(message);
+      });
+  }, []);
+
+  if (loadError) {
+    return (
+      <div className="mx-auto flex min-h-[40vh] w-full max-w-6xl flex-col items-center justify-center gap-4 px-4 text-center">
+        <p className="text-sm text-[#86868b]">
+          Failed to load player data. Please reload the page.
+        </p>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="rounded-full bg-[#1d1d1f] px-4 py-2 text-sm font-medium text-white hover:bg-black"
+        >
+          Reload page
+        </button>
+      </div>
+    );
+  }
+
+  if (!isReady) {
+    return (
+      <div className="mx-auto flex min-h-[40vh] w-full max-w-6xl items-center justify-center text-sm text-[#86868b]">
+        Loading player data…
+      </div>
+    );
+  }
+
+  return <CareerAtlasAppMain />;
 }
 
 export function CareerAtlasApp() {

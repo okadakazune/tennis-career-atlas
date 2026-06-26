@@ -479,14 +479,23 @@ async function main() {
   await mkdir(OUT_DIR, { recursive: true });
 
   const indexPath = path.join(OUT_DIR, "player-index.json");
-  const publicIndexPath = path.join(ROOT, "public", "data", "player-index.json");
+  const publicDataDir = path.join(ROOT, "public", "data");
+  const publicIndexPath = path.join(publicDataDir, "player-index.json");
+  const publicPlayersPath = path.join(publicDataDir, "players.generated.json");
   const playersPathOut = path.join(OUT_DIR, "players.generated.json");
+  const playersMetaPath = path.join(OUT_DIR, "players-meta.json");
   const metaPath = path.join(OUT_DIR, "data-source-meta.json");
 
+  const playersMeta = players.map(
+    ({ trajectoryWeekly, trajectoryMonthly, trajectoryYearly, ...meta }) => meta,
+  );
+
   await writeFile(indexPath, `${JSON.stringify(playerIndex)}\n`);
-  await mkdir(path.dirname(publicIndexPath), { recursive: true });
+  await mkdir(publicDataDir, { recursive: true });
   await writeFile(publicIndexPath, `${JSON.stringify(playerIndex)}\n`);
   await writeFile(playersPathOut, `${JSON.stringify(players)}\n`);
+  await writeFile(publicPlayersPath, `${JSON.stringify(players)}\n`);
+  await writeFile(playersMetaPath, `${JSON.stringify(playersMeta, null, 2)}\n`);
   await writeFile(
     metaPath,
     `${JSON.stringify(
