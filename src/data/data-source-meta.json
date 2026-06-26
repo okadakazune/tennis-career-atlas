@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-25T23:59:52.867Z",
+  "generatedAt": "2026-06-26T00:29:26.472Z",
   "sources": {
     "archive": {
       "label": "Jeff Sackmann / Tennis Abstract (Sackmann-format frozen archive)",
@@ -22,7 +22,7 @@
     }
   },
   "latestWeek": "2026-06-22",
-  "latestWeekAgeDays": 3,
+  "latestWeekAgeDays": 4,
   "isLatestWeekStale": false,
   "staleThresholdDays": 14,
   "staleWarning": null,
