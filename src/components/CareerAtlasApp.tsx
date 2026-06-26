@@ -31,10 +31,14 @@ import {
 } from "@/data/career-stats";
 import {
   buildCompareSharePath,
+  buildCompareShareUrl,
   clampSnapshotAge,
+  DEFAULT_SHARE_PLAYER_IDS,
   parseCompareUrlState,
-  RankingScaleMode,
+  resolveSharePlayerIds,
+  ChartViewMode,
 } from "@/data/compare-url-state";
+import { ShareLinkButton } from "@/components/ShareLinkButton";
 
 function normalizePlayerIdsForMode(
   playerIds: string[],
@@ -61,12 +65,24 @@ function isAlreadyInComparison(
   return targets.some((target) => target.atpPlayerId === entry.atpPlayerId);
 }
 
-function toRankingScale(mode: RankingScaleMode): RankingScale {
-  return mode === "career" ? "log" : "linear";
+function toRankingScale(view: ChartViewMode): RankingScale {
+  return view === "career" ? "log" : "linear";
 }
 
-function fromRankingScale(scale: RankingScale): RankingScaleMode {
+function fromRankingScale(scale: RankingScale): ChartViewMode {
   return scale === "log" ? "career" : "detail";
+}
+
+function buildDefaultComparisonState(granularity: TrajectoryGranularity = "yearly") {
+  const playerIds = normalizePlayerIdsForMode(
+    [...DEFAULT_SHARE_PLAYER_IDS],
+    granularity,
+  );
+
+  return {
+    playerIds,
+    comparisonTargets: buildComparisonTargetsFromIds(playerIds),
+  };
 }
 
 function CareerAtlasAppContent() {
@@ -78,10 +94,13 @@ function CareerAtlasAppContent() {
   );
   const skipUrlSyncRef = useRef(true);
 
-  const initialMode = urlBootstrapRef.current?.mode ?? "yearly";
+  const initialGranularity = urlBootstrapRef.current?.granularity ?? "yearly";
+  const initialDefaults = buildDefaultComparisonState(initialGranularity);
   const initialPlayerIds = normalizePlayerIdsForMode(
-    urlBootstrapRef.current?.playerIds ?? ["federer", "nadal", "djokovic"],
-    initialMode,
+    urlBootstrapRef.current?.playerIds !== undefined
+      ? resolveSharePlayerIds(urlBootstrapRef.current.playerIds)
+      : initialDefaults.playerIds,
+    initialGranularity,
   );
 
   const [selectedIds, setSelectedIds] = useState<string[]>(() => initialPlayerIds);
@@ -89,13 +108,13 @@ function CareerAtlasAppContent() {
     () => buildComparisonTargetsFromIds(initialPlayerIds),
   );
   const [granularity, setGranularity] = useState<TrajectoryGranularity>(
-    () => initialMode,
+    () => initialGranularity,
   );
   const [selectedAge, setSelectedAge] = useState<number>(
     () => urlBootstrapRef.current?.age ?? DEFAULT_SNAPSHOT_AGE,
   );
   const [yScale, setYScale] = useState<RankingScale>(() =>
-    toRankingScale(urlBootstrapRef.current?.scale ?? "career"),
+    toRankingScale(urlBootstrapRef.current?.view ?? "career"),
   );
   const [chartHoverAge, setChartHoverAge] = useState<number | null>(null);
   const selectedPlayers = useMemo(
@@ -116,11 +135,33 @@ function CareerAtlasAppContent() {
     const nextPath = buildCompareSharePath({
       playerIds: selectedIds,
       age: selectedAge,
-      mode: granularity,
-      scale: fromRankingScale(yScale),
+      granularity,
+      view: fromRankingScale(yScale),
     });
     router.replace(nextPath, { scroll: false });
   }, [selectedIds, selectedAge, granularity, yScale, router]);
+
+  const getShareUrl = useCallback(() => {
+    if (typeof window === "undefined") return "/";
+
+    return buildCompareShareUrl(
+      {
+        playerIds: selectedIds,
+        age: selectedAge,
+        granularity,
+        view: fromRankingScale(yScale),
+      },
+      window.location.origin,
+    );
+  }, [selectedIds, selectedAge, granularity, yScale]);
+
+  useEffect(() => {
+    if (selectedIds.length > 0) return;
+
+    const defaults = buildDefaultComparisonState(granularityRef.current);
+    setSelectedIds(defaults.playerIds);
+    setComparisonTargets(defaults.comparisonTargets);
+  }, [selectedIds]);
   const [limitWarning, setLimitWarning] = useState<string | null>(null);
   const warningTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const comparisonTargetsRef = useRef(comparisonTargets);
@@ -253,8 +294,9 @@ function CareerAtlasAppContent() {
   }, []);
 
   const clearAll = useCallback(() => {
-    setSelectedIds([]);
-    setComparisonTargets([]);
+    const defaults = buildDefaultComparisonState(granularityRef.current);
+    setSelectedIds(defaults.playerIds);
+    setComparisonTargets(defaults.comparisonTargets);
     setLimitWarning(null);
   }, []);
 
@@ -329,6 +371,7 @@ function CareerAtlasAppContent() {
         onSelectAll={selectAll}
         onClearAll={clearAll}
         onApplyPreset={applyPreset}
+        shareLinkButton={<ShareLinkButton getShareUrl={getShareUrl} />}
       />
 
       <RankingChart

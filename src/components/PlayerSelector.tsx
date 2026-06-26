@@ -1,5 +1,6 @@
 "use client";
 
+import { ReactNode } from "react";
 import { Player, PlayerIndexEntry, TrajectoryGranularity, getMaxComparisonPlayers } from "@/data/players";
 import { PlayerSearch } from "@/components/PlayerSearch";
 import { ComparisonPresets } from "@/components/ComparisonPresets";
@@ -17,6 +18,7 @@ interface PlayerSelectorProps {
   onSelectAll: () => void;
   onClearAll: () => void;
   onApplyPreset: (playerIds: string[]) => void;
+  shareLinkButton?: ReactNode;
 }
 
 export function PlayerSelector({
@@ -31,6 +33,7 @@ export function PlayerSelector({
   onSelectAll,
   onClearAll,
   onApplyPreset,
+  shareLinkButton,
 }: PlayerSelectorProps) {
   const maxPlayers = getMaxComparisonPlayers(granularity);
 
@@ -47,21 +50,24 @@ export function PlayerSelector({
             {comparisonTargets.length}/{maxPlayers} selected
           </p>
         </div>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={onSelectAll}
-            className="rounded-full bg-[#f5f5f7] px-3.5 py-1.5 text-xs font-medium text-[#1d1d1f] transition-colors hover:bg-[#e8e8ed]"
-          >
-            Select all charted
-          </button>
-          <button
-            type="button"
-            onClick={onClearAll}
-            className="rounded-full bg-[#f5f5f7] px-3.5 py-1.5 text-xs font-medium text-[#1d1d1f] transition-colors hover:bg-[#e8e8ed]"
-          >
-            Clear
-          </button>
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+          {shareLinkButton}
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={onSelectAll}
+              className="rounded-full bg-[#f5f5f7] px-3.5 py-1.5 text-xs font-medium text-[#1d1d1f] transition-colors hover:bg-[#e8e8ed]"
+            >
+              Select all charted
+            </button>
+            <button
+              type="button"
+              onClick={onClearAll}
+              className="rounded-full bg-[#f5f5f7] px-3.5 py-1.5 text-xs font-medium text-[#1d1d1f] transition-colors hover:bg-[#e8e8ed]"
+            >
+              Clear
+            </button>
+          </div>
         </div>
       </div>
 
