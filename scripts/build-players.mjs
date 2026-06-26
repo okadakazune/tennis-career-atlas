@@ -479,10 +479,13 @@ async function main() {
   await mkdir(OUT_DIR, { recursive: true });
 
   const indexPath = path.join(OUT_DIR, "player-index.json");
+  const publicIndexPath = path.join(ROOT, "public", "data", "player-index.json");
   const playersPathOut = path.join(OUT_DIR, "players.generated.json");
   const metaPath = path.join(OUT_DIR, "data-source-meta.json");
 
   await writeFile(indexPath, `${JSON.stringify(playerIndex)}\n`);
+  await mkdir(path.dirname(publicIndexPath), { recursive: true });
+  await writeFile(publicIndexPath, `${JSON.stringify(playerIndex)}\n`);
   await writeFile(playersPathOut, `${JSON.stringify(players)}\n`);
   await writeFile(
     metaPath,
@@ -520,6 +523,7 @@ async function main() {
   );
 
   console.log(`Wrote ${playerIndex.length} players to ${indexPath}`);
+  console.log(`Wrote ${playerIndex.length} players to ${publicIndexPath}`);
   console.log(`Wrote ${players.length} featured players to ${playersPathOut}`);
   if (latestWeekMeta.staleWarning) {
     console.warn(latestWeekMeta.staleWarning);

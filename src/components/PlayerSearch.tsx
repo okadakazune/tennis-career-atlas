@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   PlayerIndexEntry,
   formatBirthDate,
   getPlayerByAtpId,
-  searchPlayers,
 } from "@/data/players";
+import {
+  loadPlayerSearchIndex,
+  searchPlayerIndex,
+} from "@/data/player-index-search";
 
 interface PlayerSearchProps {
   selectedIds: string[];
@@ -16,9 +19,11 @@ interface PlayerSearchProps {
 export function PlayerSearch({ selectedIds, onAddToComparison }: PlayerSearchProps) {
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const [results, setResults] = useState<PlayerIndexEntry[]>([]);
+  const [isLoadingIndex, setIsLoadingIndex] = useState(false);
+  const [indexError, setIndexError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  const results = useMemo(() => searchPlayers(query, 12), [query]);
+  const playerIndexRef = useRef<PlayerIndexEntry[] | null>(null);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -30,6 +35,45 @@ export function PlayerSearch({ selectedIds, onAddToComparison }: PlayerSearchPro
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    const normalized = query.trim();
+    if (!normalized) {
+      setResults([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function runSearch() {
+      try {
+        if (!playerIndexRef.current) {
+          setIsLoadingIndex(true);
+          setIndexError(null);
+          playerIndexRef.current = await loadPlayerSearchIndex();
+        }
+
+        if (cancelled) return;
+
+        setResults(searchPlayerIndex(playerIndexRef.current, normalized, 12));
+      } catch {
+        if (!cancelled) {
+          setIndexError("Player search is temporarily unavailable.");
+          setResults([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingIndex(false);
+        }
+      }
+    }
+
+    void runSearch();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [query]);
 
   function handleSelect(entry: PlayerIndexEntry) {
     setQuery(entry.name);
@@ -55,7 +99,19 @@ export function PlayerSearch({ selectedIds, onAddToComparison }: PlayerSearchPro
         className="w-full rounded-xl border border-black/[0.08] bg-[#fafafa] px-4 py-3 text-sm text-[#1d1d1f] outline-none transition-colors placeholder:text-[#86868b] focus:border-[#0071E3] focus:bg-white"
       />
 
-      {isOpen && query.trim() && results.length > 0 && (
+      {isOpen && query.trim() && isLoadingIndex && (
+        <div className="absolute z-20 mt-2 w-full rounded-xl border border-black/[0.06] bg-white px-4 py-3 text-sm text-[#86868b] shadow-[0_12px_40px_rgba(0,0,0,0.12)]">
+          Loading player index…
+        </div>
+      )}
+
+      {isOpen && query.trim() && indexError && (
+        <div className="absolute z-20 mt-2 w-full rounded-xl border border-[#FFCCBC] bg-[#FFF3E0] px-4 py-3 text-sm text-[#E65100] shadow-[0_12px_40px_rgba(0,0,0,0.12)]">
+          {indexError}
+        </div>
+      )}
+
+      {isOpen && query.trim() && !isLoadingIndex && !indexError && results.length > 0 && (
         <ul className="absolute z-20 mt-2 max-h-72 w-full overflow-y-auto rounded-xl border border-black/[0.06] bg-white py-2 shadow-[0_12px_40px_rgba(0,0,0,0.12)]">
           {results.map((entry) => {
             const isSelected = entry.slug ? selectedIds.includes(entry.slug) : false;
@@ -107,7 +163,7 @@ export function PlayerSearch({ selectedIds, onAddToComparison }: PlayerSearchPro
         </ul>
       )}
 
-      {isOpen && query.trim() && results.length === 0 && (
+      {isOpen && query.trim() && !isLoadingIndex && !indexError && results.length === 0 && (
         <div className="absolute z-20 mt-2 w-full rounded-xl border border-black/[0.06] bg-white px-4 py-3 text-sm text-[#86868b] shadow-[0_12px_40px_rgba(0,0,0,0.12)]">
           No players found.
         </div>
