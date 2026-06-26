@@ -273,6 +273,25 @@ export function countGrandSlamTitlesThroughAge(
   return total;
 }
 
+export function countGrandSlamFinalsThroughAge(
+  player: Player,
+  age: number,
+): number {
+  const seasons = resultsByPlayer[player.id] ?? {};
+  let total = 0;
+
+  for (const [year, season] of Object.entries(seasons)) {
+    const seasonAge = getAgeForCalendarYear(player, year);
+    if (seasonAge == null || seasonAge > age) continue;
+
+    for (const result of Object.values(season)) {
+      if (result === "Winner" || result === "Runner-up") total += 1;
+    }
+  }
+
+  return total;
+}
+
 export function buildGrandSlamTitlesChartData(
   players: Player[],
 ): GrandSlamTitlesChartRow[] {

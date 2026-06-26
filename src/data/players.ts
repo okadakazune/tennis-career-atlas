@@ -174,10 +174,21 @@ export function buildChartData(
         rows.set(displayAge, { age: displayAge });
       }
       const row = rows.get(displayAge)!;
+      const latestWeekKey = chartLatestWeekKey(player.id);
+      const alreadyLatestWeek = row[latestWeekKey] === true;
+
+      if (
+        alreadyLatestWeek &&
+        granularity === "yearly" &&
+        !point.isLatestWeek
+      ) {
+        return;
+      }
+
       row[player.id] = point.ranking;
       row[chartDateKey(player.id)] = point.rankingDate;
       if (point.isLatestWeek) {
-        row[chartLatestWeekKey(player.id)] = true;
+        row[latestWeekKey] = true;
       }
       if (point.consecutiveWeeksAtNo1 != null) {
         row[chartStreakKey(player.id)] = point.consecutiveWeeksAtNo1;

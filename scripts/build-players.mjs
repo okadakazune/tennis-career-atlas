@@ -299,7 +299,15 @@ function buildTrajectories(rawTrajectory, birthDate) {
     birthDate,
   );
 
+  markLatestWeekPoint(trajectoryWeekly);
+  markLatestWeekPoint(trajectoryMonthly);
+
   return { trajectoryWeekly, trajectoryMonthly, trajectoryYearly };
+}
+
+function markLatestWeekPoint(trajectory) {
+  if (trajectory.length === 0) return;
+  trajectory[trajectory.length - 1].isLatestWeek = true;
 }
 
 function yearFromRankingDate(dateStr) {

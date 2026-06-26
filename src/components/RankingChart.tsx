@@ -31,6 +31,8 @@ interface RankingChartProps {
   granularity: TrajectoryGranularity;
   onGranularityChange: (granularity: TrajectoryGranularity) => void;
   onActiveAgeChange?: (age: number | null) => void;
+  yScale?: RankingScale;
+  onYScaleChange?: (scale: RankingScale) => void;
 }
 
 interface TooltipPayloadItem {
@@ -54,6 +56,8 @@ const GRANULARITY_DESCRIPTIONS: Record<TrajectoryGranularity, string> = {
 };
 
 type RankingScale = "linear" | "log";
+
+export type { RankingScale };
 
 const SCALE_OPTIONS: { value: RankingScale; label: string; title: string }[] = [
   {
@@ -177,20 +181,20 @@ function formatTooltipPeriod(
   granularity: TrajectoryGranularity,
   isLatestWeek = false,
 ): { label: string; value: string } {
-  if (granularity === "yearly") {
-    if (isLatestWeek) {
-      const date = new Date(`${rankingDate}T00:00:00Z`);
-      return {
-        label: "Latest week",
-        value: date.toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-          timeZone: "UTC",
-        }),
-      };
-    }
+  if (isLatestWeek) {
+    const date = new Date(`${rankingDate}T00:00:00Z`);
+    return {
+      label: "Latest week",
+      value: date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        timeZone: "UTC",
+      }),
+    };
+  }
 
+  if (granularity === "yearly") {
     return { label: "Year-end week", value: rankingDate.slice(0, 4) };
   }
 
@@ -277,7 +281,7 @@ function CustomTooltip({
     typeof label === "number" ? label : validEntries[0]?.payload?.age;
 
   return (
-    <div className="rounded-xl border border-black/[0.06] bg-white/95 px-4 py-3 shadow-[0_8px_30px_rgba(0,0,0,0.12)] backdrop-blur-sm">
+    <div className="rounded-xl border border-black/[0.06] bg-white/95 px-4 py-3 shadow-[0_8px_30px_rgba(0,0,0,0.12)] backdrop-blur-sm max-w-[min(calc(100vw-2rem),320px)]">
       <div className="space-y-3">
         {validEntries
           .sort((a, b) => a.value - b.value)
@@ -359,8 +363,12 @@ export function RankingChart({
   granularity,
   onGranularityChange,
   onActiveAgeChange,
+  yScale: yScaleProp,
+  onYScaleChange,
 }: RankingChartProps) {
-  const [yScale, setYScale] = useState<RankingScale>("log");
+  const [internalYScale, setInternalYScale] = useState<RankingScale>("log");
+  const yScale = yScaleProp ?? internalYScale;
+  const setYScale = onYScaleChange ?? setInternalYScale;
   const [activeAge, setActiveAge] = useState<number | null>(null);
   const handleActiveAgeChange = useCallback(
     (age: number | null) => {
@@ -504,6 +512,12 @@ export function RankingChart({
               }}
             />
             <Tooltip
+              wrapperStyle={{
+                zIndex: 20,
+                maxWidth: "min(calc(100vw - 2rem), 320px)",
+                pointerEvents: "none",
+              }}
+              allowEscapeViewBox={{ x: true, y: true }}
               content={(props) => (
                 <>
                   <ActiveAgeSync
