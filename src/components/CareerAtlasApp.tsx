@@ -42,6 +42,10 @@ import {
   ChartViewMode,
 } from "@/data/compare-url-state";
 import { ShareLinkButton } from "@/components/ShareLinkButton";
+import {
+  CompareDashboardTab,
+  CompareTabNav,
+} from "@/components/CompareTabNav";
 
 function normalizePlayerIdsForMode(
   playerIds: string[],
@@ -120,6 +124,8 @@ function CareerAtlasAppMain() {
     toRankingScale(urlBootstrapRef.current?.view ?? "career"),
   );
   const [chartHoverAge, setChartHoverAge] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<CompareDashboardTab>("career");
+  const dashboardPanelRef = useRef<HTMLDivElement>(null);
   const selectedPlayers = useMemo(
     () => getPlayers().filter((player) => selectedIds.includes(player.id)),
     [selectedIds],
@@ -128,6 +134,16 @@ function CareerAtlasAppMain() {
     resolveDisplayAge(selectedAge, chartHoverAge),
   );
   const isAgeSyncedFromChart = chartHoverAge != null;
+
+  const handleTabChange = useCallback((tab: CompareDashboardTab) => {
+    setActiveTab(tab);
+    requestAnimationFrame(() => {
+      dashboardPanelRef.current?.scrollIntoView({
+        block: "nearest",
+        behavior: "auto",
+      });
+    });
+  }, []);
 
   useEffect(() => {
     if (skipUrlSyncRef.current) {
@@ -377,45 +393,100 @@ function CareerAtlasAppMain() {
         shareLinkButton={<ShareLinkButton getShareUrl={getShareUrl} />}
       />
 
-      <RankingChart
-        players={getPlayers()}
-        selectedIds={selectedIds}
-        granularity={granularity}
-        onGranularityChange={handleGranularityChange}
-        onActiveAgeChange={setChartHoverAge}
-        yScale={yScale}
-        onYScaleChange={setYScale}
-      />
+      <div className="flex flex-col gap-4">
+        <CompareTabNav activeTab={activeTab} onTabChange={handleTabChange} />
 
-      <CompareOverview players={selectedPlayers} displayAge={displayAge} />
+        <div
+          ref={dashboardPanelRef}
+          className="flex min-h-[420px] flex-col gap-6"
+        >
+          {activeTab === "career" ? (
+            <div
+              role="tabpanel"
+              id="compare-panel-career"
+              aria-labelledby="compare-tab-career"
+            >
+              <RankingChart
+                players={getPlayers()}
+                selectedIds={selectedIds}
+                granularity={granularity}
+                onGranularityChange={handleGranularityChange}
+                onActiveAgeChange={setChartHoverAge}
+                yScale={yScale}
+                onYScaleChange={setYScale}
+              />
+            </div>
+          ) : null}
 
-      <GoatScorePanel players={selectedPlayers} />
+          {activeTab === "stats" ? (
+            <div
+              role="tabpanel"
+              id="compare-panel-stats"
+              aria-labelledby="compare-tab-stats"
+              className="flex flex-col gap-6"
+            >
+              <CompareOverview players={selectedPlayers} displayAge={displayAge} />
+              <CareerSummaryCards players={selectedPlayers} />
+              <Top10LongevityCards players={selectedPlayers} />
+            </div>
+          ) : null}
 
-      <CareerSummaryCards players={selectedPlayers} />
+          {activeTab === "age" ? (
+            <div
+              role="tabpanel"
+              id="compare-panel-age"
+              aria-labelledby="compare-tab-age"
+            >
+              <AgeSnapshotTable
+                players={selectedPlayers}
+                ages={snapshotAges}
+                displayAge={displayAge}
+                onAgeChange={setSelectedAge}
+                isSyncedFromChart={isAgeSyncedFromChart}
+              />
+            </div>
+          ) : null}
 
-      <Top10LongevityCards players={selectedPlayers} />
+          {activeTab === "grand-slam" ? (
+            <div
+              role="tabpanel"
+              id="compare-panel-grand-slam"
+              aria-labelledby="compare-tab-grand-slam"
+              className="flex flex-col gap-6"
+            >
+              <GrandSlamResultsByAge
+                players={selectedPlayers}
+                ages={snapshotAges}
+                displayAge={displayAge}
+                onAgeChange={setSelectedAge}
+                isSyncedFromChart={isAgeSyncedFromChart}
+              />
+              <GrandSlamCareerTimeline players={selectedPlayers} />
+              <GrandSlamTitlesByAgeChart players={selectedPlayers} />
+            </div>
+          ) : null}
 
-      <AgeSnapshotTable
-        players={selectedPlayers}
-        ages={snapshotAges}
-        displayAge={displayAge}
-        onAgeChange={setSelectedAge}
-        isSyncedFromChart={isAgeSyncedFromChart}
-      />
+          {activeTab === "goat" ? (
+            <div
+              role="tabpanel"
+              id="compare-panel-goat"
+              aria-labelledby="compare-tab-goat"
+            >
+              <GoatScorePanel players={selectedPlayers} />
+            </div>
+          ) : null}
 
-      <GrandSlamResultsByAge
-        players={selectedPlayers}
-        ages={snapshotAges}
-        displayAge={displayAge}
-        onAgeChange={setSelectedAge}
-        isSyncedFromChart={isAgeSyncedFromChart}
-      />
-
-      <GrandSlamCareerTimeline players={selectedPlayers} />
-
-      <GrandSlamTitlesByAgeChart players={selectedPlayers} />
-
-      <No1StreakTimeline players={selectedPlayers} />
+          {activeTab === "no1" ? (
+            <div
+              role="tabpanel"
+              id="compare-panel-no1"
+              aria-labelledby="compare-tab-no1"
+            >
+              <No1StreakTimeline players={selectedPlayers} />
+            </div>
+          ) : null}
+        </div>
+      </div>
 
       <footer className="pb-4 text-center text-xs leading-relaxed text-[#86868b] sm:text-left">
         <p>
