@@ -17,6 +17,7 @@ import dataSourceMeta from "@/data/data-source-meta.json";
 import { PlayerSelector } from "@/components/PlayerSelector";
 import { RankingChart, RankingScale } from "@/components/RankingChart";
 import { CompareOverview } from "@/components/CompareOverview";
+import { GoatScorePanel } from "@/components/GoatScorePanel";
 import { CareerSummaryCards } from "@/components/CareerSummaryCards";
 import { AgeSnapshotTable } from "@/components/AgeSnapshotTable";
 import { No1StreakTimeline } from "@/components/No1StreakTimeline";
@@ -385,6 +386,8 @@ function CareerAtlasAppContent() {
       />
 
       <CompareOverview players={selectedPlayers} displayAge={displayAge} />
+
+      <GoatScorePanel players={selectedPlayers} />
 
       <CareerSummaryCards players={selectedPlayers} />
 
