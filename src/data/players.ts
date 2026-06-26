@@ -1,4 +1,3 @@
-import playerIndexData from "@/data/player-index.json";
 import playersGenerated from "@/data/players.generated.json";
 
 export interface RankingPoint {
@@ -44,7 +43,6 @@ export interface PlayerIndexEntry {
   imagePosition?: string;
 }
 
-export const PLAYER_INDEX: PlayerIndexEntry[] = playerIndexData as PlayerIndexEntry[];
 export const PLAYERS: Player[] = playersGenerated as Player[];
 
 export const PLAYER_IDS = PLAYERS.map((player) => player.id);
@@ -86,7 +84,28 @@ const AUTO_ZOOM_MIN_SPAN: Record<TrajectoryGranularity, number> = {
 
 const playersById = new Map(PLAYERS.map((player) => [player.id, player]));
 const playersByAtpId = new Map(PLAYERS.map((player) => [player.atpPlayerId, player]));
-const indexByAtpId = new Map(PLAYER_INDEX.map((entry) => [entry.atpPlayerId, entry]));
+const featuredIndexByAtpId = new Map(
+  PLAYERS.map((player) => [player.atpPlayerId, playerToIndexEntry(player)]),
+);
+
+function playerToIndexEntry(player: Player): PlayerIndexEntry {
+  const [nameFirst, ...nameRest] = player.name.split(" ");
+  return {
+    atpPlayerId: player.atpPlayerId,
+    name: player.name,
+    nameFirst: nameFirst ?? player.name,
+    nameLast: nameRest.join(" ") || player.shortName,
+    birthDate: player.birthDate,
+    countryCode: player.countryCode,
+    hand: "U",
+    hasRankingData: true,
+    slug: player.id,
+    shortName: player.shortName,
+    color: player.color,
+    imageUrl: player.imageUrl,
+    imagePosition: player.imagePosition,
+  };
+}
 
 export function getPlayerById(id: string): Player | undefined {
   return playersById.get(id);
@@ -97,7 +116,7 @@ export function getPlayerByAtpId(atpPlayerId: string): Player | undefined {
 }
 
 export function getIndexEntryByAtpId(atpPlayerId: string): PlayerIndexEntry | undefined {
-  return indexByAtpId.get(atpPlayerId);
+  return featuredIndexByAtpId.get(atpPlayerId);
 }
 
 export function getPlayerTrajectory(
@@ -112,22 +131,6 @@ export function getPlayerTrajectory(
     case "yearly":
       return player.trajectoryYearly;
   }
-}
-
-export function searchPlayers(query: string, limit = 20): PlayerIndexEntry[] {
-  const normalized = query.trim().toLowerCase();
-  if (!normalized) return [];
-
-  const results: PlayerIndexEntry[] = [];
-  for (const entry of PLAYER_INDEX) {
-    const haystack = `${entry.name} ${entry.nameFirst} ${entry.nameLast} ${entry.countryCode}`.toLowerCase();
-    if (haystack.includes(normalized)) {
-      results.push(entry);
-      if (results.length >= limit) break;
-    }
-  }
-
-  return results;
 }
 
 export function formatBirthDate(birthDate: string | null): string {
