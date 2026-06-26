@@ -23,9 +23,7 @@ import { GoatScorePanel } from "@/components/GoatScorePanel";
 import { CareerSummaryCards } from "@/components/CareerSummaryCards";
 import { AgeSnapshotTable } from "@/components/AgeSnapshotTable";
 import { No1StreakTimeline } from "@/components/No1StreakTimeline";
-import { GrandSlamResultsByAge } from "@/components/GrandSlamResultsByAge";
-import { GrandSlamCareerTimeline } from "@/components/GrandSlamCareerTimeline";
-import { GrandSlamTitlesByAgeChart } from "@/components/GrandSlamTitlesByAgeChart";
+import { GrandSlamTabContent } from "@/components/GrandSlamTabContent";
 import { Top10LongevityCards } from "@/components/Top10LongevityCards";
 import { resolveDisplayAge } from "@/data/grand-slam";
 import {
@@ -454,15 +452,13 @@ function CareerAtlasAppMain() {
               aria-labelledby="compare-tab-grand-slam"
               className="flex flex-col gap-6"
             >
-              <GrandSlamResultsByAge
+              <GrandSlamTabContent
                 players={selectedPlayers}
                 ages={snapshotAges}
                 displayAge={displayAge}
                 onAgeChange={setSelectedAge}
                 isSyncedFromChart={isAgeSyncedFromChart}
               />
-              <GrandSlamCareerTimeline players={selectedPlayers} />
-              <GrandSlamTitlesByAgeChart players={selectedPlayers} />
             </div>
           ) : null}
 

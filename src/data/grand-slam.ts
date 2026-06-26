@@ -328,7 +328,7 @@ export function buildGrandSlamTitlesChartData(
 export function formatTimelineResultLabel(result: GrandSlamResultLabel): string {
   const display = getGrandSlamResultDisplay(result);
   if (display.showTrophy) {
-    return `🏆 ${display.shortLabel}`;
+    return "🏆";
   }
   return display.shortLabel;
 }

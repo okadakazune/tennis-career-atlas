@@ -4,15 +4,18 @@ import { Player } from "@/data/players";
 import {
   GRAND_SLAM_TOURNAMENTS,
   buildGrandSlamCareerTimeline,
-  formatTimelineResultLabel,
-  getGrandSlamResultDisplay,
 } from "@/data/grand-slam";
+import { GrandSlamResultBadge } from "@/components/GrandSlamResultBadge";
 
 interface GrandSlamCareerTimelineProps {
   players: Player[];
+  displayAge: number;
 }
 
-export function GrandSlamCareerTimeline({ players }: GrandSlamCareerTimelineProps) {
+export function GrandSlamCareerTimeline({
+  players,
+  displayAge,
+}: GrandSlamCareerTimelineProps) {
   if (players.length === 0) return null;
 
   return (
@@ -22,8 +25,22 @@ export function GrandSlamCareerTimeline({ players }: GrandSlamCareerTimelineProp
           Grand Slam Career Timeline
         </h2>
         <p className="mt-0.5 text-sm text-[#86868b]">
-          Every Grand Slam season mapped to the player&apos;s age that year.
+          Every Grand Slam season by age. Age {displayAge} is highlighted.
         </p>
+      </div>
+
+      <div className="mb-4 flex flex-wrap gap-3 text-[11px] text-[#86868b]">
+        <span className="inline-flex items-center gap-1">
+          <span className="rounded-full bg-[#e8f8ec] px-1.5 py-0.5">🏆</span>
+          Winner
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <span className="rounded-full bg-[#e8f1ff] px-1.5 py-0.5 text-[#0a58ca]">
+            F
+          </span>
+          Finalist
+        </span>
+        <span>SF · QF · early rounds shown smaller</span>
       </div>
 
       <div className="flex flex-col gap-5">
@@ -51,45 +68,56 @@ export function GrandSlamCareerTimeline({ players }: GrandSlamCareerTimelineProp
                   No Grand Slam match data available.
                 </p>
               ) : (
-                <div className="space-y-3">
-                  {rows.map((row) => (
-                    <div
-                      key={`${player.id}-${row.year}`}
-                      className="rounded-lg bg-white px-3 py-3 ring-1 ring-black/[0.04]"
-                    >
-                      <p className="mb-2 text-sm font-semibold text-[#1d1d1f]">
-                        Age {row.age}
-                        <span className="ml-2 text-xs font-normal text-[#86868b]">
-                          {row.year}
-                        </span>
-                      </p>
+                <div className="space-y-2">
+                  {rows.map((row) => {
+                    const isHighlighted = row.age === displayAge;
 
-                      <div className="-mx-1 overflow-x-auto px-1 pb-1 sm:overflow-visible sm:pb-0">
-                        <div className="flex min-w-max flex-col gap-2 sm:min-w-0 sm:flex-row sm:flex-wrap">
+                    return (
+                      <div
+                        key={`${player.id}-${row.year}`}
+                        className={`rounded-lg px-3 py-2.5 ${
+                          isHighlighted
+                            ? "bg-[#f0f7ff] ring-2 ring-[#0071e3]/25"
+                            : "bg-white ring-1 ring-black/[0.04]"
+                        }`}
+                      >
+                        <div className="mb-2 flex items-center justify-between gap-2">
+                          <p className="text-sm font-semibold text-[#1d1d1f]">
+                            Age {row.age}
+                            {isHighlighted ? (
+                              <span className="ml-2 rounded-full bg-[#0071e3]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#0071e3]">
+                                Selected
+                              </span>
+                            ) : null}
+                          </p>
+                          <span className="text-xs text-[#86868b]">
+                            {row.year}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
                           {GRAND_SLAM_TOURNAMENTS.map((tournament) => {
                             const result = row.results[tournament.key];
-                            const display = getGrandSlamResultDisplay(result);
 
                             return (
                               <div
                                 key={tournament.key}
-                                className="flex items-center gap-2 sm:min-w-[140px]"
+                                className="flex min-w-0 flex-col items-center gap-1"
                               >
-                                <span className="w-10 shrink-0 text-xs font-semibold text-[#86868b]">
+                                <span className="text-[10px] font-semibold uppercase tracking-wide text-[#86868b]">
                                   {tournament.timelineLabel}
                                 </span>
-                                <span
-                                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${display.className}`}
-                                >
-                                  {formatTimelineResultLabel(result)}
-                                </span>
+                                <GrandSlamResultBadge
+                                  result={result}
+                                  compact
+                                />
                               </div>
                             );
                           })}
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </article>

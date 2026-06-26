@@ -9,12 +9,14 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
+  ReferenceLine,
 } from "recharts";
 import { Player } from "@/data/players";
 import { buildGrandSlamTitlesChartData } from "@/data/grand-slam";
 
 interface GrandSlamTitlesByAgeChartProps {
   players: Player[];
+  displayAge: number;
 }
 
 interface TooltipPayloadItem {
@@ -80,6 +82,7 @@ function CustomTooltip({
 
 export function GrandSlamTitlesByAgeChart({
   players,
+  displayAge,
 }: GrandSlamTitlesByAgeChartProps) {
   if (players.length === 0) return null;
 
@@ -99,7 +102,8 @@ export function GrandSlamTitlesByAgeChart({
           Grand Slam Titles by Age
         </h2>
         <p className="mt-0.5 text-sm text-[#86868b]">
-          Cumulative Grand Slam titles at each age, computed from match results.
+          Cumulative Grand Slam titles at each age. The dashed line marks age{" "}
+          {displayAge}.
         </p>
       </div>
 
@@ -137,12 +141,24 @@ export function GrandSlamTitlesByAgeChart({
               axisLine={{ stroke: "#d2d2d7" }}
               tickLine={{ stroke: "#d2d2d7" }}
               label={{
-                value: "Grand Slam titles",
+                value: "Cumulative GS titles",
                 angle: -90,
                 position: "insideLeft",
                 fill: "#86868b",
                 fontSize: 12,
                 dx: 10,
+              }}
+            />
+            <ReferenceLine
+              x={displayAge}
+              stroke="#0071e3"
+              strokeDasharray="4 4"
+              strokeWidth={1.5}
+              label={{
+                value: `Age ${displayAge}`,
+                position: "insideTopRight",
+                fill: "#0071e3",
+                fontSize: 11,
               }}
             />
             <Tooltip content={<CustomTooltip players={players} />} />
