@@ -52,6 +52,59 @@ export interface EnhancedAgeSnapshotRow {
   inTop10AtAge: boolean;
 }
 
+export type AgeSnapshotMetricKey =
+  | "rankingAtAge"
+  | "gsTitlesByAge"
+  | "gsFinalsByAge"
+  | "weeksAtNo1ByAge"
+  | "inTop10AtAge";
+
+export interface AgeSnapshotMetric {
+  key: AgeSnapshotMetricKey;
+  direction: MetricDirection | "boolean";
+  label: (age: number) => string;
+  format: (row: EnhancedAgeSnapshotRow) => string;
+}
+
+export function getAgeSnapshotMetrics(age: number): AgeSnapshotMetric[] {
+  return [
+    {
+      key: "rankingAtAge",
+      direction: "lower",
+      label: () => `ATP Ranking at age ${age}`,
+      format: (row) => formatRank(row.rankingAtAge),
+    },
+    {
+      key: "gsTitlesByAge",
+      direction: "higher",
+      label: () => `Grand Slam Titles by age ${age}`,
+      format: (row) => dash(row.gsTitlesByAge),
+    },
+    {
+      key: "gsFinalsByAge",
+      direction: "higher",
+      label: () => `Grand Slam Finals by age ${age}`,
+      format: (row) => dash(row.gsFinalsByAge),
+    },
+    {
+      key: "weeksAtNo1ByAge",
+      direction: "higher",
+      label: () => `Total weeks at #1 by age ${age}`,
+      format: (row) =>
+        row.weeksAtNo1ByAge > 0 ? String(row.weeksAtNo1ByAge) : "—",
+    },
+    {
+      key: "inTop10AtAge",
+      direction: "boolean",
+      label: () => `Top 10 status at age ${age}`,
+      format: (row) => {
+        if (row.rankingAtAge == null) return "—";
+        return row.inTop10AtAge ? "Yes" : "No";
+      },
+    },
+  ];
+}
+
 function dash(value: string | number | null | undefined): string {
   if (value == null || value === "") return "—";
   return String(value);
@@ -272,7 +325,24 @@ function findBestAgeMetricIds(
       ? Math.min(...values.map((entry) => entry.value))
       : Math.max(...values.map((entry) => entry.value));
 
+  if (direction === "higher" && best <= 0) {
+    return [];
+  }
+
   return values.filter((entry) => entry.value === best).map((entry) => entry.playerId);
+}
+
+export function findBestPlayerIdsForAgeSnapshotMetric(
+  rows: EnhancedAgeSnapshotRow[],
+  metric: AgeSnapshotMetric,
+): string[] {
+  if (metric.direction === "boolean") {
+    const eligible = rows.filter((row) => row.rankingAtAge != null);
+    const inTop10 = eligible.filter((row) => row.inTop10AtAge);
+    return inTop10.length === 1 ? [inTop10[0].playerId] : [];
+  }
+
+  return findBestAgeMetricIds(rows, metric.key, metric.direction);
 }
 
 export function generateHeadlineInsight(
