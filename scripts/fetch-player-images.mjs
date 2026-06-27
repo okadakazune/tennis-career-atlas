@@ -1,11 +1,12 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { loadChartedPlayersConfig } from "./lib/charted-players.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
 const OUT_DIR = path.join(ROOT, "src", "data");
-const CONFIG_PATH = path.join(__dirname, "config", "featured-players.json");
+const CONFIG_DIR = path.join(__dirname, "config");
 
 const WIKIDATA_API = "https://www.wikidata.org/w/api.php";
 const COMMONS_FILE_PATH = "https://commons.wikimedia.org/wiki/Special:FilePath";
@@ -105,13 +106,13 @@ async function resolvePlayerImage(player) {
 }
 
 async function main() {
-  const featuredConfig = JSON.parse(await readFile(CONFIG_PATH, "utf8"));
+  const chartedConfig = await loadChartedPlayersConfig(CONFIG_DIR);
   const pilotOnly = process.argv.includes("--pilot");
   const targets = pilotOnly
-    ? featuredConfig.filter((player) =>
+    ? chartedConfig.filter((player) =>
         ["federer", "nadal", "djokovic", "alcaraz", "sinner"].includes(player.id),
       )
-    : featuredConfig;
+    : chartedConfig;
 
   const images = {};
 

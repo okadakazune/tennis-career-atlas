@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generatedAt": "2026-06-26T00:29:27.708Z",
+    "generatedAt": "2026-06-27T09:07:29.263Z",
     "source": "Local Sackmann-format match archive (data/raw)",
     "sourceUrl": "data/raw",
     "attribution": "Jeff Sackmann / Tennis Abstract (CC BY-NC-SA 4.0)",
@@ -1060,6 +1060,1208 @@
       },
       "2019": {
         "rg": "R16"
+      }
+    },
+    "sampras": {
+      "1988": {
+        "usOpen": "R128"
+      },
+      "1989": {
+        "rg": "R64",
+        "wimbledon": "R128",
+        "usOpen": "R16",
+        "ao": "R128"
+      },
+      "1990": {
+        "ao": "R16",
+        "wimbledon": "R128",
+        "usOpen": "Winner"
+      },
+      "1991": {
+        "rg": "R64",
+        "wimbledon": "R64",
+        "usOpen": "Quarterfinal"
+      },
+      "1992": {
+        "rg": "Quarterfinal",
+        "wimbledon": "Semifinal",
+        "usOpen": "Runner-up"
+      },
+      "1993": {
+        "ao": "Semifinal",
+        "rg": "Quarterfinal",
+        "wimbledon": "Winner",
+        "usOpen": "Winner"
+      },
+      "1994": {
+        "ao": "Winner",
+        "rg": "Quarterfinal",
+        "wimbledon": "Winner",
+        "usOpen": "R16"
+      },
+      "1995": {
+        "ao": "Runner-up",
+        "rg": "R128",
+        "wimbledon": "Winner",
+        "usOpen": "Winner"
+      },
+      "1996": {
+        "ao": "R32",
+        "rg": "Semifinal",
+        "wimbledon": "Quarterfinal",
+        "usOpen": "Winner"
+      },
+      "1997": {
+        "ao": "Winner",
+        "rg": "R32",
+        "wimbledon": "Winner",
+        "usOpen": "R16"
+      },
+      "1998": {
+        "ao": "Quarterfinal",
+        "rg": "R64",
+        "wimbledon": "Winner",
+        "usOpen": "Semifinal"
+      },
+      "1999": {
+        "rg": "R64",
+        "wimbledon": "Winner"
+      },
+      "2000": {
+        "rg": "R128",
+        "wimbledon": "Winner",
+        "usOpen": "Runner-up",
+        "ao": "Semifinal"
+      },
+      "2001": {
+        "rg": "R64",
+        "wimbledon": "R16",
+        "usOpen": "Runner-up",
+        "ao": "R16"
+      },
+      "2002": {
+        "rg": "R128",
+        "wimbledon": "R64",
+        "usOpen": "Winner",
+        "ao": "R16"
+      }
+    },
+    "agassi": {
+      "1986": {
+        "usOpen": "R128"
+      },
+      "1987": {
+        "rg": "R64",
+        "wimbledon": "R128",
+        "usOpen": "R128"
+      },
+      "1988": {
+        "rg": "Semifinal",
+        "usOpen": "Semifinal"
+      },
+      "1989": {
+        "rg": "R32",
+        "usOpen": "Semifinal"
+      },
+      "1990": {
+        "rg": "Runner-up",
+        "usOpen": "Runner-up"
+      },
+      "1991": {
+        "rg": "Runner-up",
+        "wimbledon": "Quarterfinal",
+        "usOpen": "R128"
+      },
+      "1992": {
+        "rg": "Semifinal",
+        "wimbledon": "Winner",
+        "usOpen": "Quarterfinal"
+      },
+      "1993": {
+        "wimbledon": "Quarterfinal",
+        "usOpen": "R128"
+      },
+      "1994": {
+        "rg": "R64",
+        "wimbledon": "R16",
+        "usOpen": "Winner"
+      },
+      "1995": {
+        "ao": "Winner",
+        "rg": "Quarterfinal",
+        "wimbledon": "Semifinal",
+        "usOpen": "Runner-up"
+      },
+      "1996": {
+        "ao": "Semifinal",
+        "rg": "R64",
+        "wimbledon": "R128",
+        "usOpen": "Semifinal"
+      },
+      "1997": {
+        "usOpen": "R16"
+      },
+      "1998": {
+        "ao": "R16",
+        "rg": "R128",
+        "wimbledon": "R64",
+        "usOpen": "R16"
+      },
+      "1999": {
+        "ao": "R16",
+        "rg": "Winner",
+        "wimbledon": "Runner-up",
+        "usOpen": "Winner"
+      },
+      "2000": {
+        "rg": "R64",
+        "wimbledon": "Semifinal",
+        "usOpen": "R64",
+        "ao": "Winner"
+      },
+      "2001": {
+        "rg": "Quarterfinal",
+        "wimbledon": "Semifinal",
+        "usOpen": "Quarterfinal",
+        "ao": "Winner"
+      },
+      "2002": {
+        "rg": "Quarterfinal",
+        "wimbledon": "R64",
+        "usOpen": "Runner-up"
+      },
+      "2003": {
+        "rg": "Quarterfinal",
+        "wimbledon": "R16",
+        "usOpen": "Semifinal",
+        "ao": "Winner"
+      },
+      "2004": {
+        "rg": "R128",
+        "usOpen": "Quarterfinal",
+        "ao": "Semifinal"
+      },
+      "2005": {
+        "rg": "R128",
+        "usOpen": "Runner-up",
+        "ao": "Quarterfinal"
+      },
+      "2006": {
+        "wimbledon": "R32",
+        "usOpen": "R32"
+      }
+    },
+    "borg": {
+      "1973": {
+        "rg": "R16",
+        "wimbledon": "Quarterfinal",
+        "usOpen": "R16",
+        "ao": "R16"
+      },
+      "1974": {
+        "rg": "Winner",
+        "wimbledon": "R32",
+        "usOpen": "R64"
+      },
+      "1975": {
+        "rg": "Winner",
+        "wimbledon": "Quarterfinal",
+        "usOpen": "Semifinal"
+      },
+      "1976": {
+        "rg": "Quarterfinal",
+        "wimbledon": "Winner",
+        "usOpen": "Runner-up"
+      },
+      "1977": {
+        "wimbledon": "Winner",
+        "usOpen": "R16"
+      },
+      "1978": {
+        "rg": "Winner",
+        "wimbledon": "Winner",
+        "usOpen": "Runner-up"
+      },
+      "1979": {
+        "rg": "Winner",
+        "wimbledon": "Winner",
+        "usOpen": "Quarterfinal"
+      },
+      "1980": {
+        "rg": "Winner",
+        "wimbledon": "Winner",
+        "usOpen": "Runner-up"
+      },
+      "1981": {
+        "rg": "Winner",
+        "wimbledon": "Runner-up",
+        "usOpen": "Runner-up"
+      }
+    },
+    "lendl": {
+      "1978": {
+        "rg": "R128"
+      },
+      "1979": {
+        "rg": "R16",
+        "wimbledon": "R128",
+        "usOpen": "R64"
+      },
+      "1980": {
+        "rg": "R32",
+        "wimbledon": "R32",
+        "usOpen": "Quarterfinal",
+        "ao": "R32"
+      },
+      "1981": {
+        "rg": "Runner-up",
+        "wimbledon": "R128",
+        "usOpen": "R16"
+      },
+      "1982": {
+        "rg": "R16",
+        "usOpen": "Runner-up"
+      },
+      "1983": {
+        "rg": "Quarterfinal",
+        "wimbledon": "Semifinal",
+        "usOpen": "Runner-up",
+        "ao": "Runner-up"
+      },
+      "1984": {
+        "rg": "Winner",
+        "wimbledon": "Semifinal",
+        "usOpen": "Runner-up",
+        "ao": "R16"
+      },
+      "1985": {
+        "rg": "Runner-up",
+        "wimbledon": "R16",
+        "usOpen": "Winner",
+        "ao": "Semifinal"
+      },
+      "1986": {
+        "rg": "Winner",
+        "wimbledon": "Runner-up",
+        "usOpen": "Winner"
+      },
+      "1987": {
+        "rg": "Winner",
+        "wimbledon": "Runner-up",
+        "usOpen": "Winner",
+        "ao": "Semifinal"
+      },
+      "1988": {
+        "rg": "Quarterfinal",
+        "wimbledon": "Semifinal",
+        "usOpen": "Runner-up",
+        "ao": "Semifinal"
+      },
+      "1989": {
+        "rg": "R16",
+        "wimbledon": "Semifinal",
+        "usOpen": "Runner-up",
+        "ao": "Winner"
+      },
+      "1990": {
+        "ao": "Winner",
+        "wimbledon": "Semifinal",
+        "usOpen": "Quarterfinal"
+      },
+      "1991": {
+        "ao": "Runner-up",
+        "wimbledon": "R32",
+        "usOpen": "Semifinal"
+      },
+      "1992": {
+        "ao": "Quarterfinal",
+        "rg": "R64",
+        "wimbledon": "R16",
+        "usOpen": "Quarterfinal"
+      },
+      "1993": {
+        "ao": "R128",
+        "rg": "R128",
+        "wimbledon": "R64",
+        "usOpen": "R128"
+      },
+      "1994": {
+        "ao": "R16",
+        "rg": "R128",
+        "usOpen": "R64"
+      }
+    },
+    "connors": {
+      "1970": {
+        "usOpen": "R128"
+      },
+      "1971": {
+        "wimbledon": "R128",
+        "usOpen": "R64"
+      },
+      "1972": {
+        "rg": "R32",
+        "wimbledon": "Quarterfinal",
+        "usOpen": "R128"
+      },
+      "1973": {
+        "rg": "R128",
+        "wimbledon": "Quarterfinal",
+        "usOpen": "Quarterfinal",
+        "ao": "Winner"
+      },
+      "1974": {
+        "wimbledon": "Winner",
+        "usOpen": "Winner",
+        "ao": "Runner-up"
+      },
+      "1975": {
+        "wimbledon": "Runner-up",
+        "usOpen": "Runner-up"
+      },
+      "1976": {
+        "wimbledon": "Quarterfinal",
+        "usOpen": "Winner"
+      },
+      "1977": {
+        "wimbledon": "Runner-up",
+        "usOpen": "Runner-up"
+      },
+      "1978": {
+        "wimbledon": "Runner-up",
+        "usOpen": "Winner"
+      },
+      "1979": {
+        "rg": "Semifinal",
+        "wimbledon": "Semifinal",
+        "usOpen": "Semifinal"
+      },
+      "1980": {
+        "rg": "Semifinal",
+        "wimbledon": "Semifinal",
+        "usOpen": "Semifinal"
+      },
+      "1981": {
+        "rg": "Quarterfinal",
+        "wimbledon": "Semifinal",
+        "usOpen": "Semifinal"
+      },
+      "1982": {
+        "rg": "Quarterfinal",
+        "wimbledon": "Winner",
+        "usOpen": "Winner"
+      },
+      "1983": {
+        "rg": "Quarterfinal",
+        "wimbledon": "R16",
+        "usOpen": "Winner"
+      },
+      "1984": {
+        "rg": "Semifinal",
+        "wimbledon": "Runner-up",
+        "usOpen": "Semifinal"
+      },
+      "1985": {
+        "rg": "Semifinal",
+        "wimbledon": "Semifinal",
+        "usOpen": "Semifinal"
+      },
+      "1986": {
+        "wimbledon": "R128",
+        "usOpen": "R32"
+      },
+      "1987": {
+        "rg": "Quarterfinal",
+        "wimbledon": "Semifinal",
+        "usOpen": "Semifinal"
+      },
+      "1988": {
+        "wimbledon": "R16",
+        "usOpen": "Quarterfinal"
+      },
+      "1989": {
+        "rg": "R64",
+        "wimbledon": "R64",
+        "usOpen": "Quarterfinal"
+      },
+      "1991": {
+        "rg": "R32",
+        "wimbledon": "R32",
+        "usOpen": "Semifinal"
+      },
+      "1992": {
+        "rg": "R128",
+        "wimbledon": "R128",
+        "usOpen": "R64"
+      }
+    },
+    "mcenroe": {
+      "1977": {
+        "rg": "R64",
+        "wimbledon": "Semifinal",
+        "usOpen": "R16"
+      },
+      "1978": {
+        "wimbledon": "R128",
+        "usOpen": "Semifinal"
+      },
+      "1979": {
+        "wimbledon": "R16",
+        "usOpen": "Winner"
+      },
+      "1980": {
+        "rg": "R32",
+        "wimbledon": "Runner-up",
+        "usOpen": "Winner"
+      },
+      "1981": {
+        "rg": "Quarterfinal",
+        "wimbledon": "Winner",
+        "usOpen": "Winner"
+      },
+      "1982": {
+        "wimbledon": "Runner-up",
+        "usOpen": "Semifinal"
+      },
+      "1983": {
+        "rg": "Quarterfinal",
+        "wimbledon": "Winner",
+        "usOpen": "R16",
+        "ao": "Semifinal"
+      },
+      "1984": {
+        "rg": "Runner-up",
+        "wimbledon": "Winner",
+        "usOpen": "Winner"
+      },
+      "1985": {
+        "rg": "Semifinal",
+        "wimbledon": "Quarterfinal",
+        "usOpen": "Runner-up",
+        "ao": "Quarterfinal"
+      },
+      "1986": {
+        "usOpen": "R128"
+      },
+      "1987": {
+        "rg": "R128",
+        "usOpen": "Quarterfinal"
+      },
+      "1988": {
+        "rg": "R16",
+        "wimbledon": "R64",
+        "usOpen": "R64"
+      },
+      "1989": {
+        "wimbledon": "Semifinal",
+        "usOpen": "R64",
+        "ao": "Quarterfinal"
+      },
+      "1990": {
+        "ao": "R16",
+        "wimbledon": "R128",
+        "usOpen": "Semifinal"
+      },
+      "1991": {
+        "rg": "R128",
+        "wimbledon": "R16",
+        "usOpen": "R32"
+      },
+      "1992": {
+        "ao": "Quarterfinal",
+        "rg": "R128",
+        "wimbledon": "Semifinal",
+        "usOpen": "R16"
+      }
+    },
+    "becker": {
+      "1984": {
+        "wimbledon": "R32",
+        "ao": "Quarterfinal"
+      },
+      "1985": {
+        "rg": "R64",
+        "wimbledon": "Winner",
+        "usOpen": "R16",
+        "ao": "R64"
+      },
+      "1986": {
+        "rg": "Quarterfinal",
+        "wimbledon": "Winner",
+        "usOpen": "Semifinal"
+      },
+      "1987": {
+        "rg": "Semifinal",
+        "wimbledon": "R64",
+        "usOpen": "R16",
+        "ao": "R16"
+      },
+      "1988": {
+        "rg": "R16",
+        "wimbledon": "Runner-up",
+        "usOpen": "R64"
+      },
+      "1989": {
+        "rg": "Semifinal",
+        "wimbledon": "Winner",
+        "usOpen": "Winner",
+        "ao": "R16"
+      },
+      "1990": {
+        "ao": "Quarterfinal",
+        "rg": "R128",
+        "wimbledon": "Runner-up",
+        "usOpen": "Semifinal"
+      },
+      "1991": {
+        "ao": "Winner",
+        "rg": "Semifinal",
+        "wimbledon": "Runner-up",
+        "usOpen": "R32"
+      },
+      "1992": {
+        "ao": "R32",
+        "wimbledon": "Quarterfinal",
+        "usOpen": "R16"
+      },
+      "1993": {
+        "ao": "R128",
+        "rg": "R64",
+        "wimbledon": "Semifinal",
+        "usOpen": "R16"
+      },
+      "1994": {
+        "wimbledon": "Semifinal",
+        "usOpen": "R128"
+      },
+      "1995": {
+        "ao": "R128",
+        "rg": "R32",
+        "wimbledon": "Runner-up",
+        "usOpen": "Semifinal"
+      },
+      "1996": {
+        "ao": "Winner",
+        "wimbledon": "R32"
+      },
+      "1997": {
+        "ao": "R128",
+        "wimbledon": "Quarterfinal"
+      },
+      "1999": {
+        "wimbledon": "R16"
+      }
+    },
+    "edberg": {
+      "1983": {
+        "wimbledon": "R64",
+        "usOpen": "R128",
+        "ao": "R64"
+      },
+      "1984": {
+        "rg": "R64",
+        "wimbledon": "R64",
+        "usOpen": "R64",
+        "ao": "Quarterfinal"
+      },
+      "1985": {
+        "rg": "Quarterfinal",
+        "wimbledon": "R16",
+        "usOpen": "R16",
+        "ao": "Winner"
+      },
+      "1986": {
+        "rg": "R64",
+        "wimbledon": "R32",
+        "usOpen": "Semifinal"
+      },
+      "1987": {
+        "rg": "R64",
+        "wimbledon": "Semifinal",
+        "usOpen": "Semifinal",
+        "ao": "Winner"
+      },
+      "1988": {
+        "rg": "R16",
+        "wimbledon": "Winner",
+        "usOpen": "R16",
+        "ao": "Semifinal"
+      },
+      "1989": {
+        "rg": "Runner-up",
+        "wimbledon": "Runner-up",
+        "usOpen": "R16",
+        "ao": "Quarterfinal"
+      },
+      "1990": {
+        "ao": "Runner-up",
+        "rg": "R128",
+        "wimbledon": "Winner",
+        "usOpen": "R128"
+      },
+      "1991": {
+        "ao": "Semifinal",
+        "rg": "Quarterfinal",
+        "wimbledon": "Semifinal",
+        "usOpen": "Winner"
+      },
+      "1992": {
+        "ao": "Runner-up",
+        "rg": "R32",
+        "wimbledon": "Quarterfinal",
+        "usOpen": "Winner"
+      },
+      "1993": {
+        "ao": "Runner-up",
+        "rg": "Quarterfinal",
+        "wimbledon": "Semifinal",
+        "usOpen": "R64"
+      },
+      "1994": {
+        "ao": "Semifinal",
+        "rg": "R128",
+        "wimbledon": "R64",
+        "usOpen": "R32"
+      },
+      "1995": {
+        "ao": "R16",
+        "rg": "R64",
+        "wimbledon": "R64",
+        "usOpen": "R32"
+      },
+      "1996": {
+        "ao": "R64",
+        "rg": "R16",
+        "wimbledon": "R64",
+        "usOpen": "Quarterfinal"
+      }
+    },
+    "wilander": {
+      "1981": {
+        "wimbledon": "R32",
+        "ao": "R64"
+      },
+      "1982": {
+        "rg": "Winner",
+        "wimbledon": "R16",
+        "usOpen": "R16"
+      },
+      "1983": {
+        "rg": "Runner-up",
+        "wimbledon": "R32",
+        "usOpen": "Quarterfinal",
+        "ao": "Winner"
+      },
+      "1984": {
+        "rg": "Semifinal",
+        "wimbledon": "R64",
+        "usOpen": "Quarterfinal",
+        "ao": "Winner"
+      },
+      "1985": {
+        "rg": "Winner",
+        "wimbledon": "R128",
+        "usOpen": "Semifinal",
+        "ao": "Runner-up"
+      },
+      "1986": {
+        "rg": "R32",
+        "wimbledon": "R16",
+        "usOpen": "R16"
+      },
+      "1987": {
+        "rg": "Runner-up",
+        "wimbledon": "Quarterfinal",
+        "usOpen": "Runner-up"
+      },
+      "1988": {
+        "rg": "Winner",
+        "wimbledon": "Quarterfinal",
+        "usOpen": "Winner",
+        "ao": "Winner"
+      },
+      "1989": {
+        "rg": "Quarterfinal",
+        "wimbledon": "Quarterfinal",
+        "usOpen": "R64",
+        "ao": "R64"
+      },
+      "1990": {
+        "ao": "Semifinal",
+        "usOpen": "R128"
+      },
+      "1991": {
+        "ao": "R16",
+        "rg": "R64"
+      },
+      "1993": {
+        "usOpen": "R32"
+      },
+      "1994": {
+        "ao": "R16",
+        "rg": "R128",
+        "usOpen": "R128"
+      },
+      "1995": {
+        "ao": "R128",
+        "rg": "R64",
+        "wimbledon": "R32",
+        "usOpen": "R64"
+      },
+      "1996": {
+        "rg": "R64"
+      }
+    },
+    "courier": {
+      "1988": {
+        "usOpen": "R64"
+      },
+      "1989": {
+        "rg": "R16",
+        "wimbledon": "R128",
+        "usOpen": "R32"
+      },
+      "1990": {
+        "ao": "R64",
+        "rg": "R16",
+        "wimbledon": "R32",
+        "usOpen": "R64"
+      },
+      "1991": {
+        "ao": "R16",
+        "rg": "Winner",
+        "wimbledon": "Quarterfinal",
+        "usOpen": "Runner-up"
+      },
+      "1992": {
+        "ao": "Winner",
+        "rg": "Winner",
+        "wimbledon": "R32",
+        "usOpen": "Semifinal"
+      },
+      "1993": {
+        "ao": "Winner",
+        "rg": "Runner-up",
+        "wimbledon": "Runner-up",
+        "usOpen": "R16"
+      },
+      "1994": {
+        "ao": "Semifinal",
+        "rg": "Semifinal",
+        "wimbledon": "R64",
+        "usOpen": "R64"
+      },
+      "1995": {
+        "ao": "Quarterfinal",
+        "rg": "R16",
+        "wimbledon": "R64",
+        "usOpen": "Semifinal"
+      },
+      "1996": {
+        "ao": "Quarterfinal",
+        "rg": "Quarterfinal",
+        "wimbledon": "R128"
+      },
+      "1997": {
+        "ao": "R16",
+        "rg": "R128",
+        "wimbledon": "R128",
+        "usOpen": "R128"
+      },
+      "1998": {
+        "rg": "R64",
+        "wimbledon": "R128"
+      },
+      "1999": {
+        "ao": "R32",
+        "rg": "R64",
+        "wimbledon": "R16",
+        "usOpen": "R128"
+      },
+      "2000": {
+        "ao": "R128"
+      }
+    },
+    "hewitt": {
+      "1997": {
+        "ao": "R128"
+      },
+      "1998": {
+        "ao": "R128"
+      },
+      "1999": {
+        "ao": "R64",
+        "rg": "R128",
+        "wimbledon": "R32",
+        "usOpen": "R32"
+      },
+      "2000": {
+        "rg": "R16",
+        "wimbledon": "R128",
+        "usOpen": "Semifinal",
+        "ao": "R16"
+      },
+      "2001": {
+        "rg": "Quarterfinal",
+        "wimbledon": "R16",
+        "usOpen": "Winner",
+        "ao": "R32"
+      },
+      "2002": {
+        "rg": "R16",
+        "wimbledon": "Winner",
+        "usOpen": "Semifinal",
+        "ao": "R128"
+      },
+      "2003": {
+        "rg": "R32",
+        "wimbledon": "R128",
+        "usOpen": "Quarterfinal",
+        "ao": "R16"
+      },
+      "2004": {
+        "rg": "Quarterfinal",
+        "wimbledon": "Quarterfinal",
+        "usOpen": "Runner-up",
+        "ao": "R16"
+      },
+      "2005": {
+        "wimbledon": "Semifinal",
+        "usOpen": "Semifinal",
+        "ao": "Runner-up"
+      },
+      "2006": {
+        "rg": "R16",
+        "wimbledon": "Quarterfinal",
+        "usOpen": "Quarterfinal",
+        "ao": "R64"
+      },
+      "2007": {
+        "rg": "R16",
+        "wimbledon": "R16",
+        "usOpen": "R64",
+        "ao": "R32"
+      },
+      "2008": {
+        "rg": "R32",
+        "wimbledon": "R16",
+        "ao": "R16"
+      },
+      "2009": {
+        "rg": "R32",
+        "wimbledon": "Quarterfinal",
+        "usOpen": "R32",
+        "ao": "R128"
+      },
+      "2010": {
+        "ao": "R16",
+        "rg": "R32",
+        "wimbledon": "R16",
+        "usOpen": "R128"
+      },
+      "2011": {
+        "ao": "R128",
+        "wimbledon": "R64"
+      },
+      "2012": {
+        "ao": "R16",
+        "rg": "R128",
+        "wimbledon": "R128",
+        "usOpen": "R32"
+      },
+      "2013": {
+        "ao": "R128",
+        "rg": "R128",
+        "wimbledon": "R64",
+        "usOpen": "R16"
+      },
+      "2014": {
+        "ao": "R128",
+        "rg": "R128",
+        "wimbledon": "R64",
+        "usOpen": "R128"
+      },
+      "2015": {
+        "ao": "R64",
+        "wimbledon": "R128",
+        "usOpen": "R64"
+      },
+      "2016": {
+        "ao": "R64"
+      }
+    },
+    "roddick": {
+      "2000": {
+        "usOpen": "R128"
+      },
+      "2001": {
+        "rg": "R32",
+        "wimbledon": "R32",
+        "usOpen": "Quarterfinal"
+      },
+      "2002": {
+        "rg": "R128",
+        "wimbledon": "R32",
+        "usOpen": "Quarterfinal",
+        "ao": "R64"
+      },
+      "2003": {
+        "rg": "R128",
+        "wimbledon": "Semifinal",
+        "usOpen": "Winner",
+        "ao": "Semifinal"
+      },
+      "2004": {
+        "rg": "R64",
+        "wimbledon": "Runner-up",
+        "usOpen": "Quarterfinal",
+        "ao": "Quarterfinal"
+      },
+      "2005": {
+        "rg": "R64",
+        "wimbledon": "Runner-up",
+        "usOpen": "R128",
+        "ao": "Semifinal"
+      },
+      "2006": {
+        "rg": "R128",
+        "wimbledon": "R32",
+        "usOpen": "Runner-up",
+        "ao": "R16"
+      },
+      "2007": {
+        "rg": "R128",
+        "wimbledon": "Quarterfinal",
+        "usOpen": "Quarterfinal",
+        "ao": "Semifinal"
+      },
+      "2008": {
+        "wimbledon": "R64",
+        "usOpen": "Quarterfinal",
+        "ao": "R32"
+      },
+      "2009": {
+        "rg": "R16",
+        "wimbledon": "Runner-up",
+        "usOpen": "R32",
+        "ao": "Semifinal"
+      },
+      "2010": {
+        "ao": "Quarterfinal",
+        "rg": "R32",
+        "wimbledon": "R16",
+        "usOpen": "R64"
+      },
+      "2011": {
+        "ao": "R16",
+        "wimbledon": "R32",
+        "usOpen": "Quarterfinal"
+      },
+      "2012": {
+        "ao": "R64",
+        "rg": "R128",
+        "wimbledon": "R32",
+        "usOpen": "R16"
+      }
+    },
+    "safin": {
+      "1998": {
+        "rg": "R16",
+        "wimbledon": "R128",
+        "usOpen": "R16"
+      },
+      "1999": {
+        "ao": "R32",
+        "rg": "R16",
+        "usOpen": "R64"
+      },
+      "2000": {
+        "rg": "Quarterfinal",
+        "wimbledon": "R64",
+        "usOpen": "Winner",
+        "ao": "R128"
+      },
+      "2001": {
+        "rg": "R32",
+        "wimbledon": "Quarterfinal",
+        "usOpen": "Semifinal",
+        "ao": "R16"
+      },
+      "2002": {
+        "rg": "Semifinal",
+        "wimbledon": "R64",
+        "usOpen": "R64",
+        "ao": "Runner-up"
+      },
+      "2003": {
+        "ao": "R32"
+      },
+      "2004": {
+        "rg": "R16",
+        "wimbledon": "R128",
+        "usOpen": "R128",
+        "ao": "Runner-up"
+      },
+      "2005": {
+        "rg": "R16",
+        "wimbledon": "R32",
+        "ao": "Winner"
+      },
+      "2006": {
+        "rg": "R128",
+        "wimbledon": "R64",
+        "usOpen": "R16"
+      },
+      "2007": {
+        "rg": "R64",
+        "wimbledon": "R32",
+        "usOpen": "R64",
+        "ao": "R32"
+      },
+      "2008": {
+        "rg": "R64",
+        "wimbledon": "Semifinal",
+        "usOpen": "R64",
+        "ao": "R64"
+      },
+      "2009": {
+        "rg": "R64",
+        "wimbledon": "R128",
+        "usOpen": "R128",
+        "ao": "R32"
+      }
+    },
+    "kuerten": {
+      "1996": {
+        "rg": "R128"
+      },
+      "1997": {
+        "ao": "R64",
+        "rg": "Winner",
+        "wimbledon": "R128",
+        "usOpen": "R32"
+      },
+      "1998": {
+        "ao": "R64",
+        "rg": "R64",
+        "wimbledon": "R128",
+        "usOpen": "R64"
+      },
+      "1999": {
+        "ao": "R64",
+        "rg": "Quarterfinal",
+        "wimbledon": "Quarterfinal",
+        "usOpen": "Quarterfinal"
+      },
+      "2000": {
+        "rg": "Winner",
+        "wimbledon": "R32",
+        "usOpen": "R128",
+        "ao": "R128"
+      },
+      "2001": {
+        "rg": "Winner",
+        "usOpen": "Quarterfinal",
+        "ao": "R64"
+      },
+      "2002": {
+        "rg": "R16",
+        "usOpen": "R16",
+        "ao": "R128"
+      },
+      "2003": {
+        "rg": "R16",
+        "wimbledon": "R64",
+        "usOpen": "R128",
+        "ao": "R64"
+      },
+      "2004": {
+        "rg": "Quarterfinal",
+        "usOpen": "R128",
+        "ao": "R32"
+      },
+      "2005": {
+        "rg": "R128",
+        "usOpen": "R64"
+      },
+      "2008": {
+        "rg": "R128"
+      }
+    },
+    "ferrero": {
+      "1999": {
+        "usOpen": "R128"
+      },
+      "2000": {
+        "rg": "Semifinal",
+        "usOpen": "R16",
+        "ao": "R32"
+      },
+      "2001": {
+        "rg": "Semifinal",
+        "wimbledon": "R32",
+        "usOpen": "R32",
+        "ao": "R64"
+      },
+      "2002": {
+        "rg": "Runner-up",
+        "wimbledon": "R64",
+        "usOpen": "R32"
+      },
+      "2003": {
+        "rg": "Winner",
+        "wimbledon": "R16",
+        "usOpen": "Runner-up",
+        "ao": "Quarterfinal"
+      },
+      "2004": {
+        "rg": "R64",
+        "wimbledon": "R32",
+        "usOpen": "R64",
+        "ao": "Semifinal"
+      },
+      "2005": {
+        "rg": "R32",
+        "wimbledon": "R16",
+        "usOpen": "R128",
+        "ao": "R32"
+      },
+      "2006": {
+        "rg": "R32",
+        "wimbledon": "R32",
+        "usOpen": "R64",
+        "ao": "R32"
+      },
+      "2007": {
+        "rg": "R32",
+        "wimbledon": "Quarterfinal",
+        "usOpen": "R128",
+        "ao": "R64"
+      },
+      "2008": {
+        "rg": "R128",
+        "wimbledon": "R64",
+        "ao": "R16"
+      },
+      "2009": {
+        "rg": "R64",
+        "wimbledon": "Quarterfinal",
+        "usOpen": "R16",
+        "ao": "R128"
+      },
+      "2010": {
+        "ao": "R128",
+        "rg": "R32",
+        "wimbledon": "R128",
+        "usOpen": "R32"
+      },
+      "2011": {
+        "usOpen": "R16"
+      },
+      "2012": {
+        "ao": "R128",
+        "rg": "R64",
+        "wimbledon": "R128"
       }
     }
   }

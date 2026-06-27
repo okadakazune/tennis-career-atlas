@@ -1,7 +1,7 @@
 "use client";
 
 import { ReactNode } from "react";
-import { Player, PlayerIndexEntry, TrajectoryGranularity, getMaxComparisonPlayers } from "@/data/players";
+import { Player, PlayerIndexEntry, TrajectoryGranularity, getMaxComparisonPlayers, getPlayerAvailabilityLabel } from "@/data/players";
 import { PlayerSearch } from "@/components/PlayerSearch";
 import { ComparisonPresets } from "@/components/ComparisonPresets";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
@@ -80,8 +80,8 @@ export function PlayerSelector({
       )}
 
       <ComparisonPresets
+        selectedIds={selectedIds}
         onApplyPreset={onApplyPreset}
-        onClear={onClearAll}
       />
 
       <div className="mb-5">
@@ -122,11 +122,15 @@ export function PlayerSelector({
                   <span
                     className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
                       entry.hasRankingData
-                        ? "bg-[#E8F5E9] text-[#1B5E20]"
+                        ? entry.careerStatus === "retired"
+                          ? "bg-[#FFF3E0] text-[#E65100]"
+                          : "bg-[#E8F5E9] text-[#1B5E20]"
                         : "bg-[#f5f5f7] text-[#86868b]"
                     }`}
                   >
-                    {entry.hasRankingData ? "Chart available" : "Index only"}
+                    {entry.hasRankingData
+                      ? (getPlayerAvailabilityLabel(entry) ?? "Chart available")
+                      : "Index only"}
                   </span>
                   <button
                     type="button"

@@ -186,11 +186,12 @@ function formatTooltipPeriod(
   rankingDate: string,
   granularity: TrajectoryGranularity,
   isLatestWeek = false,
+  isRetired = false,
 ): { label: string; value: string } {
   if (isLatestWeek) {
     const date = new Date(`${rankingDate}T00:00:00Z`);
     return {
-      label: "Latest week",
+      label: isRetired ? "Career week" : "Latest week",
       value: date.toLocaleDateString("en-US", {
         year: "numeric",
         month: "short",
@@ -302,7 +303,12 @@ function CustomTooltip({
             const streakValue = entry.payload?.[chartStreakKey(entry.dataKey)];
             const period =
               typeof rankingDate === "string"
-                ? formatTooltipPeriod(rankingDate, granularity, isLatestWeek)
+                ? formatTooltipPeriod(
+                    rankingDate,
+                    granularity,
+                    isLatestWeek,
+                    player?.careerStatus === "retired",
+                  )
                 : null;
             const consecutiveWeeksAtNo1 =
               entry.value === 1 && typeof streakValue === "number"

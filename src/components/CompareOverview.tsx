@@ -8,6 +8,7 @@ import {
   buildEnhancedAgeSnapshot,
   findBestPlayerIdsForMetric,
   generateHeadlineInsight,
+  getCompareMetricLabel,
 } from "@/data/compare-stats";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { ChartTooltipCard, TooltipStatRow } from "@/components/ChartTooltipCard";
@@ -125,7 +126,7 @@ export function CompareOverview({ players, displayAge }: CompareOverviewProps) {
                     return (
                       <div key={metric.key}>
                         <dt className="text-[10px] font-medium uppercase tracking-wide text-[#86868b]">
-                          {metric.label}
+                          {getCompareMetricLabel(metric.key, row)}
                         </dt>
                         <dd className="mt-0.5 flex items-center gap-1.5">
                           <span
@@ -165,7 +166,7 @@ export function CompareOverview({ players, displayAge }: CompareOverviewProps) {
                           return (
                             <TooltipStatRow
                               key={metric.key}
-                              label={metric.label}
+                              label={getCompareMetricLabel(metric.key, row)}
                               value={
                                 rank != null
                                   ? `${metric.format(row)} · #${rank}`

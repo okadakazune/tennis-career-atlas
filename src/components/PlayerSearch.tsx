@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   PlayerIndexEntry,
   formatBirthDate,
+  getPlayerAvailabilityLabel,
   getPlayerByAtpId,
 } from "@/data/players";
 import {
@@ -139,7 +140,9 @@ export function PlayerSearch({ selectedIds, onAddToComparison }: PlayerSearchPro
                         className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
                           isSelected
                             ? "bg-[#1d1d1f] text-white"
-                            : "bg-[#E8F5E9] text-[#1B5E20]"
+                            : entry.careerStatus === "retired"
+                              ? "bg-[#FFF3E0] text-[#E65100]"
+                              : "bg-[#E8F5E9] text-[#1B5E20]"
                         }`}
                       >
                         {featuredPlayer && (
@@ -148,7 +151,7 @@ export function PlayerSearch({ selectedIds, onAddToComparison }: PlayerSearchPro
                             style={{ backgroundColor: featuredPlayer.color }}
                           />
                         )}
-                        Chart available
+                        {getPlayerAvailabilityLabel(entry) ?? "Chart available"}
                       </span>
                     ) : (
                       <span className="rounded-full bg-[#f5f5f7] px-2.5 py-1 text-xs font-medium text-[#86868b]">

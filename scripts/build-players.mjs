@@ -2,6 +2,7 @@ import { readdir, readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { ROOT } from "./lib/paths.mjs";
+import { loadChartedPlayersConfig } from "./lib/charted-players.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUT_DIR = path.join(ROOT, "src", "data");
@@ -159,11 +160,11 @@ function mergeLatestIntoTrajectory(
   return Array.from(byDate.values()).sort((a, b) => a.rankingDateRaw - b.rankingDateRaw);
 }
 
-function buildPlayerIndex(rows, featuredByAtpId) {
+function buildPlayerIndex(rows, chartedByAtpId) {
   return rows
     .map((row) => {
       const birthDate = parseDobToDate(row.dob);
-      const featured = featuredByAtpId.get(row.player_id);
+      const charted = chartedByAtpId.get(row.player_id);
 
       return {
         atpPlayerId: row.player_id,
@@ -173,11 +174,13 @@ function buildPlayerIndex(rows, featuredByAtpId) {
         birthDate: birthDate ? formatIsoDate(birthDate) : null,
         countryCode: row.ioc || "",
         hand: row.hand || "",
-        hasRankingData: Boolean(featured),
-        slug: featured?.id,
-        shortName: featured?.shortName,
-        color: featured?.color,
-        imageUrl: featured?.imageUrl,
+        hasRankingData: Boolean(charted),
+        slug: charted?.id,
+        shortName: charted?.shortName,
+        color: charted?.color,
+        imageUrl: charted?.imageUrl,
+        careerStatus: charted?.careerStatus,
+        playerTier: charted?.playerTier,
       };
     })
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -346,8 +349,8 @@ async function loadPlayerImages() {
   }
 }
 
-async function buildFeaturedPlayers(
-  featuredConfig,
+async function buildChartedPlayers(
+  chartedConfig,
   playerRows,
   rankingPaths,
   playerImages,
@@ -358,44 +361,64 @@ async function buildFeaturedPlayers(
   const playersById = new Map(playerRows.map((row) => [row.player_id, row]));
   const players = [];
 
-  for (const featured of featuredConfig) {
-    const row = playersById.get(featured.atpPlayerId);
+  for (const charted of chartedConfig) {
+    const row = playersById.get(charted.atpPlayerId);
+    const label = charted.shortName ?? charted.id;
+    const isLegend = charted.playerTier === "legend";
+
     if (!row) {
-      throw new Error(`Featured player not found in atp_players.csv: ${featured.atpPlayerId}`);
+      const message = `Charted player not found in atp_players.csv: ${charted.atpPlayerId} (${label})`;
+      if (isLegend) {
+        console.warn(`Skipping legend player: ${message}`);
+        continue;
+      }
+      throw new Error(message);
     }
 
     const birthDate = parseDobToDate(row.dob);
     if (!birthDate) {
-      throw new Error(`Missing birth date for featured player: ${featured.atpPlayerId}`);
+      const message = `Missing birth date for charted player: ${charted.atpPlayerId} (${label})`;
+      if (isLegend) {
+        console.warn(`Skipping legend player: ${message}`);
+        continue;
+      }
+      throw new Error(message);
     }
 
     console.log(`Building trajectories for ${row.name_first} ${row.name_last}...`);
-    let rawTrajectory = await loadRankingsForPlayer(rankingPaths, featured.atpPlayerId);
+    let rawTrajectory = await loadRankingsForPlayer(rankingPaths, charted.atpPlayerId);
     rawTrajectory = mergeLatestIntoTrajectory(
       rawTrajectory,
       latestDeltas,
-      featured.atpPlayerId,
+      charted.atpPlayerId,
       archiveCutoffRaw,
       minDateRaw,
     );
 
     if (rawTrajectory.length === 0) {
-      throw new Error(`No ranking history found for featured player: ${featured.atpPlayerId}`);
+      const message = `No ranking history found for charted player: ${charted.atpPlayerId} (${label})`;
+      if (isLegend) {
+        console.warn(`Skipping legend player: ${message}`);
+        continue;
+      }
+      throw new Error(message);
     }
 
     const trajectories = buildTrajectories(rawTrajectory, birthDate);
-    const imageRecord = playerImages[featured.id];
+    const imageRecord = playerImages[charted.id];
 
     players.push({
-      id: featured.id,
-      atpPlayerId: featured.atpPlayerId,
+      id: charted.id,
+      atpPlayerId: charted.atpPlayerId,
       name: `${row.name_first} ${row.name_last}`.trim(),
-      shortName: featured.shortName,
+      shortName: charted.shortName,
       birthDate: formatIsoDate(birthDate),
       countryCode: row.ioc || "",
-      color: featured.color,
-      ...(featured.imageUrl ? { imageUrl: featured.imageUrl } : {}),
-      ...(featured.imagePosition ? { imagePosition: featured.imagePosition } : {}),
+      color: charted.color,
+      careerStatus: charted.careerStatus ?? "active",
+      playerTier: charted.playerTier ?? "featured",
+      ...(charted.imageUrl ? { imageUrl: charted.imageUrl } : {}),
+      ...(charted.imagePosition ? { imagePosition: charted.imagePosition } : {}),
       ...(imageRecord?.imageUrl ? { imageUrl: imageRecord.imageUrl } : {}),
       ...(imageRecord?.imagePosition
         ? { imagePosition: imageRecord.imagePosition }
@@ -437,9 +460,7 @@ async function main() {
   const config = JSON.parse(
     await readFile(path.join(__dirname, "config", "data-source.json"), "utf8"),
   );
-  const featuredConfig = JSON.parse(
-    await readFile(path.join(__dirname, "config", "featured-players.json"), "utf8"),
-  );
+  const chartedConfig = await loadChartedPlayersConfig(path.join(__dirname, "config"));
 
   const { archiveDir, playersPath, rankingPaths } = resolveArchivePaths(config);
   const archiveMeta = await loadArchiveMeta(archiveDir, config.archive.metaFile);
@@ -459,12 +480,12 @@ async function main() {
   }
 
   const playerRows = parseCsv(await readFile(playersPath, "utf8"));
-  const featuredByAtpId = new Map(featuredConfig.map((player) => [player.atpPlayerId, player]));
+  const chartedByAtpId = new Map(chartedConfig.map((player) => [player.atpPlayerId, player]));
 
-  const playerIndex = buildPlayerIndex(playerRows, featuredByAtpId);
+  const playerIndex = buildPlayerIndex(playerRows, chartedByAtpId);
   const playerImages = await loadPlayerImages();
-  const players = await buildFeaturedPlayers(
-    featuredConfig,
+  const players = await buildChartedPlayers(
+    chartedConfig,
     playerRows,
     rankingPaths,
     playerImages,
@@ -522,6 +543,8 @@ async function main() {
         ...latestWeekMeta,
         playerIndexCount: playerIndex.length,
         featuredPlayerCount: players.length,
+        chartedPlayerCount: players.length,
+        legendPlayerCount: players.filter((player) => player.playerTier === "legend").length,
         rankingGranularity: ["weekly", "monthly", "yearly"],
         disclaimer:
           "Unofficial site. Not affiliated with ATP. Historical rankings from Jeff Sackmann archives; recent updates from BallDontLie API when available.",
@@ -533,7 +556,7 @@ async function main() {
 
   console.log(`Wrote ${playerIndex.length} players to ${indexPath}`);
   console.log(`Wrote ${playerIndex.length} players to ${publicIndexPath}`);
-  console.log(`Wrote ${players.length} featured players to ${playersPathOut}`);
+  console.log(`Wrote ${players.length} charted players to ${playersPathOut}`);
   if (latestWeekMeta.staleWarning) {
     console.warn(latestWeekMeta.staleWarning);
   }

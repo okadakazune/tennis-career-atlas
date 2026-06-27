@@ -2,6 +2,7 @@ import { access, readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { ROOT } from "./lib/paths.mjs";
+import { loadChartedPlayersConfig } from "./lib/charted-players.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUT_DIR = path.join(ROOT, "src", "data");
@@ -169,9 +170,7 @@ async function main() {
   const config = JSON.parse(
     await readFile(path.join(__dirname, "config", "data-source.json"), "utf8"),
   );
-  const featuredConfig = JSON.parse(
-    await readFile(path.join(__dirname, "config", "featured-players.json"), "utf8"),
-  );
+  const chartedConfig = await loadChartedPlayersConfig(path.join(__dirname, "config"));
 
   console.log(`Using local match files from ${config.matches.directory ?? "data/raw"}`);
   const matchPaths = await resolveLocalMatchPaths(config);
@@ -180,7 +179,7 @@ async function main() {
     console.warn("No local match CSV files found. Grand Slam results will be empty.");
   }
 
-  const players = await buildResultsForFeatured(featuredConfig, matchPaths);
+  const players = await buildResultsForFeatured(chartedConfig, matchPaths);
   await mkdir(OUT_DIR, { recursive: true });
 
   const outputPath = path.join(OUT_DIR, "grand-slam-results.generated.json");
@@ -198,9 +197,9 @@ async function main() {
   await writeFile(outputPath, `${JSON.stringify(payload, null, 2)}\n`);
 
   console.log(`Wrote Grand Slam results to ${outputPath}`);
-  for (const featured of featuredConfig) {
-    const yearCount = Object.keys(players[featured.id] ?? {}).length;
-    console.log(`  ${featured.shortName}: ${yearCount} seasons with GS data`);
+  for (const charted of chartedConfig) {
+    const yearCount = Object.keys(players[charted.id] ?? {}).length;
+    console.log(`  ${charted.shortName}: ${yearCount} seasons with GS data`);
   }
 }
 

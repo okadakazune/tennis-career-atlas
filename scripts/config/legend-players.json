@@ -1,0 +1,107 @@
+[
+  {
+    "id": "sampras",
+    "atpPlayerId": "101948",
+    "shortName": "Sampras",
+    "color": "#283593",
+    "wikidataSearch": "Pete Sampras"
+  },
+  {
+    "id": "agassi",
+    "atpPlayerId": "101736",
+    "shortName": "Agassi",
+    "color": "#C62828",
+    "wikidataSearch": "Andre Agassi"
+  },
+  {
+    "id": "borg",
+    "atpPlayerId": "100437",
+    "shortName": "Borg",
+    "color": "#F9A825",
+    "wikidataSearch": "Bjorn Borg"
+  },
+  {
+    "id": "lendl",
+    "atpPlayerId": "100656",
+    "shortName": "Lendl",
+    "color": "#37474F",
+    "wikidataSearch": "Ivan Lendl"
+  },
+  {
+    "id": "connors",
+    "atpPlayerId": "100284",
+    "shortName": "Connors",
+    "color": "#1565C0",
+    "wikidataSearch": "Jimmy Connors"
+  },
+  {
+    "id": "mcenroe",
+    "atpPlayerId": "100581",
+    "shortName": "McEnroe",
+    "color": "#2E7D32",
+    "wikidataSearch": "John McEnroe"
+  },
+  {
+    "id": "becker",
+    "atpPlayerId": "101414",
+    "shortName": "Becker",
+    "color": "#6A1B9A",
+    "wikidataSearch": "Boris Becker"
+  },
+  {
+    "id": "edberg",
+    "atpPlayerId": "101222",
+    "shortName": "Edberg",
+    "color": "#00838F",
+    "wikidataSearch": "Stefan Edberg"
+  },
+  {
+    "id": "wilander",
+    "atpPlayerId": "101062",
+    "shortName": "Wilander",
+    "color": "#EF6C00",
+    "wikidataSearch": "Mats Wilander"
+  },
+  {
+    "id": "courier",
+    "atpPlayerId": "101793",
+    "shortName": "Courier",
+    "color": "#455A64",
+    "wikidataSearch": "Jim Courier"
+  },
+  {
+    "id": "hewitt",
+    "atpPlayerId": "103720",
+    "shortName": "Hewitt",
+    "color": "#FFD600",
+    "wikidataSearch": "Lleyton Hewitt"
+  },
+  {
+    "id": "roddick",
+    "atpPlayerId": "104053",
+    "shortName": "Roddick",
+    "color": "#0277BD",
+    "wikidataSearch": "Andy Roddick"
+  },
+  {
+    "id": "safin",
+    "atpPlayerId": "103498",
+    "shortName": "Safin",
+    "color": "#AD1457",
+    "wikidataSearch": "Marat Safin"
+  },
+  {
+    "id": "kuerten",
+    "atpPlayerId": "102856",
+    "shortName": "Kuerten",
+    "color": "#558B2F",
+    "wikidataSearch": "Gustavo Kuerten"
+  },
+  {
+    "id": "ferrero",
+    "atpPlayerId": "103507",
+    "shortName": "Ferrero",
+    "color": "#D84315",
+    "wikidataSearch": "Juan Carlos Ferrero"
+  }
+]

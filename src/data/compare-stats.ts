@@ -18,6 +18,7 @@ export interface CompareOverviewRow {
   color: string;
   imageUrl?: string;
   imagePosition?: string;
+  careerStatus?: Player["careerStatus"];
   bestRank: number | null;
   latestRank: number | null;
   latestWeek: string | null;
@@ -118,6 +119,33 @@ function formatAge(value: number | null): string {
   return value == null ? "—" : value.toFixed(1);
 }
 
+function formatLatestRank(row: CompareOverviewRow): string {
+  if (row.latestRank == null) {
+    return row.careerStatus === "retired" ? "Retired" : "—";
+  }
+  return formatRank(row.latestRank);
+}
+
+function formatLatestWeek(row: CompareOverviewRow): string {
+  if (!row.latestWeek) return "—";
+  return formatWeek(row.latestWeek);
+}
+
+export function getCompareMetricLabel(
+  metricKey: keyof CompareOverviewRow,
+  row: CompareOverviewRow,
+): string {
+  if (metricKey === "latestRank") {
+    return row.careerStatus === "retired" ? "Career Rank" : "Latest Rank";
+  }
+  if (metricKey === "latestWeek") {
+    return row.careerStatus === "retired" ? "Career Week" : "Latest Week";
+  }
+
+  const metric = COMPARE_OVERVIEW_METRICS.find((entry) => entry.key === metricKey);
+  return metric?.label ?? String(metricKey);
+}
+
 function formatWeek(value: string | null): string {
   if (!value) return "—";
   const date = new Date(`${value}T00:00:00Z`);
@@ -145,6 +173,7 @@ export function buildCompareOverview(players: Player[]): CompareOverviewRow[] {
       color: player.color,
       imageUrl: player.imageUrl,
       imagePosition: player.imagePosition,
+      careerStatus: player.careerStatus,
       bestRank: stats.bestRank,
       latestRank: latest?.ranking ?? null,
       latestWeek: latest?.rankingDate ?? null,
@@ -171,13 +200,13 @@ export const COMPARE_OVERVIEW_METRICS: CompareMetric[] = [
     key: "latestRank",
     label: "Latest Rank",
     direction: "lower",
-    format: (row) => formatRank(row.latestRank),
+    format: (row) => formatLatestRank(row),
   },
   {
     key: "latestWeek",
     label: "Latest Week",
     direction: "higher",
-    format: (row) => formatWeek(row.latestWeek),
+    format: (row) => formatLatestWeek(row),
   },
   {
     key: "grandSlamTitles",

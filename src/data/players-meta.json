@@ -7,6 +7,8 @@
     "birthDate": "1981-08-08",
     "countryCode": "SUI",
     "color": "#1E88E5",
+    "careerStatus": "active",
+    "playerTier": "featured",
     "imagePosition": "center 18%",
     "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Federer_WM16_(37)_(28136155830).jpg?width=384",
     "imageAttribution": "Wikimedia Commons (Federer WM16 (37) (28136155830).jpg)"
@@ -19,6 +21,8 @@
     "birthDate": "1986-06-03",
     "countryCode": "ESP",
     "color": "#FB8C00",
+    "careerStatus": "active",
+    "playerTier": "featured",
     "imagePosition": "center 22%",
     "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Rafael_Nadal_en_2024_(cropped).jpg?width=384",
     "imageAttribution": "Wikimedia Commons (Rafael Nadal en 2024 (cropped).jpg)"
@@ -31,6 +35,8 @@
     "birthDate": "1987-05-22",
     "countryCode": "SRB",
     "color": "#43A047",
+    "careerStatus": "active",
+    "playerTier": "featured",
     "imagePosition": "center 20%",
     "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Novak_Djokovic_Paris_2024_Olympic_Games_(cropped).jpg?width=384",
     "imageAttribution": "Wikimedia Commons (Novak Djokovic Paris 2024 Olympic Games (cropped).jpg)"
@@ -43,6 +49,8 @@
     "birthDate": "2003-05-05",
     "countryCode": "ESP",
     "color": "#FBC02D",
+    "careerStatus": "active",
+    "playerTier": "featured",
     "imagePosition": "center 24%",
     "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Carlos_Alcaraz_Roland_Garros_2025_(cropped).jpg?width=384",
     "imageAttribution": "Wikimedia Commons (Carlos Alcaraz Roland Garros 2025 (cropped).jpg)"
@@ -55,6 +63,8 @@
     "birthDate": "2001-08-16",
     "countryCode": "ITA",
     "color": "#E53935",
+    "careerStatus": "active",
+    "playerTier": "featured",
     "imagePosition": "center 22%",
     "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Jannik_Sinner_US_Open_2025_(cropped).jpg?width=384",
     "imageAttribution": "Wikimedia Commons (Jannik Sinner US Open 2025 (cropped).jpg)"
@@ -66,7 +76,9 @@
     "shortName": "Murray",
     "birthDate": "1987-05-15",
     "countryCode": "GBR",
-    "color": "#5E60CE"
+    "color": "#5E60CE",
+    "careerStatus": "active",
+    "playerTier": "featured"
   },
   {
     "id": "wawrinka",
@@ -75,7 +87,9 @@
     "shortName": "Wawrinka",
     "birthDate": "1985-03-28",
     "countryCode": "SUI",
-    "color": "#8E2430"
+    "color": "#8E2430",
+    "careerStatus": "active",
+    "playerTier": "featured"
   },
   {
     "id": "nishikori",
@@ -84,7 +98,9 @@
     "shortName": "Nishikori",
     "birthDate": "1989-12-29",
     "countryCode": "JPN",
-    "color": "#EC407A"
+    "color": "#EC407A",
+    "careerStatus": "active",
+    "playerTier": "featured"
   },
   {
     "id": "zverev",
@@ -93,7 +109,9 @@
     "shortName": "Zverev",
     "birthDate": "1997-04-20",
     "countryCode": "GER",
-    "color": "#546E7A"
+    "color": "#546E7A",
+    "careerStatus": "active",
+    "playerTier": "featured"
   },
   {
     "id": "medvedev",
@@ -102,7 +120,9 @@
     "shortName": "Medvedev",
     "birthDate": "1996-02-11",
     "countryCode": "RUS",
-    "color": "#29B6F6"
+    "color": "#29B6F6",
+    "careerStatus": "active",
+    "playerTier": "featured"
   },
   {
     "id": "tsitsipas",
@@ -111,7 +131,9 @@
     "shortName": "Tsitsipas",
     "birthDate": "1998-08-12",
     "countryCode": "GRE",
-    "color": "#00ACC1"
+    "color": "#00ACC1",
+    "careerStatus": "active",
+    "playerTier": "featured"
   },
   {
     "id": "rune",
@@ -120,7 +142,9 @@
     "shortName": "Rune",
     "birthDate": "2003-04-29",
     "countryCode": "DEN",
-    "color": "#7CB342"
+    "color": "#7CB342",
+    "careerStatus": "active",
+    "playerTier": "featured"
   },
   {
     "id": "ruud",
@@ -129,7 +153,9 @@
     "shortName": "Ruud",
     "birthDate": "1998-12-22",
     "countryCode": "NOR",
-    "color": "#AB47BC"
+    "color": "#AB47BC",
+    "careerStatus": "active",
+    "playerTier": "featured"
   },
   {
     "id": "thiem",
@@ -138,7 +164,9 @@
     "shortName": "Thiem",
     "birthDate": "1993-09-03",
     "countryCode": "AUT",
-    "color": "#6D4C41"
+    "color": "#6D4C41",
+    "careerStatus": "active",
+    "playerTier": "featured"
   },
   {
     "id": "del-potro",
@@ -147,6 +175,173 @@
     "shortName": "Del Potro",
     "birthDate": "1988-09-23",
     "countryCode": "ARG",
-    "color": "#424242"
+    "color": "#424242",
+    "careerStatus": "active",
+    "playerTier": "featured"
+  },
+  {
+    "id": "sampras",
+    "atpPlayerId": "101948",
+    "name": "Pete Sampras",
+    "shortName": "Sampras",
+    "birthDate": "1971-08-12",
+    "countryCode": "USA",
+    "color": "#283593",
+    "careerStatus": "retired",
+    "playerTier": "legend"
+  },
+  {
+    "id": "agassi",
+    "atpPlayerId": "101736",
+    "name": "Andre Agassi",
+    "shortName": "Agassi",
+    "birthDate": "1970-04-29",
+    "countryCode": "USA",
+    "color": "#C62828",
+    "careerStatus": "retired",
+    "playerTier": "legend"
+  },
+  {
+    "id": "borg",
+    "atpPlayerId": "100437",
+    "name": "Bjorn Borg",
+    "shortName": "Borg",
+    "birthDate": "1956-06-06",
+    "countryCode": "SWE",
+    "color": "#F9A825",
+    "careerStatus": "retired",
+    "playerTier": "legend"
+  },
+  {
+    "id": "lendl",
+    "atpPlayerId": "100656",
+    "name": "Ivan Lendl",
+    "shortName": "Lendl",
+    "birthDate": "1960-03-07",
+    "countryCode": "USA",
+    "color": "#37474F",
+    "careerStatus": "retired",
+    "playerTier": "legend"
+  },
+  {
+    "id": "connors",
+    "atpPlayerId": "100284",
+    "name": "Jimmy Connors",
+    "shortName": "Connors",
+    "birthDate": "1952-09-02",
+    "countryCode": "USA",
+    "color": "#1565C0",
+    "careerStatus": "retired",
+    "playerTier": "legend"
+  },
+  {
+    "id": "mcenroe",
+    "atpPlayerId": "100581",
+    "name": "John McEnroe",
+    "shortName": "McEnroe",
+    "birthDate": "1959-02-16",
+    "countryCode": "USA",
+    "color": "#2E7D32",
+    "careerStatus": "retired",
+    "playerTier": "legend"
+  },
+  {
+    "id": "becker",
+    "atpPlayerId": "101414",
+    "name": "Boris Becker",
+    "shortName": "Becker",
+    "birthDate": "1967-11-22",
+    "countryCode": "GER",
+    "color": "#6A1B9A",
+    "careerStatus": "retired",
+    "playerTier": "legend"
+  },
+  {
+    "id": "edberg",
+    "atpPlayerId": "101222",
+    "name": "Stefan Edberg",
+    "shortName": "Edberg",
+    "birthDate": "1966-01-19",
+    "countryCode": "SWE",
+    "color": "#00838F",
+    "careerStatus": "retired",
+    "playerTier": "legend"
+  },
+  {
+    "id": "wilander",
+    "atpPlayerId": "101062",
+    "name": "Mats Wilander",
+    "shortName": "Wilander",
+    "birthDate": "1964-08-22",
+    "countryCode": "SWE",
+    "color": "#EF6C00",
+    "careerStatus": "retired",
+    "playerTier": "legend"
+  },
+  {
+    "id": "courier",
+    "atpPlayerId": "101793",
+    "name": "Jim Courier",
+    "shortName": "Courier",
+    "birthDate": "1970-08-17",
+    "countryCode": "USA",
+    "color": "#455A64",
+    "careerStatus": "retired",
+    "playerTier": "legend"
+  },
+  {
+    "id": "hewitt",
+    "atpPlayerId": "103720",
+    "name": "Lleyton Hewitt",
+    "shortName": "Hewitt",
+    "birthDate": "1981-02-24",
+    "countryCode": "AUS",
+    "color": "#FFD600",
+    "careerStatus": "retired",
+    "playerTier": "legend"
+  },
+  {
+    "id": "roddick",
+    "atpPlayerId": "104053",
+    "name": "Andy Roddick",
+    "shortName": "Roddick",
+    "birthDate": "1982-08-30",
+    "countryCode": "USA",
+    "color": "#0277BD",
+    "careerStatus": "retired",
+    "playerTier": "legend"
+  },
+  {
+    "id": "safin",
+    "atpPlayerId": "103498",
+    "name": "Marat Safin",
+    "shortName": "Safin",
+    "birthDate": "1980-01-27",
+    "countryCode": "RUS",
+    "color": "#AD1457",
+    "careerStatus": "retired",
+    "playerTier": "legend"
+  },
+  {
+    "id": "kuerten",
+    "atpPlayerId": "102856",
+    "name": "Gustavo Kuerten",
+    "shortName": "Kuerten",
+    "birthDate": "1976-09-10",
+    "countryCode": "BRA",
+    "color": "#558B2F",
+    "careerStatus": "retired",
+    "playerTier": "legend"
+  },
+  {
+    "id": "ferrero",
+    "atpPlayerId": "103507",
+    "name": "Juan Carlos Ferrero",
+    "shortName": "Ferrero",
+    "birthDate": "1980-02-12",
+    "countryCode": "ESP",
+    "color": "#D84315",
+    "careerStatus": "retired",
+    "playerTier": "legend"
   }
 ]

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-26T01:47:31.031Z",
+  "generatedAt": "2026-06-27T09:07:27.929Z",
   "sources": {
     "archive": {
       "label": "Jeff Sackmann / Tennis Abstract (Sackmann-format frozen archive)",
@@ -22,12 +22,14 @@
     }
   },
   "latestWeek": "2026-06-22",
-  "latestWeekAgeDays": 4,
+  "latestWeekAgeDays": 5,
   "isLatestWeekStale": false,
   "staleThresholdDays": 14,
   "staleWarning": null,
   "playerIndexCount": 65989,
-  "featuredPlayerCount": 15,
+  "featuredPlayerCount": 30,
+  "chartedPlayerCount": 30,
+  "legendPlayerCount": 15,
   "rankingGranularity": [
     "weekly",
     "monthly",

@@ -11,6 +11,10 @@ export interface RankingPoint {
 
 export type TrajectoryGranularity = "weekly" | "monthly" | "yearly";
 
+export type PlayerCareerStatus = "active" | "retired";
+
+export type PlayerTier = "featured" | "legend";
+
 export interface Player {
   id: string;
   atpPlayerId: string;
@@ -19,6 +23,8 @@ export interface Player {
   birthDate: string;
   countryCode: string;
   color: string;
+  careerStatus?: PlayerCareerStatus;
+  playerTier?: PlayerTier;
   imageUrl?: string;
   imagePosition?: string;
   imageAttribution?: string;
@@ -35,6 +41,8 @@ export interface PlayerMeta {
   birthDate: string;
   countryCode: string;
   color: string;
+  careerStatus?: PlayerCareerStatus;
+  playerTier?: PlayerTier;
   imageUrl?: string;
   imagePosition?: string;
   imageAttribution?: string;
@@ -54,6 +62,8 @@ export interface PlayerIndexEntry {
   color?: string;
   imageUrl?: string;
   imagePosition?: string;
+  careerStatus?: PlayerCareerStatus;
+  playerTier?: PlayerTier;
 }
 
 const PLAYERS_DATA_URL = "/data/players.generated.json";
@@ -87,7 +97,20 @@ function metaToIndexEntry(meta: PlayerMeta): PlayerIndexEntry {
     color: meta.color,
     imageUrl: meta.imageUrl,
     imagePosition: meta.imagePosition,
+    careerStatus: meta.careerStatus,
+    playerTier: meta.playerTier,
   };
+}
+
+export function isRetiredPlayer(player: Pick<Player, "careerStatus">): boolean {
+  return player.careerStatus === "retired";
+}
+
+export function getPlayerAvailabilityLabel(
+  entry: Pick<PlayerIndexEntry, "hasRankingData" | "careerStatus">,
+): string | null {
+  if (!entry.hasRankingData) return null;
+  return entry.careerStatus === "retired" ? "Career data" : "Chart available";
 }
 
 function playerToIndexEntry(player: Player): PlayerIndexEntry {
