@@ -277,28 +277,20 @@ export function buildChartData(
   selectedPlayers.forEach((player) => {
     getPlayerTrajectory(player, granularity).forEach((point) => {
       const displayAge =
-        granularity === "yearly" ? Math.round(point.age) : point.age;
+        granularity === "yearly"
+          ? Math.round(point.age * 10_000) / 10_000
+          : point.age;
 
       if (!rows.has(displayAge)) {
         rows.set(displayAge, { age: displayAge });
       }
       const row = rows.get(displayAge)!;
-      const latestWeekKey = chartLatestWeekKey(player.id);
-      const alreadyLatestWeek = row[latestWeekKey] === true;
-
-      if (
-        alreadyLatestWeek &&
-        granularity === "yearly" &&
-        !point.isLatestWeek
-      ) {
-        return;
-      }
 
       row[player.id] = point.ranking;
       row[chartDateKey(player.id)] =
         point.highestRankDateReached ?? point.rankingDate;
       if (point.isLatestWeek) {
-        row[latestWeekKey] = true;
+        row[chartLatestWeekKey(player.id)] = true;
       }
       if (granularity === "yearly") {
         if (point.yearEndRank != null) {

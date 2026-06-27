@@ -546,7 +546,7 @@ export function RankingChart({
               type="number"
               domain={xDomain}
               ticks={ageTicks.length > 0 ? ageTicks : undefined}
-              allowDecimals={!isYearly}
+              allowDecimals
               tick={{ fill: "#86868b", fontSize: 12 }}
               axisLine={{ stroke: "#d2d2d7" }}
               tickLine={{ stroke: "#d2d2d7" }}
@@ -630,7 +630,7 @@ export function RankingChart({
                   strokeOpacity={highlight.strokeOpacity}
                   dot={lineStyle.dot}
                   activeDot={lineStyle.activeDot}
-                  connectNulls={false}
+                  connectNulls={isYearly}
                   legendType="none"
                   onMouseEnter={() => setHoveredPlayerId(player.id)}
                   onMouseLeave={() => setHoveredPlayerId(null)}

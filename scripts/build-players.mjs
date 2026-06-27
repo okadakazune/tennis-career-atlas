@@ -358,13 +358,11 @@ function aggregateYearlyBestRank(rawTrajectory) {
   return Array.from(groups.entries())
     .sort(([yearA], [yearB]) => yearA - yearB)
     .map(([calendarYear, group]) => ({
-      rankingDate: formatIsoDate(
-        parseRankingDate(group.firstBestDateRaw) ?? group.bestPoint.rankingDateObj,
-      ),
-      rankingDateRaw: group.firstBestDateRaw,
+      rankingDate: group.yearEndPoint.rankingDate,
+      rankingDateRaw: group.yearEndPoint.rankingDateRaw,
       ranking: group.bestPoint.ranking,
       points: group.bestPoint.points,
-      rankingDateObj: parseRankingDate(group.firstBestDateRaw) ?? group.bestPoint.rankingDateObj,
+      rankingDateObj: group.yearEndPoint.rankingDateObj,
       source: group.bestPoint.source,
       calendarYear,
       yearEndRank: group.yearEndPoint.ranking,
