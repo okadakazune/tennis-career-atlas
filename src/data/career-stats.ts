@@ -200,9 +200,14 @@ export function getYearlyRankingAtAge(player: Player, age: number): number | nul
   );
   if (matches.length === 0) return null;
 
-  const point =
-    matches.find((entry) => entry.isLatestWeek) ?? matches[matches.length - 1];
-  return point.ranking ?? null;
+  let bestRank: number | null = null;
+  for (const match of matches) {
+    if (bestRank === null || match.ranking < bestRank) {
+      bestRank = match.ranking;
+    }
+  }
+
+  return bestRank;
 }
 
 export interface AgeSnapshotRow {

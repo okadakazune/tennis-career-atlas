@@ -15,9 +15,11 @@ import {
   Player,
   TrajectoryGranularity,
   buildChartData,
+  chartCalendarYearKey,
   chartDateKey,
   chartLatestWeekKey,
   chartStreakKey,
+  chartYearEndRankKey,
   getAutoZoomAgeDomain,
   getAgeTicksForDomain,
   getMaxComparisonPlayers,
@@ -56,7 +58,8 @@ const GRANULARITY_OPTIONS: { value: TrajectoryGranularity; label: string }[] = [
 ];
 
 const GRANULARITY_DESCRIPTIONS: Record<TrajectoryGranularity, string> = {
-  yearly: "Compare careers by integer age. The latest calendar year uses the most recent week in the CSV.",
+  yearly:
+    "Compare careers by integer age. Each year shows the highest rank reached that calendar year.",
   monthly: "Month-end rankings for a more detailed career view.",
   weekly: "Full weekly ranking history for deep analysis. Supports up to 2 players.",
 };
@@ -259,6 +262,16 @@ function ActiveAgeHeader({ age }: { age: number }) {
   );
 }
 
+function formatYearlyTooltipDate(value: string): string {
+  const date = new Date(`${value}T00:00:00Z`);
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
+
 function CustomTooltip({
   active,
   payload,
@@ -297,25 +310,24 @@ function CustomTooltip({
           .sort((a, b) => a.value - b.value)
           .map((entry, index) => {
             const player = players.find((p) => p.id === entry.dataKey);
-            const rankingDate = entry.payload?.[chartDateKey(entry.dataKey)];
+            const dateReached = entry.payload?.[chartDateKey(entry.dataKey)];
+            const calendarYear = entry.payload?.[chartCalendarYearKey(entry.dataKey)];
+            const yearEndRank = entry.payload?.[chartYearEndRankKey(entry.dataKey)];
             const isLatestWeek =
               entry.payload?.[chartLatestWeekKey(entry.dataKey)] === true;
             const streakValue = entry.payload?.[chartStreakKey(entry.dataKey)];
-            const period =
-              typeof rankingDate === "string"
-                ? formatTooltipPeriod(
-                    rankingDate,
-                    granularity,
-                    isLatestWeek,
-                    player?.careerStatus === "retired",
-                  )
-                : null;
             const consecutiveWeeksAtNo1 =
               entry.value === 1 && typeof streakValue === "number"
                 ? streakValue
                 : null;
             const rankAmong =
               validEntries.findIndex((item) => item.dataKey === entry.dataKey) + 1;
+            const displayYear =
+              typeof calendarYear === "number"
+                ? calendarYear
+                : typeof dateReached === "string"
+                  ? dateReached.slice(0, 4)
+                  : null;
 
             return (
               <div
@@ -331,24 +343,85 @@ function CustomTooltip({
                 />
 
                 <div className="space-y-1">
-                  <TooltipStatRow
-                    label="ATP ranking"
-                    value={`#${entry.value}`}
-                    highlight
-                  />
-                  <TooltipStatRow
-                    label="Rank among selected"
-                    value={`#${rankAmong} of ${validEntries.length}`}
-                  />
-                  {period ? (
-                    <TooltipStatRow label={period.label} value={period.value} />
-                  ) : null}
-                  {consecutiveWeeksAtNo1 != null ? (
-                    <TooltipStatRow
-                      label="Consecutive weeks at #1"
-                      value={consecutiveWeeksAtNo1}
-                    />
-                  ) : null}
+                  {granularity === "yearly" ? (
+                    <>
+                      <TooltipStatRow
+                        label="Age"
+                        value={formatTooltipAge(
+                          typeof hoveredAge === "number" ? hoveredAge : null,
+                          granularity,
+                        )}
+                      />
+                      {displayYear != null ? (
+                        <TooltipStatRow label="Year" value={String(displayYear)} />
+                      ) : null}
+                      <TooltipStatRow
+                        label="Highest Rank"
+                        value={`#${entry.value}`}
+                        highlight
+                      />
+                      {typeof yearEndRank === "number" ? (
+                        <TooltipStatRow
+                          label="Year-end Rank"
+                          value={`#${yearEndRank}`}
+                        />
+                      ) : null}
+                      {typeof dateReached === "string" ? (
+                        <TooltipStatRow
+                          label="Date Reached"
+                          value={formatYearlyTooltipDate(dateReached)}
+                        />
+                      ) : null}
+                      <TooltipStatRow
+                        label="Rank among selected"
+                        value={`#${rankAmong} of ${validEntries.length}`}
+                      />
+                      {isLatestWeek ? (
+                        <TooltipStatRow
+                          label={player?.careerStatus === "retired" ? "Career year" : "Latest year"}
+                          value="Partial season in dataset"
+                        />
+                      ) : null}
+                    </>
+                  ) : (
+                    <>
+                      <TooltipStatRow
+                        label="ATP ranking"
+                        value={`#${entry.value}`}
+                        highlight
+                      />
+                      <TooltipStatRow
+                        label="Rank among selected"
+                        value={`#${rankAmong} of ${validEntries.length}`}
+                      />
+                      {typeof dateReached === "string" ? (
+                        <TooltipStatRow
+                          label={
+                            formatTooltipPeriod(
+                              dateReached,
+                              granularity,
+                              isLatestWeek,
+                              player?.careerStatus === "retired",
+                            ).label
+                          }
+                          value={
+                            formatTooltipPeriod(
+                              dateReached,
+                              granularity,
+                              isLatestWeek,
+                              player?.careerStatus === "retired",
+                            ).value
+                          }
+                        />
+                      ) : null}
+                      {consecutiveWeeksAtNo1 != null ? (
+                        <TooltipStatRow
+                          label="Consecutive weeks at #1"
+                          value={consecutiveWeeksAtNo1}
+                        />
+                      ) : null}
+                    </>
+                  )}
                 </div>
               </div>
             );

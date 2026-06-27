@@ -7,6 +7,14 @@ export interface RankingPoint {
   points: number | null;
   consecutiveWeeksAtNo1?: number;
   isLatestWeek?: boolean;
+  /** Calendar year this yearly point represents. */
+  calendarYear?: number;
+  /** Best rank reached during the calendar year (same as ranking for yearly points). */
+  yearEndRank?: number;
+  /** Last weekly ranking date in the calendar year. */
+  yearEndDate?: string;
+  /** First date the year's best rank was reached. */
+  highestRankDateReached?: string;
 }
 
 export type TrajectoryGranularity = "weekly" | "monthly" | "yearly";
@@ -249,6 +257,14 @@ export function chartLatestWeekKey(playerId: string): string {
   return `${playerId}__latestWeek`;
 }
 
+export function chartYearEndRankKey(playerId: string): string {
+  return `${playerId}__yearEndRank`;
+}
+
+export function chartCalendarYearKey(playerId: string): string {
+  return `${playerId}__calendarYear`;
+}
+
 export function buildChartData(
   selectedPlayerIds: string[],
   granularity: TrajectoryGranularity = "yearly",
@@ -279,9 +295,20 @@ export function buildChartData(
       }
 
       row[player.id] = point.ranking;
-      row[chartDateKey(player.id)] = point.rankingDate;
+      row[chartDateKey(player.id)] =
+        point.highestRankDateReached ?? point.rankingDate;
       if (point.isLatestWeek) {
         row[latestWeekKey] = true;
+      }
+      if (granularity === "yearly") {
+        if (point.yearEndRank != null) {
+          row[chartYearEndRankKey(player.id)] = point.yearEndRank;
+        }
+        if (point.calendarYear != null) {
+          row[chartCalendarYearKey(player.id)] = point.calendarYear;
+        } else if (point.yearEndDate) {
+          row[chartCalendarYearKey(player.id)] = Number(point.yearEndDate.slice(0, 4));
+        }
       }
       if (point.consecutiveWeeksAtNo1 != null) {
         row[chartStreakKey(player.id)] = point.consecutiveWeeksAtNo1;

@@ -130,15 +130,27 @@ export function getGrandSlamResultDisplay(
 }
 
 function getCalendarYearForAge(player: Player, age: number): string | null {
-  const yearlyPoint = player.trajectoryYearly.find(
+  const matches = player.trajectoryYearly.filter(
     (point) => Math.round(point.age) === age,
   );
-  return yearlyPoint ? yearlyPoint.rankingDate.slice(0, 4) : null;
+  if (matches.length === 0) return null;
+
+  const point = matches.find((entry) => entry.isLatestWeek) ?? matches[matches.length - 1];
+  return String(
+    point.calendarYear ??
+      point.yearEndDate?.slice(0, 4) ??
+      point.rankingDate.slice(0, 4),
+  );
 }
 
 export function getAgeForCalendarYear(player: Player, year: string): number | null {
   const yearlyPoint = player.trajectoryYearly.find(
-    (point) => point.rankingDate.slice(0, 4) === year,
+    (point) =>
+      String(
+        point.calendarYear ??
+          point.yearEndDate?.slice(0, 4) ??
+          point.rankingDate.slice(0, 4),
+      ) === year,
   );
   return yearlyPoint ? Math.round(yearlyPoint.age) : null;
 }

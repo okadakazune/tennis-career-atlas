@@ -230,6 +230,22 @@ function finalizeTrajectory(rawTrajectory, birthDate) {
       finalized.consecutiveWeeksAtNo1 = point.consecutiveWeeksAtNo1;
     }
 
+    if (point.calendarYear != null) {
+      finalized.calendarYear = point.calendarYear;
+    }
+
+    if (point.yearEndRank != null) {
+      finalized.yearEndRank = point.yearEndRank;
+    }
+
+    if (point.yearEndDate) {
+      finalized.yearEndDate = point.yearEndDate;
+    }
+
+    if (point.highestRankDateReached) {
+      finalized.highestRankDateReached = point.highestRankDateReached;
+    }
+
     return finalized;
   });
 }
@@ -292,14 +308,9 @@ function buildTrajectories(rawTrajectory, birthDate) {
     aggregateByPeriod(rawTrajectory, monthKey),
     birthDate,
   );
-  const yearlyAggregated = finalizeTrajectory(
-    aggregateByPeriod(rawTrajectory, yearKey),
-    birthDate,
-  );
-  const trajectoryYearly = applyLatestWeekYearlyPoint(
+  const trajectoryYearly = markLatestYearPoint(
     rawTrajectory,
-    yearlyAggregated,
-    birthDate,
+    finalizeTrajectory(aggregateYearlyBestRank(rawTrajectory), birthDate),
   );
 
   markLatestWeekPoint(trajectoryWeekly);
@@ -313,30 +324,68 @@ function markLatestWeekPoint(trajectory) {
   trajectory[trajectory.length - 1].isLatestWeek = true;
 }
 
-function yearFromRankingDate(dateStr) {
-  return Number(dateStr.slice(0, 4));
-}
+function aggregateYearlyBestRank(rawTrajectory) {
+  const groups = new Map();
 
-function applyLatestWeekYearlyPoint(rawTrajectory, yearlyPoints, birthDate) {
-  if (rawTrajectory.length === 0) return yearlyPoints;
+  for (const point of rawTrajectory) {
+    const calendarYear = yearKey(point.rankingDateRaw);
+    const existing = groups.get(calendarYear);
 
-  const latestRaw = rawTrajectory[rawTrajectory.length - 1];
-  const latestYear = yearKey(latestRaw.rankingDateRaw);
-  const [latestPoint] = finalizeTrajectory([latestRaw], birthDate);
-  latestPoint.isLatestWeek = true;
+    if (!existing) {
+      groups.set(calendarYear, {
+        bestPoint: point,
+        yearEndPoint: point,
+        firstBestDateRaw: point.rankingDateRaw,
+      });
+      continue;
+    }
 
-  const nextYearly = yearlyPoints.map((point) => ({ ...point }));
-  const existingIndex = nextYearly.findIndex(
-    (point) => yearFromRankingDate(point.rankingDate) === latestYear,
-  );
+    if (point.rankingDateRaw > existing.yearEndPoint.rankingDateRaw) {
+      existing.yearEndPoint = point;
+    }
 
-  if (existingIndex >= 0) {
-    nextYearly[existingIndex] = latestPoint;
-  } else {
-    nextYearly.push(latestPoint);
+    if (point.ranking < existing.bestPoint.ranking) {
+      existing.bestPoint = point;
+      existing.firstBestDateRaw = point.rankingDateRaw;
+    } else if (
+      point.ranking === existing.bestPoint.ranking &&
+      point.rankingDateRaw < existing.firstBestDateRaw
+    ) {
+      existing.firstBestDateRaw = point.rankingDateRaw;
+    }
   }
 
-  return nextYearly.sort((a, b) => a.rankingDate.localeCompare(b.rankingDate));
+  return Array.from(groups.entries())
+    .sort(([yearA], [yearB]) => yearA - yearB)
+    .map(([calendarYear, group]) => ({
+      rankingDate: formatIsoDate(
+        parseRankingDate(group.firstBestDateRaw) ?? group.bestPoint.rankingDateObj,
+      ),
+      rankingDateRaw: group.firstBestDateRaw,
+      ranking: group.bestPoint.ranking,
+      points: group.bestPoint.points,
+      rankingDateObj: parseRankingDate(group.firstBestDateRaw) ?? group.bestPoint.rankingDateObj,
+      source: group.bestPoint.source,
+      calendarYear,
+      yearEndRank: group.yearEndPoint.ranking,
+      yearEndDate: group.yearEndPoint.rankingDate,
+      highestRankDateReached: formatIsoDate(
+        parseRankingDate(group.firstBestDateRaw) ?? group.bestPoint.rankingDateObj,
+      ),
+    }));
+}
+
+function markLatestYearPoint(rawTrajectory, yearlyPoints) {
+  if (rawTrajectory.length === 0) {
+    return yearlyPoints;
+  }
+
+  const latestYear = yearKey(rawTrajectory[rawTrajectory.length - 1].rankingDateRaw);
+
+  return yearlyPoints.map((point) => ({
+    ...point,
+    isLatestWeek: point.calendarYear === latestYear,
+  }));
 }
 
 async function loadPlayerImages() {
