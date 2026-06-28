@@ -47,6 +47,7 @@ import {
 } from "@/components/CompareTabNav";
 import { CompareDashboardStickyHeader } from "@/components/CompareDashboardStickyHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { CareerInsightsCard } from "@/components/CareerInsightsCard";
 
 function normalizePlayerIdsForMode(
   playerIds: string[],
@@ -409,6 +410,14 @@ function CareerAtlasAppMain() {
           displayAge={displayAge}
           onAgeChange={setSelectedAge}
           isSyncedFromChart={isAgeSyncedFromChart}
+        />
+
+        <CareerInsightsCard
+          players={selectedPlayers}
+          displayAge={displayAge}
+          activeTab={activeTab}
+          yearlyMetric={yearlyMetric}
+          granularity={granularity}
         />
 
         <div
