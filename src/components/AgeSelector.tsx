@@ -23,7 +23,7 @@ export function AgeSelector({
     <div className={`flex w-full flex-col ${compact ? "gap-1.5" : "gap-2"}`}>
       <div className="flex w-full items-center justify-between gap-3">
         <p
-          className={`font-medium text-[#1d1d1f] ${compact ? "text-xs sm:text-sm" : "text-sm"}`}
+          className={`ui-transition font-medium text-[#1d1d1f] ${compact ? "text-xs sm:text-sm" : "text-sm"}`}
         >
           Age {displayAge}
           {isSyncedFromChart ? (
@@ -53,7 +53,7 @@ export function AgeSelector({
                 type="button"
                 onClick={() => onAgeChange(age)}
                 aria-pressed={isActive}
-                className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-150 ${
+                className={`ui-transition rounded-full px-3 py-1.5 text-xs font-medium ${
                   isActive
                     ? "bg-white text-[#1d1d1f] shadow-[0_1px_6px_rgba(0,0,0,0.08)]"
                     : "text-[#86868b] hover:text-[#1d1d1f]"
