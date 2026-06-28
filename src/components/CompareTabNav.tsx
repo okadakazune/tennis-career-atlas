@@ -12,7 +12,7 @@ export const COMPARE_DASHBOARD_TABS: {
   id: CompareDashboardTab;
   label: string;
 }[] = [
-  { id: "career", label: "Career" },
+  { id: "career", label: "Ranking" },
   { id: "stats", label: "Stats" },
   { id: "age", label: "Age" },
   { id: "grand-slam", label: "Grand Slam" },
@@ -52,7 +52,7 @@ export function CompareTabNav({
               aria-selected={isActive}
               aria-controls={`compare-panel-${tab.id}`}
               onClick={() => onTabChange(tab.id)}
-              className={`shrink-0 rounded-t-lg px-4 py-2.5 text-sm font-medium transition-colors ${
+              className={`ui-transition shrink-0 rounded-t-lg px-4 py-2.5 text-sm font-medium ${
                 isActive
                   ? "border-b-2 border-[#1d1d1f] text-[#1d1d1f]"
                   : "border-b-2 border-transparent text-[#86868b] hover:text-[#1d1d1f]"

@@ -16,6 +16,7 @@ import {
   TrajectoryGranularity,
   buildChartData,
   chartCalendarYearKey,
+  chartCareerEndKey,
   chartDateKey,
   chartLatestWeekKey,
   chartPeakRankKey,
@@ -100,7 +101,116 @@ const SCALE_HELP_TEXT: Record<RankingScale, string> = {
   linear: "Inspect full ranking history down to Top 1000.",
 };
 
-const CHART_HEIGHT_PX = 520;
+const CHART_HEIGHT_PX = 580;
+
+function YearlyMetricSelector({
+  value,
+  onChange,
+}: {
+  value: YearlyMetric;
+  onChange: (value: YearlyMetric) => void;
+}) {
+  return (
+    <fieldset className="rounded-xl border border-black/[0.08] bg-[#fafafa] px-3.5 py-2.5">
+      <legend className="px-1 text-[11px] font-semibold uppercase tracking-wide text-[#86868b]">
+        Ranking Metric
+      </legend>
+      <div className="mt-1 flex flex-col gap-1" role="radiogroup" aria-label="Ranking metric">
+        {YEARLY_METRIC_OPTIONS.map((option) => {
+          const isActive = value === option.value;
+
+          return (
+            <label
+              key={option.value}
+              className={`ui-transition flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm ${
+                isActive
+                  ? "bg-white text-[#1d1d1f] shadow-[0_1px_6px_rgba(0,0,0,0.06)]"
+                  : "text-[#86868b] hover:text-[#1d1d1f]"
+              }`}
+            >
+              <input
+                type="radio"
+                name="yearly-metric"
+                value={option.value}
+                checked={isActive}
+                onChange={() => onChange(option.value)}
+                className="h-3.5 w-3.5 accent-[#1d1d1f]"
+              />
+              <span className="font-medium">{option.label}</span>
+            </label>
+          );
+        })}
+      </div>
+    </fieldset>
+  );
+}
+
+interface ChartDotProps {
+  cx?: number;
+  cy?: number;
+  payload?: Record<string, number | string | boolean | null | undefined>;
+  index?: number;
+}
+
+function CareerChartDot({
+  cx,
+  cy,
+  payload,
+  player,
+  defaultRadius,
+  showDefaultDot,
+}: ChartDotProps & {
+  player: Player;
+  defaultRadius: number;
+  showDefaultDot: boolean;
+}) {
+  if (cx == null || cy == null || !payload) {
+    return null;
+  }
+
+  const isCareerEnd = payload[chartCareerEndKey(player.id)] === true;
+  const isRetired = player.careerStatus === "retired";
+  const radius = isCareerEnd ? 7 : defaultRadius;
+
+  if (!showDefaultDot && !isCareerEnd) {
+    return null;
+  }
+
+  return (
+    <g className="ui-transition">
+      <circle
+        cx={cx}
+        cy={cy}
+        r={radius}
+        fill={player.color}
+        stroke="#fff"
+        strokeWidth={2}
+      />
+      {isCareerEnd ? (
+        <>
+          <circle
+            cx={cx}
+            cy={cy}
+            r={radius + 3}
+            fill="none"
+            stroke={player.color}
+            strokeWidth={1.5}
+            strokeOpacity={0.45}
+          />
+          <text
+            x={cx + radius + 8}
+            y={cy + 4}
+            fill={isRetired ? "#86868b" : "#0071e3"}
+            fontSize={10}
+            fontWeight={600}
+          >
+            {isRetired ? "● Retired" : "▶ Active"}
+          </text>
+        </>
+      ) : null}
+    </g>
+  );
+}
 
 function ChartToggleGroup<T extends string>({
   label,
@@ -128,7 +238,7 @@ function ChartToggleGroup<T extends string>({
             onClick={() => onChange(option.value)}
             aria-pressed={isActive}
             title={option.title}
-            className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-all ${
+            className={`ui-transition rounded-full px-3.5 py-1.5 text-xs font-medium ${
               isActive
                 ? "bg-white text-[#1d1d1f] shadow-[0_1px_6px_rgba(0,0,0,0.08)]"
                 : "text-[#86868b] hover:text-[#1d1d1f]"
@@ -145,21 +255,34 @@ function ChartToggleGroup<T extends string>({
 function ChartLegend({ players }: { players: Player[] }) {
   return (
     <div
-      className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 px-0.5"
+      className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 px-0.5"
       aria-label="Selected players"
     >
-      {players.map((player) => (
-        <div key={player.id} className="flex items-center gap-1.5">
-          <PlayerAvatar
-            name={player.name}
-            color={player.color}
-            imageUrl={player.imageUrl}
-            imagePosition={player.imagePosition}
-            size="chip"
-          />
-          <span className="text-xs font-medium text-[#1d1d1f]">{player.name}</span>
-        </div>
-      ))}
+      {players.map((player) => {
+        const isRetired = player.careerStatus === "retired";
+
+        return (
+          <div key={player.id} className="flex items-center gap-1.5">
+            <PlayerAvatar
+              name={player.name}
+              color={player.color}
+              imageUrl={player.imageUrl}
+              imagePosition={player.imagePosition}
+              size="chip"
+            />
+            <span className="text-xs font-medium text-[#1d1d1f]">{player.shortName}</span>
+            <span
+              className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
+                isRetired
+                  ? "bg-[#f5f5f7] text-[#86868b]"
+                  : "bg-[#e8f4fd] text-[#0071e3]"
+              }`}
+            >
+              {isRetired ? "Retired" : "Active"}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -265,7 +388,7 @@ function ActiveAgeSync({
 function ActiveAgeHeader({ age }: { age: number }) {
   return (
     <div
-      className="pointer-events-none absolute left-1/2 top-3 z-10 -translate-x-1/2 rounded-full border border-black/[0.06] bg-white/95 px-4 py-1.5 shadow-[0_4px_16px_rgba(0,0,0,0.08)] backdrop-blur-sm"
+      className="ui-transition pointer-events-none absolute left-1/2 top-3 z-10 -translate-x-1/2 rounded-full border border-black/[0.06] bg-white/95 px-4 py-1.5 shadow-[0_4px_16px_rgba(0,0,0,0.08)] backdrop-blur-sm"
       aria-live="polite"
       aria-atomic="true"
     >
@@ -513,7 +636,7 @@ export function RankingChart({
   }
 
   return (
-    <div className="rounded-2xl border border-black/[0.06] bg-white p-4 shadow-[0_2px_20px_rgba(0,0,0,0.04)] sm:p-6">
+    <div className="rounded-2xl border border-black/[0.08] bg-white p-4 shadow-[0_12px_48px_rgba(0,0,0,0.08)] sm:p-6 lg:p-7">
       <div className="mb-4 flex flex-col gap-4 sm:mb-5 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-lg font-semibold tracking-tight text-[#1d1d1f]">
@@ -535,9 +658,7 @@ export function RankingChart({
             onChange={onGranularityChange}
           />
           {isYearly && onYearlyMetricChange ? (
-            <ChartToggleGroup
-              label="Yearly ranking metric"
-              options={YEARLY_METRIC_OPTIONS}
+            <YearlyMetricSelector
               value={yearlyMetric}
               onChange={onYearlyMetricChange}
             />
@@ -561,7 +682,11 @@ export function RankingChart({
 
       <ChartLegend players={selectedPlayers} />
 
-      <div className="relative w-full" style={{ height: CHART_HEIGHT_PX }}>
+      <div
+        key={`${granularity}-${yearlyMetric}`}
+        className="ui-chart-metric-enter relative w-full"
+        style={{ height: CHART_HEIGHT_PX }}
+      >
         {activeAge != null ? <ActiveAgeHeader age={activeAge} /> : null}
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
@@ -659,6 +784,13 @@ export function RankingChart({
                 lineStyle.strokeOpacity,
                 lineStyle.strokeWidth,
               );
+              const defaultDotRadius =
+                granularity === "yearly"
+                  ? 5
+                  : granularity === "monthly"
+                    ? 3.5
+                    : 0;
+              const showDefaultDot = lineStyle.dot !== false;
 
               return (
                 <Line
@@ -669,7 +801,14 @@ export function RankingChart({
                   stroke={player.color}
                   strokeWidth={highlight.strokeWidth}
                   strokeOpacity={highlight.strokeOpacity}
-                  dot={lineStyle.dot}
+                  dot={(props) => (
+                    <CareerChartDot
+                      {...props}
+                      player={player}
+                      defaultRadius={defaultDotRadius}
+                      showDefaultDot={showDefaultDot}
+                    />
+                  )}
                   activeDot={lineStyle.activeDot}
                   connectNulls={isYearly}
                   legendType="none"

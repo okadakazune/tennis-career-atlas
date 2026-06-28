@@ -277,6 +277,10 @@ export function chartYearEndDateKey(playerId: string): string {
   return `${playerId}__yearEndDate`;
 }
 
+export function chartCareerEndKey(playerId: string): string {
+  return `${playerId}__careerEnd`;
+}
+
 export function buildChartData(
   selectedPlayerIds: string[],
   granularity: TrajectoryGranularity = "yearly",
@@ -327,7 +331,18 @@ export function buildChartData(
     });
   });
 
-  return Array.from(rows.values()).sort((a, b) => a.age - b.age);
+  const sortedRows = Array.from(rows.values()).sort((a, b) => a.age - b.age);
+
+  for (const playerId of selectedPlayerIds) {
+    for (let index = sortedRows.length - 1; index >= 0; index -= 1) {
+      if (sortedRows[index][playerId] != null) {
+        sortedRows[index][chartCareerEndKey(playerId)] = true;
+        break;
+      }
+    }
+  }
+
+  return sortedRows;
 }
 
 export function getYAxisDomain(

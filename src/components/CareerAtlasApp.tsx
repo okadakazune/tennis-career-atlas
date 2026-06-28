@@ -46,6 +46,7 @@ import {
   CompareDashboardTab,
 } from "@/components/CompareTabNav";
 import { CompareDashboardStickyHeader } from "@/components/CompareDashboardStickyHeader";
+import { SiteFooter } from "@/components/SiteFooter";
 
 function normalizePlayerIdsForMode(
   playerIds: string[],
@@ -358,18 +359,17 @@ function CareerAtlasAppMain() {
   );
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 pb-2">
       <header className="text-center sm:text-left">
         <p className="mb-2 text-sm font-medium uppercase tracking-[0.2em] text-[#86868b]">
           Tennis Career Atlas
         </p>
         <h1 className="text-3xl font-semibold tracking-tight text-[#1d1d1f] sm:text-4xl sm:leading-tight">
-          Compare ATP ranking trajectories
+          Compare tennis careers at the same age
         </h1>
         <p className="mt-3 max-w-2xl text-base leading-relaxed text-[#86868b]">
-          Compare up to 5 players by age. Start with the yearly view for a
-          career overview, then drill into monthly or weekly detail. Weekly view
-          supports up to 2 players.
+          Discover who was ahead at every stage of their career. Compare ATP
+          rankings, Grand Slam titles, World No.1 weeks and more.
         </p>
       </header>
 
@@ -398,7 +398,10 @@ function CareerAtlasAppMain() {
         shareLinkButton={<ShareLinkButton getShareUrl={getShareUrl} />}
       />
 
-      <div className="flex flex-col gap-4">
+      <section
+        aria-label="Comparison dashboard"
+        className="flex flex-col gap-3 border-t border-black/[0.05] pt-5"
+      >
         <CompareDashboardStickyHeader
           activeTab={activeTab}
           onTabChange={handleTabChange}
@@ -410,13 +413,15 @@ function CareerAtlasAppMain() {
 
         <div
           ref={dashboardPanelRef}
-          className="flex min-h-[420px] flex-col gap-6"
+          key={activeTab}
+          className="ui-panel-enter flex min-h-[420px] flex-col gap-6"
         >
           {activeTab === "career" ? (
             <div
               role="tabpanel"
               id="compare-panel-career"
               aria-labelledby="compare-tab-career"
+              className="-mx-1"
             >
               <RankingChart
                 players={getPlayers()}
@@ -499,32 +504,9 @@ function CareerAtlasAppMain() {
             </div>
           ) : null}
         </div>
-      </div>
+      </section>
 
-      <footer className="pb-4 text-center text-xs leading-relaxed text-[#86868b] sm:text-left">
-        <p>
-          Historical ATP rankings are based on Jeff Sackmann archives. Recent weekly
-          ranking updates are derived from BallDontLie API when available. This site
-          is unofficial and is not affiliated with ATP.
-        </p>
-        <p className="mt-2">
-          Archive: {dataSourceMeta.sources.archive.attribution}. Latest provider:{" "}
-          {dataSourceMeta.sources.latest.enabled
-            ? dataSourceMeta.sources.latest.provider
-            : "not configured"}
-          . Generated{" "}
-          {new Date(dataSourceMeta.generatedAt).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-          })}
-          {dataSourceMeta.latestWeek
-            ? `. Latest ranking week: ${dataSourceMeta.latestWeek}.`
-            : "."}{" "}
-          Grand Slam results from Jeff Sackmann archives. Player photos from
-          Wikimedia Commons via Wikidata when available.
-        </p>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

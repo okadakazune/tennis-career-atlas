@@ -38,7 +38,7 @@ export function PlayerSelector({
   const maxPlayers = getMaxComparisonPlayers(granularity);
 
   return (
-    <section className="rounded-2xl border border-black/[0.06] bg-white p-5 shadow-[0_2px_20px_rgba(0,0,0,0.04)] sm:p-6">
+    <section className="rounded-xl border border-black/[0.05] bg-white/70 p-4 shadow-[0_1px_8px_rgba(0,0,0,0.03)] sm:p-5">
       <div className="mb-4 flex flex-col gap-3 sm:mb-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-lg font-semibold tracking-tight text-[#1d1d1f]">

@@ -58,7 +58,32 @@ body {
   }
 }
 
+@keyframes ui-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .chart-tooltip-card {
   animation: chart-tooltip-in 180ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
   transform-origin: top center;
+}
+
+.ui-transition {
+  transition-property: color, background-color, border-color, opacity, transform, box-shadow;
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ui-panel-enter {
+  animation: ui-fade-in 200ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.ui-chart-metric-enter {
+  animation: ui-fade-in 180ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
