@@ -37,7 +37,9 @@ import {
   DEFAULT_SHARE_PLAYER_IDS,
   parseCompareUrlState,
   resolveSharePlayerIds,
+  resolveYearlyMetric,
   ChartViewMode,
+  YearlyMetric,
 } from "@/data/compare-url-state";
 import { ShareLinkButton } from "@/components/ShareLinkButton";
 import {
@@ -121,6 +123,9 @@ function CareerAtlasAppMain() {
   const [yScale, setYScale] = useState<RankingScale>(() =>
     toRankingScale(urlBootstrapRef.current?.view ?? "career"),
   );
+  const [yearlyMetric, setYearlyMetric] = useState<YearlyMetric>(() =>
+    resolveYearlyMetric(urlBootstrapRef.current?.yearlyMetric),
+  );
   const [chartHoverAge, setChartHoverAge] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<CompareDashboardTab>("career");
   const dashboardPanelRef = useRef<HTMLDivElement>(null);
@@ -154,9 +159,10 @@ function CareerAtlasAppMain() {
       age: selectedAge,
       granularity,
       view: fromRankingScale(yScale),
+      yearlyMetric: granularity === "yearly" ? yearlyMetric : undefined,
     });
     router.replace(nextPath, { scroll: false });
-  }, [selectedIds, selectedAge, granularity, yScale, router]);
+  }, [selectedIds, selectedAge, granularity, yScale, yearlyMetric, router]);
 
   const getShareUrl = useCallback(() => {
     if (typeof window === "undefined") return "/";
@@ -167,10 +173,11 @@ function CareerAtlasAppMain() {
         age: selectedAge,
         granularity,
         view: fromRankingScale(yScale),
+        yearlyMetric: granularity === "yearly" ? yearlyMetric : undefined,
       },
       window.location.origin,
     );
-  }, [selectedIds, selectedAge, granularity, yScale]);
+  }, [selectedIds, selectedAge, granularity, yScale, yearlyMetric]);
 
   useEffect(() => {
     if (selectedIds.length > 0) return;
@@ -419,6 +426,8 @@ function CareerAtlasAppMain() {
                 onActiveAgeChange={setChartHoverAge}
                 yScale={yScale}
                 onYScaleChange={setYScale}
+                yearlyMetric={yearlyMetric}
+                onYearlyMetricChange={setYearlyMetric}
               />
             </div>
           ) : null}

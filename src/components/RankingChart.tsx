@@ -18,12 +18,15 @@ import {
   chartCalendarYearKey,
   chartDateKey,
   chartLatestWeekKey,
+  chartPeakRankKey,
   chartStreakKey,
+  chartYearEndDateKey,
   chartYearEndRankKey,
   getAutoZoomAgeDomain,
   getAgeTicksForDomain,
   getMaxComparisonPlayers,
   getYAxisConfig,
+  YearlyMetric,
 } from "@/data/players";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import {
@@ -41,6 +44,8 @@ interface RankingChartProps {
   onActiveAgeChange?: (age: number | null) => void;
   yScale?: RankingScale;
   onYScaleChange?: (scale: RankingScale) => void;
+  yearlyMetric?: YearlyMetric;
+  onYearlyMetricChange?: (metric: YearlyMetric) => void;
 }
 
 interface TooltipPayloadItem {
@@ -58,10 +63,19 @@ const GRANULARITY_OPTIONS: { value: TrajectoryGranularity; label: string }[] = [
 ];
 
 const GRANULARITY_DESCRIPTIONS: Record<TrajectoryGranularity, string> = {
-  yearly:
-    "Compare careers by integer age. Each year shows the highest rank reached that calendar year.",
+  yearly: "Compare careers by integer age. Use Peak Rank or Year-end Rank below.",
   monthly: "Month-end rankings for a more detailed career view.",
   weekly: "Full weekly ranking history for deep analysis. Supports up to 2 players.",
+};
+
+const YEARLY_METRIC_OPTIONS: { value: YearlyMetric; label: string }[] = [
+  { value: "peak", label: "Peak Rank" },
+  { value: "yearEnd", label: "Year-end Rank" },
+];
+
+const YEARLY_METRIC_DESCRIPTIONS: Record<YearlyMetric, string> = {
+  peak: "Best ranking reached during each age year.",
+  yearEnd: "Ranking at the final available week of each age year.",
 };
 
 type RankingScale = "linear" | "log";
@@ -278,12 +292,14 @@ function CustomTooltip({
   label,
   players,
   granularity,
+  yearlyMetric = "peak",
 }: {
   active?: boolean;
   payload?: TooltipPayloadItem[];
   label?: number;
   players: Player[];
   granularity: TrajectoryGranularity;
+  yearlyMetric?: YearlyMetric;
 }) {
   if (!active || !payload?.length) return null;
 
@@ -312,7 +328,9 @@ function CustomTooltip({
             const player = players.find((p) => p.id === entry.dataKey);
             const dateReached = entry.payload?.[chartDateKey(entry.dataKey)];
             const calendarYear = entry.payload?.[chartCalendarYearKey(entry.dataKey)];
+            const peakRank = entry.payload?.[chartPeakRankKey(entry.dataKey)];
             const yearEndRank = entry.payload?.[chartYearEndRankKey(entry.dataKey)];
+            const yearEndDate = entry.payload?.[chartYearEndDateKey(entry.dataKey)];
             const isLatestWeek =
               entry.payload?.[chartLatestWeekKey(entry.dataKey)] === true;
             const streakValue = entry.payload?.[chartStreakKey(entry.dataKey)];
@@ -355,21 +373,30 @@ function CustomTooltip({
                       {displayYear != null ? (
                         <TooltipStatRow label="Year" value={String(displayYear)} />
                       ) : null}
-                      <TooltipStatRow
-                        label="Highest Rank"
-                        value={`#${entry.value}`}
-                        highlight
-                      />
-                      {typeof yearEndRank === "number" ? (
+                      {typeof peakRank === "number" ? (
                         <TooltipStatRow
-                          label="Year-end Rank"
-                          value={`#${yearEndRank}`}
+                          label="Peak Rank"
+                          value={`#${peakRank}`}
+                          highlight={yearlyMetric === "peak"}
                         />
                       ) : null}
                       {typeof dateReached === "string" ? (
                         <TooltipStatRow
                           label="Date Reached"
                           value={formatYearlyTooltipDate(dateReached)}
+                        />
+                      ) : null}
+                      {typeof yearEndRank === "number" ? (
+                        <TooltipStatRow
+                          label="Year-end Rank"
+                          value={`#${yearEndRank}`}
+                          highlight={yearlyMetric === "yearEnd"}
+                        />
+                      ) : null}
+                      {typeof yearEndDate === "string" ? (
+                        <TooltipStatRow
+                          label="Year-end Date"
+                          value={formatYearlyTooltipDate(yearEndDate)}
                         />
                       ) : null}
                       <TooltipStatRow
@@ -439,6 +466,8 @@ export function RankingChart({
   onActiveAgeChange,
   yScale: yScaleProp,
   onYScaleChange,
+  yearlyMetric = "peak",
+  onYearlyMetricChange,
 }: RankingChartProps) {
   const [internalYScale, setInternalYScale] = useState<RankingScale>("log");
   const [hoveredPlayerId, setHoveredPlayerId] = useState<string | null>(null);
@@ -454,7 +483,7 @@ export function RankingChart({
   );
   const maxPlayers = getMaxComparisonPlayers(granularity);
   const selectedPlayers = players.filter((p) => selectedIds.includes(p.id));
-  const chartData = buildChartData(selectedIds, granularity);
+  const chartData = buildChartData(selectedIds, granularity, yearlyMetric);
   const { domain: yDomain, ticks: yTicks } = getYAxisConfig(
     chartData,
     selectedIds,
@@ -491,7 +520,10 @@ export function RankingChart({
             ATP Ranking by Age
           </h2>
           <p className="mt-0.5 text-sm text-[#86868b]">
-            Compare up to {maxPlayers} players. {GRANULARITY_DESCRIPTIONS[granularity]}
+            Compare up to {maxPlayers} players.{" "}
+            {isYearly
+              ? YEARLY_METRIC_DESCRIPTIONS[yearlyMetric]
+              : GRANULARITY_DESCRIPTIONS[granularity]}
           </p>
         </div>
 
@@ -502,6 +534,14 @@ export function RankingChart({
             value={granularity}
             onChange={onGranularityChange}
           />
+          {isYearly && onYearlyMetricChange ? (
+            <ChartToggleGroup
+              label="Yearly ranking metric"
+              options={YEARLY_METRIC_OPTIONS}
+              value={yearlyMetric}
+              onChange={onYearlyMetricChange}
+            />
+          ) : null}
           <div className="flex flex-col items-start gap-1 sm:items-end">
             <ChartToggleGroup
               label="Y-axis scale"
@@ -606,6 +646,7 @@ export function RankingChart({
                     label={typeof props.label === "number" ? props.label : undefined}
                     players={selectedPlayers}
                     granularity={granularity}
+                    yearlyMetric={yearlyMetric}
                   />
                 </>
               )}

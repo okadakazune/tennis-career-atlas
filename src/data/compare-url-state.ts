@@ -1,7 +1,10 @@
-import { PLAYER_IDS, TrajectoryGranularity } from "@/data/players";
+import { PLAYER_IDS, TrajectoryGranularity, YearlyMetric, DEFAULT_YEARLY_METRIC } from "@/data/players";
 import { SNAPSHOT_AGE_MAX, SNAPSHOT_AGE_MIN } from "@/data/career-stats";
 
 export type ChartViewMode = "career" | "detail";
+
+export type { YearlyMetric } from "@/data/players";
+export { DEFAULT_YEARLY_METRIC } from "@/data/players";
 
 export const DEFAULT_SHARE_PLAYER_IDS = ["federer", "nadal", "djokovic"] as const;
 
@@ -10,6 +13,7 @@ export interface CompareUrlState {
   age: number;
   granularity: TrajectoryGranularity;
   view: ChartViewMode;
+  yearlyMetric?: YearlyMetric;
 }
 
 const VALID_GRANULARITIES = new Set<TrajectoryGranularity>([
@@ -18,6 +22,7 @@ const VALID_GRANULARITIES = new Set<TrajectoryGranularity>([
   "weekly",
 ]);
 const VALID_VIEWS = new Set<ChartViewMode>(["career", "detail"]);
+const VALID_YEARLY_METRICS = new Set<YearlyMetric>(["peak", "yearEnd"]);
 const VALID_PLAYER_IDS = new Set(PLAYER_IDS);
 
 export function clampSnapshotAge(age: number): number {
@@ -66,6 +71,18 @@ function parseView(searchParams: URLSearchParams): ChartViewMode | undefined {
   return undefined;
 }
 
+function parseYearlyMetric(searchParams: URLSearchParams): YearlyMetric | undefined {
+  const metricParam = searchParams.get("yearlyMetric");
+  if (metricParam && VALID_YEARLY_METRICS.has(metricParam as YearlyMetric)) {
+    return metricParam as YearlyMetric;
+  }
+  return undefined;
+}
+
+export function resolveYearlyMetric(metric: YearlyMetric | undefined): YearlyMetric {
+  return metric ?? DEFAULT_YEARLY_METRIC;
+}
+
 export function parseCompareUrlState(
   searchParams: URLSearchParams,
 ): Partial<CompareUrlState> | null {
@@ -74,6 +91,7 @@ export function parseCompareUrlState(
     searchParams.has("age") ||
     searchParams.has("granularity") ||
     searchParams.has("view") ||
+    searchParams.has("yearlyMetric") ||
     searchParams.has("mode") ||
     searchParams.has("scale");
 
@@ -110,6 +128,11 @@ export function parseCompareUrlState(
     partial.view = view;
   }
 
+  const yearlyMetric = parseYearlyMetric(searchParams);
+  if (yearlyMetric) {
+    partial.yearlyMetric = yearlyMetric;
+  }
+
   return partial;
 }
 
@@ -121,6 +144,10 @@ export function serializeCompareUrlState(state: CompareUrlState): URLSearchParam
   params.set("age", String(clampSnapshotAge(state.age)));
   params.set("granularity", state.granularity);
   params.set("view", state.view);
+
+  if (state.granularity === "yearly") {
+    params.set("yearlyMetric", resolveYearlyMetric(state.yearlyMetric));
+  }
 
   return params;
 }

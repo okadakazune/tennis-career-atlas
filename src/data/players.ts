@@ -19,6 +19,10 @@ export interface RankingPoint {
 
 export type TrajectoryGranularity = "weekly" | "monthly" | "yearly";
 
+export type YearlyMetric = "peak" | "yearEnd";
+
+export const DEFAULT_YEARLY_METRIC: YearlyMetric = "peak";
+
 export type PlayerCareerStatus = "active" | "retired";
 
 export type PlayerTier = "featured" | "legend";
@@ -265,9 +269,18 @@ export function chartCalendarYearKey(playerId: string): string {
   return `${playerId}__calendarYear`;
 }
 
+export function chartPeakRankKey(playerId: string): string {
+  return `${playerId}__peakRank`;
+}
+
+export function chartYearEndDateKey(playerId: string): string {
+  return `${playerId}__yearEndDate`;
+}
+
 export function buildChartData(
   selectedPlayerIds: string[],
   granularity: TrajectoryGranularity = "yearly",
+  yearlyMetric: YearlyMetric = DEFAULT_YEARLY_METRIC,
 ): ChartRow[] {
   const selectedPlayers = getPlayers().filter((player) =>
     selectedPlayerIds.includes(player.id),
@@ -285,16 +298,22 @@ export function buildChartData(
         rows.set(displayAge, { age: displayAge });
       }
       const row = rows.get(displayAge)!;
+      const peakRank = point.ranking;
+      const yearEndRank = point.yearEndRank ?? point.ranking;
 
-      row[player.id] = point.ranking;
+      row[player.id] = granularity === "yearly" && yearlyMetric === "yearEnd"
+        ? yearEndRank
+        : peakRank;
       row[chartDateKey(player.id)] =
         point.highestRankDateReached ?? point.rankingDate;
       if (point.isLatestWeek) {
         row[chartLatestWeekKey(player.id)] = true;
       }
       if (granularity === "yearly") {
-        if (point.yearEndRank != null) {
-          row[chartYearEndRankKey(player.id)] = point.yearEndRank;
+        row[chartPeakRankKey(player.id)] = peakRank;
+        row[chartYearEndRankKey(player.id)] = yearEndRank;
+        if (point.yearEndDate) {
+          row[chartYearEndDateKey(player.id)] = point.yearEndDate;
         }
         if (point.calendarYear != null) {
           row[chartCalendarYearKey(player.id)] = point.calendarYear;
