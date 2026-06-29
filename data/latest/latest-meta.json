@@ -1,10 +1,10 @@
 {
-  "updatedAt": "2026-06-26T00:28:35.782Z",
+  "updatedAt": "2026-06-29T16:08:40.663Z",
   "provider": "BallDontLie ATP API",
   "minDate": "2025-01-01",
-  "latestWeek": "2026-06-22",
-  "weeksOnDisk": 77,
-  "weeksUpdatedThisRun": 77,
-  "deltaCountThisRun": 791,
+  "latestWeek": "2026-06-29",
+  "weeksOnDisk": 78,
+  "weeksUpdatedThisRun": 78,
+  "deltaCountThisRun": 800,
   "mappedPlayers": 15
 }
