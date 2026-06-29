@@ -5,9 +5,7 @@ import { Player } from "@/data/players";
 import {
   COMPARE_OVERVIEW_METRICS,
   buildCompareOverview,
-  buildEnhancedAgeSnapshot,
   findBestPlayerIdsForMetric,
-  generateHeadlineInsight,
   getCompareMetricLabel,
 } from "@/data/compare-stats";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
@@ -47,14 +45,6 @@ export function CompareOverview({ players, displayAge }: CompareOverviewProps) {
   const [hoveredPlayerId, setHoveredPlayerId] = useState<string | null>(null);
 
   const overview = useMemo(() => buildCompareOverview(players), [players]);
-  const ageRows = useMemo(
-    () => buildEnhancedAgeSnapshot(players, displayAge),
-    [players, displayAge],
-  );
-  const headline = useMemo(
-    () => generateHeadlineInsight(overview, ageRows, displayAge),
-    [overview, ageRows, displayAge],
-  );
 
   if (players.length === 0) return null;
 
@@ -69,12 +59,6 @@ export function CompareOverview({ players, displayAge }: CompareOverviewProps) {
           {displayAge}.
         </p>
       </div>
-
-      {headline ? (
-        <div className="rounded-xl border border-[#0071e3]/15 bg-[#f0f7ff] px-4 py-3 text-sm leading-relaxed text-[#1d1d1f]">
-          {headline}
-        </div>
-      ) : null}
 
       <div className="-mx-1 overflow-x-auto px-1 pb-1">
         <div className="flex min-w-max gap-3">

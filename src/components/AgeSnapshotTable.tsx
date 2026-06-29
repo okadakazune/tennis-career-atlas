@@ -4,7 +4,6 @@ import { Player } from "@/data/players";
 import {
   buildEnhancedAgeSnapshot,
   findBestPlayerIdsForAgeSnapshotMetric,
-  generateAgeSnapshotSummary,
   getAgeSnapshotMetrics,
 } from "@/data/compare-stats";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
@@ -30,7 +29,6 @@ export function AgeSnapshotTable({
   if (players.length === 0) return null;
 
   const rows = buildEnhancedAgeSnapshot(players, displayAge);
-  const summary = generateAgeSnapshotSummary(rows, displayAge);
   const metrics = getAgeSnapshotMetrics(displayAge);
 
   return (
@@ -56,12 +54,6 @@ export function AgeSnapshotTable({
           />
         ) : null}
       </header>
-
-      {summary ? (
-        <div className="mb-5 w-full rounded-xl border border-[#0071e3]/15 bg-[#f0f7ff] px-4 py-3 text-sm leading-relaxed text-[#1d1d1f]">
-          {summary}
-        </div>
-      ) : null}
 
       <div className="flex w-full flex-col gap-4 md:flex-row md:flex-wrap">
         {rows.map((row) => (
