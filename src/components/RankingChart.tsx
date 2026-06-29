@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   LineChart,
   Line,
@@ -373,21 +373,96 @@ function snapYearlyHoverAge(label: number | string | undefined): number | null {
   return Math.round(numeric);
 }
 
+function copyPlayerRowFields(
+  target: ChartRow,
+  source: ChartRow,
+  playerId: string,
+): void {
+  const keys = [
+    playerId,
+    chartDateKey(playerId),
+    chartLatestWeekKey(playerId),
+    chartPeakRankKey(playerId),
+    chartYearEndRankKey(playerId),
+    chartYearEndDateKey(playerId),
+    chartCalendarYearKey(playerId),
+    chartStreakKey(playerId),
+    chartCareerEndKey(playerId),
+  ] as const;
+
+  for (const key of keys) {
+    if (source[key] !== undefined) {
+      target[key] = source[key];
+    }
+  }
+}
+
+function buildYearlyDisplayChartData(
+  chartData: ChartRow[],
+  selectedPlayerIds: string[],
+): ChartRow[] {
+  const sourceAgeKey = (playerId: string) => `${playerId}__sourceAge`;
+  const byIntegerAge = new Map<number, ChartRow>();
+
+  for (const row of chartData) {
+    const integerAge = Math.round(row.age);
+
+    if (!byIntegerAge.has(integerAge)) {
+      byIntegerAge.set(integerAge, { age: integerAge });
+    }
+
+    const displayRow = byIntegerAge.get(integerAge)!;
+
+    for (const playerId of selectedPlayerIds) {
+      if (row[playerId] == null) continue;
+
+      const previousSourceAge = displayRow[sourceAgeKey(playerId)] as
+        | number
+        | undefined;
+      if (previousSourceAge != null && previousSourceAge >= row.age) {
+        continue;
+      }
+
+      copyPlayerRowFields(displayRow, row, playerId);
+      displayRow[sourceAgeKey(playerId)] = row.age;
+    }
+  }
+
+  const sortedRows = Array.from(byIntegerAge.values()).sort(
+    (a, b) => a.age - b.age,
+  );
+
+  for (const row of sortedRows) {
+    for (const playerId of selectedPlayerIds) {
+      if (row[chartCareerEndKey(playerId)]) {
+        row[chartCareerEndKey(playerId)] = false;
+      }
+      delete row[sourceAgeKey(playerId)];
+    }
+  }
+
+  for (const playerId of selectedPlayerIds) {
+    for (let index = sortedRows.length - 1; index >= 0; index -= 1) {
+      if (sortedRows[index][playerId] != null) {
+        sortedRows[index][chartCareerEndKey(playerId)] = true;
+        break;
+      }
+    }
+  }
+
+  return sortedRows;
+}
+
 function buildYearlyTooltipPayload(
   chartData: ChartRow[],
   selectedPlayers: Player[],
   snappedAge: number,
 ): TooltipPayloadItem[] {
-  const matchingRows = chartData.filter(
-    (row) => Math.round(row.age) === snappedAge,
-  );
+  const row = chartData.find((entry) => entry.age === snappedAge);
+  if (!row) return [];
 
   return selectedPlayers.flatMap((player) => {
-    const playerRows = matchingRows
-      .filter((row) => row[player.id] != null)
-      .sort((a, b) => b.age - a.age);
-    const row = playerRows[0];
-    if (!row) return [];
+    if (row[player.id] == null) return [];
 
     return [
       {
@@ -661,14 +736,19 @@ export function RankingChart({
   );
   const maxPlayers = getMaxComparisonPlayers(granularity);
   const selectedPlayers = players.filter((p) => selectedIds.includes(p.id));
-  const chartData = buildChartData(selectedIds, granularity, yearlyMetric);
+  const isYearly = granularity === "yearly";
+  const chartData = useMemo(() => {
+    const rawChartData = buildChartData(selectedIds, granularity, yearlyMetric);
+    return isYearly
+      ? buildYearlyDisplayChartData(rawChartData, selectedIds)
+      : rawChartData;
+  }, [selectedIds, granularity, yearlyMetric, isYearly]);
   const { domain: yDomain, ticks: yTicks } = getYAxisConfig(
     chartData,
     selectedIds,
     yScale,
   );
   const [, yMax] = yDomain;
-  const isYearly = granularity === "yearly";
   const zoomDomain = getAutoZoomAgeDomain(selectedIds, granularity);
   const xDomain: [number, number] | ["dataMin", "dataMax"] =
     zoomDomain ?? ["dataMin", "dataMax"];
@@ -788,7 +868,7 @@ export function RankingChart({
               type="number"
               domain={xDomain}
               ticks={ageTicks.length > 0 ? ageTicks : undefined}
-              allowDecimals
+              allowDecimals={!isYearly}
               tick={{ fill: "#86868b", fontSize: 12 }}
               axisLine={{ stroke: "#d2d2d7" }}
               tickLine={{ stroke: "#d2d2d7" }}
