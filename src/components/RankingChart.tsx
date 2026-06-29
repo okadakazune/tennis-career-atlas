@@ -28,6 +28,7 @@ import {
   getMaxComparisonPlayers,
   getYAxisConfig,
   YearlyMetric,
+  ChartRow,
 } from "@/data/players";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import {
@@ -365,22 +366,69 @@ function formatTooltipAge(age: number | null, granularity: TrajectoryGranularity
   return granularity === "yearly" ? String(Math.round(age)) : age.toFixed(1);
 }
 
+function snapYearlyHoverAge(label: number | string | undefined): number | null {
+  if (label == null) return null;
+  const numeric = typeof label === "number" ? label : Number(label);
+  if (!Number.isFinite(numeric)) return null;
+  return Math.round(numeric);
+}
+
+function buildYearlyTooltipPayload(
+  chartData: ChartRow[],
+  selectedPlayers: Player[],
+  snappedAge: number,
+): TooltipPayloadItem[] {
+  const matchingRows = chartData.filter(
+    (row) => Math.round(row.age) === snappedAge,
+  );
+
+  return selectedPlayers.flatMap((player) => {
+    const playerRows = matchingRows
+      .filter((row) => row[player.id] != null)
+      .sort((a, b) => b.age - a.age);
+    const row = playerRows[0];
+    if (!row) return [];
+
+    return [
+      {
+        color: player.color,
+        name: player.shortName,
+        value: row[player.id] as number,
+        dataKey: player.id,
+        payload: row,
+      },
+    ];
+  });
+}
+
 function ActiveAgeSync({
   active,
   label,
+  snappedAge,
+  snapToInteger,
   onChange,
 }: {
   active?: boolean;
   label?: number;
+  snappedAge?: number | null;
+  snapToInteger?: boolean;
   onChange: (age: number | null) => void;
 }) {
   useEffect(() => {
-    if (active && typeof label === "number") {
-      onChange(Math.round(label));
+    if (active) {
+      const age =
+        snapToInteger && snappedAge != null
+          ? snappedAge
+          : typeof label === "number"
+            ? snapToInteger
+              ? Math.round(label)
+              : label
+            : null;
+      onChange(age);
     } else {
       onChange(null);
     }
-  }, [active, label, onChange]);
+  }, [active, label, snappedAge, snapToInteger, onChange]);
 
   return null;
 }
@@ -416,6 +464,7 @@ function CustomTooltip({
   players,
   granularity,
   yearlyMetric = "peak",
+  snappedAge,
 }: {
   active?: boolean;
   payload?: TooltipPayloadItem[];
@@ -423,8 +472,16 @@ function CustomTooltip({
   players: Player[];
   granularity: TrajectoryGranularity;
   yearlyMetric?: YearlyMetric;
+  snappedAge?: number | null;
 }) {
   if (!active || !payload?.length) return null;
+
+  const isYearly = granularity === "yearly";
+  const hoveredAge = isYearly
+    ? snappedAge
+    : typeof label === "number"
+      ? label
+      : payload[0]?.payload?.age;
 
   const validEntries = payload.filter(
     (entry) =>
@@ -435,9 +492,6 @@ function CustomTooltip({
   );
 
   if (!validEntries.length) return null;
-
-  const hoveredAge =
-    typeof label === "number" ? label : validEntries[0]?.payload?.age;
 
   return (
     <ChartTooltipCard active={active}>
@@ -594,6 +648,7 @@ export function RankingChart({
 }: RankingChartProps) {
   const [internalYScale, setInternalYScale] = useState<RankingScale>("log");
   const [hoveredPlayerId, setHoveredPlayerId] = useState<string | null>(null);
+  const [yearlySnapAge, setYearlySnapAge] = useState<number | null>(null);
   const yScale = yScaleProp ?? internalYScale;
   const setYScale = onYScaleChange ?? setInternalYScale;
   const [activeAge, setActiveAge] = useState<number | null>(null);
@@ -621,6 +676,26 @@ export function RankingChart({
     zoomDomain != null
       ? getAgeTicksForDomain(zoomDomain[0], zoomDomain[1], granularity)
       : [];
+
+  useEffect(() => {
+    if (!isYearly) {
+      setYearlySnapAge(null);
+    }
+  }, [isYearly]);
+
+  const handleChartMouseMove = useCallback(
+    (state: { activeLabel?: string | number } | null) => {
+      if (!isYearly) return;
+      setYearlySnapAge(snapYearlyHoverAge(state?.activeLabel));
+    },
+    [isYearly],
+  );
+
+  const handleChartMouseLeave = useCallback(() => {
+    if (isYearly) {
+      setYearlySnapAge(null);
+    }
+  }, [isYearly]);
 
   if (selectedPlayers.length === 0) {
     return (
@@ -692,6 +767,8 @@ export function RankingChart({
           <LineChart
             data={chartData}
             margin={{ top: 20, right: 12, left: 4, bottom: 8 }}
+            onMouseMove={handleChartMouseMove}
+            onMouseLeave={handleChartMouseLeave}
           >
             <CartesianGrid
               strokeDasharray="4 4"
@@ -751,6 +828,15 @@ export function RankingChart({
                 dx: 4,
               }}
             />
+            {isYearly && yearlySnapAge != null ? (
+              <ReferenceLine
+                x={yearlySnapAge}
+                stroke="#86868b"
+                strokeWidth={1}
+                strokeDasharray="4 4"
+                ifOverflow="extendDomain"
+              />
+            ) : null}
             <Tooltip
               wrapperStyle={{
                 zIndex: 20,
@@ -758,23 +844,49 @@ export function RankingChart({
                 pointerEvents: "none",
               }}
               allowEscapeViewBox={{ x: true, y: true }}
-              content={(props) => (
-                <>
-                  <ActiveAgeSync
-                    active={props.active}
-                    label={typeof props.label === "number" ? props.label : undefined}
-                    onChange={handleActiveAgeChange}
-                  />
-                  <CustomTooltip
-                    active={props.active}
-                    payload={props.payload as TooltipPayloadItem[] | undefined}
-                    label={typeof props.label === "number" ? props.label : undefined}
-                    players={selectedPlayers}
-                    granularity={granularity}
-                    yearlyMetric={yearlyMetric}
-                  />
-                </>
-              )}
+              cursor={isYearly ? false : { stroke: "#86868b", strokeDasharray: "4 4" }}
+              content={(props) => {
+                const snappedAge = isYearly
+                  ? snapYearlyHoverAge(
+                      typeof props.label === "number"
+                        ? props.label
+                        : props.label != null
+                          ? Number(props.label)
+                          : undefined,
+                    )
+                  : null;
+                const tooltipPayload =
+                  isYearly && snappedAge != null
+                    ? buildYearlyTooltipPayload(
+                        chartData,
+                        selectedPlayers,
+                        snappedAge,
+                      )
+                    : (props.payload as TooltipPayloadItem[] | undefined);
+
+                return (
+                  <>
+                    <ActiveAgeSync
+                      active={props.active}
+                      label={typeof props.label === "number" ? props.label : undefined}
+                      snappedAge={snappedAge}
+                      snapToInteger={isYearly}
+                      onChange={handleActiveAgeChange}
+                    />
+                    <CustomTooltip
+                      active={props.active}
+                      payload={tooltipPayload}
+                      label={
+                        isYearly && snappedAge != null ? snappedAge : typeof props.label === "number" ? props.label : undefined
+                      }
+                      players={selectedPlayers}
+                      granularity={granularity}
+                      yearlyMetric={yearlyMetric}
+                      snappedAge={snappedAge}
+                    />
+                  </>
+                );
+              }}
             />
             {selectedPlayers.map((player) => {
               const lineStyle = getLineStyle(granularity, player.color);
