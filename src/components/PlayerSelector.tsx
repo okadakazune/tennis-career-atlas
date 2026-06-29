@@ -42,7 +42,7 @@ export function PlayerSelector({
       <div className="mb-4 flex flex-col gap-3 sm:mb-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-lg font-semibold tracking-tight text-[#1d1d1f]">
-            Players
+            Choose your players
           </h2>
           <p className="mt-0.5 text-sm text-[#86868b]">
             Compare up to {maxPlayers} players

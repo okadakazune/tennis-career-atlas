@@ -34,7 +34,10 @@ import {
   buildCompareSharePath,
   buildCompareShareUrl,
   clampSnapshotAge,
+  DEFAULT_BATTLE_PAIR,
   DEFAULT_SHARE_PLAYER_IDS,
+  hasCompareUrlParams,
+  parseBattlePair,
   parseCompareUrlState,
   resolveSharePlayerIds,
   resolveYearlyMetric,
@@ -48,6 +51,14 @@ import {
 import { CompareDashboardStickyHeader } from "@/components/CompareDashboardStickyHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { CareerInsightsCard } from "@/components/CareerInsightsCard";
+import { HeroBattle } from "@/components/HeroBattle";
+import { BattleResult } from "@/components/BattleResult";
+import { BattleEvidenceNav } from "@/components/BattleEvidenceNav";
+import {
+  computeBattleScore,
+  DEFAULT_BATTLE_PLAYER_A,
+  DEFAULT_BATTLE_PLAYER_B,
+} from "@/data/battle-score";
 
 function normalizePlayerIdsForMode(
   playerIds: string[],
@@ -94,10 +105,42 @@ function buildDefaultComparisonState(granularity: TrajectoryGranularity = "yearl
   };
 }
 
+function resolveInitialBattleState(searchParams: URLSearchParams) {
+  const urlState = parseCompareUrlState(searchParams);
+  const battlePair =
+    parseBattlePair(searchParams) ??
+    (!hasCompareUrlParams(searchParams)
+      ? ([...DEFAULT_BATTLE_PAIR] as [string, string])
+      : undefined);
+
+  if (battlePair) {
+    return {
+      battlePlayerAId: battlePair[0],
+      battlePlayerBId: battlePair[1],
+      battleActive: true,
+      useBattleDefaults: true,
+    };
+  }
+
+  const fallbackA = urlState?.playerIds?.[0] ?? DEFAULT_BATTLE_PLAYER_A;
+  const fallbackB = urlState?.playerIds?.[1] ?? DEFAULT_BATTLE_PLAYER_B;
+
+  return {
+    battlePlayerAId: fallbackA,
+    battlePlayerBId: fallbackB,
+    battleActive: false,
+    useBattleDefaults: false,
+  };
+}
+
 function CareerAtlasAppMain() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const snapshotAges = useMemo(() => getSnapshotAgeOptions(), []);
+  const initialBattleState = useMemo(
+    () => resolveInitialBattleState(searchParams),
+    [searchParams],
+  );
   const urlBootstrapRef = useRef(
     parseCompareUrlState(searchParams) ?? undefined,
   );
@@ -106,15 +149,26 @@ function CareerAtlasAppMain() {
   const initialGranularity = urlBootstrapRef.current?.granularity ?? "yearly";
   const initialDefaults = buildDefaultComparisonState(initialGranularity);
   const initialPlayerIds = normalizePlayerIdsForMode(
-    urlBootstrapRef.current?.playerIds !== undefined
-      ? resolveSharePlayerIds(urlBootstrapRef.current.playerIds)
-      : initialDefaults.playerIds,
+    initialBattleState.useBattleDefaults
+      ? [initialBattleState.battlePlayerAId, initialBattleState.battlePlayerBId]
+      : urlBootstrapRef.current?.playerIds !== undefined
+        ? resolveSharePlayerIds(urlBootstrapRef.current.playerIds)
+        : initialDefaults.playerIds,
     initialGranularity,
   );
 
   const [selectedIds, setSelectedIds] = useState<string[]>(() => initialPlayerIds);
   const [comparisonTargets, setComparisonTargets] = useState<PlayerIndexEntry[]>(
     () => buildComparisonTargetsFromIds(initialPlayerIds),
+  );
+  const [battlePlayerAId, setBattlePlayerAId] = useState(
+    () => initialBattleState.battlePlayerAId,
+  );
+  const [battlePlayerBId, setBattlePlayerBId] = useState(
+    () => initialBattleState.battlePlayerBId,
+  );
+  const [battleActive, setBattleActive] = useState(
+    () => initialBattleState.battleActive,
   );
   const [granularity, setGranularity] = useState<TrajectoryGranularity>(
     () => initialGranularity,
@@ -140,6 +194,27 @@ function CareerAtlasAppMain() {
   );
   const isAgeSyncedFromChart = chartHoverAge != null;
 
+  const showBattleResult =
+    battleActive &&
+    selectedIds.length === 2 &&
+    selectedPlayers.length === 2;
+
+  const battleScoreResult = useMemo(() => {
+    if (!showBattleResult) return null;
+    const playerA = selectedPlayers[0];
+    const playerB = selectedPlayers[1];
+    return computeBattleScore(playerA, playerB, displayAge);
+  }, [showBattleResult, selectedPlayers, displayAge]);
+
+  const handleStartBattle = useCallback(() => {
+    if (battlePlayerAId === battlePlayerBId) return;
+
+    const nextIds = [battlePlayerAId, battlePlayerBId];
+    setSelectedIds(nextIds);
+    setComparisonTargets(buildComparisonTargetsFromIds(nextIds));
+    setBattleActive(true);
+  }, [battlePlayerAId, battlePlayerBId]);
+
   const handleTabChange = useCallback((tab: CompareDashboardTab) => {
     setActiveTab(tab);
     requestAnimationFrame(() => {
@@ -162,9 +237,13 @@ function CareerAtlasAppMain() {
       granularity,
       view: fromRankingScale(yScale),
       yearlyMetric: granularity === "yearly" ? yearlyMetric : undefined,
+      battle:
+        battleActive && selectedIds.length === 2
+          ? [selectedIds[0], selectedIds[1]]
+          : undefined,
     });
     router.replace(nextPath, { scroll: false });
-  }, [selectedIds, selectedAge, granularity, yScale, yearlyMetric, router]);
+  }, [selectedIds, selectedAge, granularity, yScale, yearlyMetric, battleActive, router]);
 
   const getShareUrl = useCallback(() => {
     if (typeof window === "undefined") return "/";
@@ -176,10 +255,31 @@ function CareerAtlasAppMain() {
         granularity,
         view: fromRankingScale(yScale),
         yearlyMetric: granularity === "yearly" ? yearlyMetric : undefined,
+        battle:
+          battleActive && selectedIds.length === 2
+            ? [selectedIds[0], selectedIds[1]]
+            : undefined,
       },
       window.location.origin,
     );
-  }, [selectedIds, selectedAge, granularity, yScale, yearlyMetric]);
+  }, [selectedIds, selectedAge, granularity, yScale, yearlyMetric, battleActive]);
+
+  const getBattleShareUrl = useCallback(() => {
+    if (typeof window === "undefined") return "/";
+    if (selectedIds.length !== 2) return getShareUrl();
+
+    return buildCompareShareUrl(
+      {
+        playerIds: selectedIds,
+        age: selectedAge,
+        granularity,
+        view: fromRankingScale(yScale),
+        yearlyMetric: granularity === "yearly" ? yearlyMetric : undefined,
+        battle: [selectedIds[0], selectedIds[1]],
+      },
+      window.location.origin,
+    );
+  }, [selectedIds, selectedAge, granularity, yScale, yearlyMetric, getShareUrl]);
 
   useEffect(() => {
     if (selectedIds.length > 0) return;
@@ -361,18 +461,13 @@ function CareerAtlasAppMain() {
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 pb-2">
-      <header className="text-center sm:text-left">
-        <p className="mb-2 text-sm font-medium uppercase tracking-[0.2em] text-[#86868b]">
-          Tennis Career Atlas
-        </p>
-        <h1 className="text-3xl font-semibold tracking-tight text-[#1d1d1f] sm:text-4xl sm:leading-tight">
-          Compare tennis careers at the same age
-        </h1>
-        <p className="mt-3 max-w-2xl text-base leading-relaxed text-[#86868b]">
-          Discover who was ahead at every stage of their career. Compare ATP
-          rankings, Grand Slam titles, World No.1 weeks and more.
-        </p>
-      </header>
+      <HeroBattle
+        playerAId={battlePlayerAId}
+        playerBId={battlePlayerBId}
+        onPlayerAChange={setBattlePlayerAId}
+        onPlayerBChange={setBattlePlayerBId}
+        onStartBattle={handleStartBattle}
+      />
 
       {dataSourceMeta.isLatestWeekStale ? (
         <div
@@ -403,6 +498,20 @@ function CareerAtlasAppMain() {
         aria-label="Comparison dashboard"
         className="flex flex-col gap-3 border-t border-black/[0.05] pt-5"
       >
+        {battleScoreResult ? (
+          <BattleResult
+            result={battleScoreResult}
+            getBattleShareUrl={getBattleShareUrl}
+          />
+        ) : null}
+
+        {showBattleResult ? (
+          <BattleEvidenceNav
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+          />
+        ) : null}
+
         <CompareDashboardStickyHeader
           activeTab={activeTab}
           onTabChange={handleTabChange}
