@@ -54,11 +54,17 @@ import { CareerInsightsCard } from "@/components/CareerInsightsCard";
 import { HeroBattle } from "@/components/HeroBattle";
 import { BattleResult } from "@/components/BattleResult";
 import { BattleEvidenceNav } from "@/components/BattleEvidenceNav";
+import { BeyondSportsSection } from "@/components/BeyondSportsSection";
 import {
   computeBattleScore,
   DEFAULT_BATTLE_PLAYER_A,
   DEFAULT_BATTLE_PLAYER_B,
 } from "@/data/battle-score";
+import { isLiveSport } from "@/data/sports/registry";
+import {
+  resolveSelectedSport,
+  type SelectedSport,
+} from "@/data/compare-url-state";
 
 function normalizePlayerIdsForMode(
   playerIds: string[],
@@ -182,6 +188,9 @@ function CareerAtlasAppMain() {
   const [yearlyMetric, setYearlyMetric] = useState<YearlyMetric>(() =>
     resolveYearlyMetric(urlBootstrapRef.current?.yearlyMetric),
   );
+  const [selectedSport, setSelectedSport] = useState<SelectedSport>(() =>
+    resolveSelectedSport(urlBootstrapRef.current?.sport),
+  );
   const [chartHoverAge, setChartHoverAge] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<CompareDashboardTab>("career");
   const dashboardPanelRef = useRef<HTMLDivElement>(null);
@@ -195,16 +204,22 @@ function CareerAtlasAppMain() {
   const isAgeSyncedFromChart = chartHoverAge != null;
 
   const showBattleResult =
+    isLiveSport(selectedSport) &&
     battleActive &&
     selectedIds.length === 2 &&
     selectedPlayers.length === 2;
 
   const battleScoreResult = useMemo(() => {
-    if (!showBattleResult) return null;
+    if (!showBattleResult || !isLiveSport(selectedSport)) return null;
     const playerA = selectedPlayers[0];
     const playerB = selectedPlayers[1];
-    return computeBattleScore(playerA, playerB, displayAge);
-  }, [showBattleResult, selectedPlayers, displayAge]);
+    return computeBattleScore({
+      sport: selectedSport,
+      playerA,
+      playerB,
+      displayAge,
+    });
+  }, [showBattleResult, selectedSport, selectedPlayers, displayAge]);
 
   const handleStartBattle = useCallback(() => {
     if (battlePlayerAId === battlePlayerBId) return;
@@ -237,13 +252,14 @@ function CareerAtlasAppMain() {
       granularity,
       view: fromRankingScale(yScale),
       yearlyMetric: granularity === "yearly" ? yearlyMetric : undefined,
+      sport: selectedSport,
       battle:
         battleActive && selectedIds.length === 2
           ? [selectedIds[0], selectedIds[1]]
           : undefined,
     });
     router.replace(nextPath, { scroll: false });
-  }, [selectedIds, selectedAge, granularity, yScale, yearlyMetric, battleActive, router]);
+  }, [selectedIds, selectedAge, granularity, yScale, yearlyMetric, battleActive, selectedSport, router]);
 
   const getShareUrl = useCallback(() => {
     if (typeof window === "undefined") return "/";
@@ -255,6 +271,7 @@ function CareerAtlasAppMain() {
         granularity,
         view: fromRankingScale(yScale),
         yearlyMetric: granularity === "yearly" ? yearlyMetric : undefined,
+        sport: selectedSport,
         battle:
           battleActive && selectedIds.length === 2
             ? [selectedIds[0], selectedIds[1]]
@@ -262,7 +279,7 @@ function CareerAtlasAppMain() {
       },
       window.location.origin,
     );
-  }, [selectedIds, selectedAge, granularity, yScale, yearlyMetric, battleActive]);
+  }, [selectedIds, selectedAge, granularity, yScale, yearlyMetric, battleActive, selectedSport]);
 
   const getBattleShareUrl = useCallback(() => {
     if (typeof window === "undefined") return "/";
@@ -275,11 +292,12 @@ function CareerAtlasAppMain() {
         granularity,
         view: fromRankingScale(yScale),
         yearlyMetric: granularity === "yearly" ? yearlyMetric : undefined,
+        sport: selectedSport,
         battle: [selectedIds[0], selectedIds[1]],
       },
       window.location.origin,
     );
-  }, [selectedIds, selectedAge, granularity, yScale, yearlyMetric, getShareUrl]);
+  }, [selectedIds, selectedAge, granularity, yScale, yearlyMetric, selectedSport, getShareUrl]);
 
   useEffect(() => {
     if (selectedIds.length > 0) return;
@@ -462,6 +480,8 @@ function CareerAtlasAppMain() {
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 pb-2">
       <HeroBattle
+        selectedSport={selectedSport}
+        onSportChange={setSelectedSport}
         playerAId={battlePlayerAId}
         playerBId={battlePlayerBId}
         onPlayerAChange={setBattlePlayerAId}
@@ -623,6 +643,8 @@ function CareerAtlasAppMain() {
           ) : null}
         </div>
       </section>
+
+      <BeyondSportsSection />
 
       <SiteFooter />
     </div>

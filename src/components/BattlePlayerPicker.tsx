@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Player, getPlayers } from "@/data/players";
+import { getPlayers, getPlayersBySport, Player } from "@/data/players";
+import type { SportId } from "@/data/sports/types";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 
 interface BattlePlayerPickerProps {
   label: string;
+  sport: SportId;
   selectedId: string;
   otherSelectedId: string;
   onChange: (playerId: string) => void;
@@ -13,6 +15,7 @@ interface BattlePlayerPickerProps {
 
 export function BattlePlayerPicker({
   label,
+  sport,
   selectedId,
   otherSelectedId,
   onChange,
@@ -24,7 +27,7 @@ export function BattlePlayerPicker({
 
   const options = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-    return getPlayers()
+    return getPlayersBySport(sport)
       .filter((player) => player.id !== otherSelectedId)
       .filter((player) => {
         if (!normalized) return true;
@@ -35,7 +38,7 @@ export function BattlePlayerPicker({
         );
       })
       .slice(0, 12);
-  }, [otherSelectedId, query]);
+  }, [otherSelectedId, query, sport]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {

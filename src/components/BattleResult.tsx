@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import type { BattleScoreResult } from "@/data/battle-score";
 import { generateBattleInsight } from "@/data/battle-insight";
+import { getSportDefinition } from "@/data/sports/registry";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 
 interface BattleResultProps {
@@ -18,6 +19,7 @@ export function BattleResult({ result, getBattleShareUrl }: BattleResultProps) {
   const [copied, setCopied] = useState(false);
   const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const insight = generateBattleInsight(result);
+  const sportDef = getSportDefinition(result.sport);
 
   const winner =
     result.overallWinner === "a"
@@ -56,8 +58,8 @@ export function BattleResult({ result, getBattleShareUrl }: BattleResultProps) {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[#ff7a00]">
-              <span aria-hidden="true">🏆</span>
-              Battle Result
+              <span aria-hidden="true">{sportDef?.emoji ?? "🏆"}</span>
+              {sportDef?.battleLabel ?? "Battle Result"}
             </p>
             <h2 className="mt-2 text-2xl font-bold tracking-tight text-[#1d1d1f] sm:text-3xl">
               {result.playerA.shortName} vs {result.playerB.shortName}
@@ -147,13 +149,36 @@ export function BattleResult({ result, getBattleShareUrl }: BattleResultProps) {
               <span className="shrink-0 text-sm font-semibold text-[#1d1d1f]">
                 {category.outcome === "excluded"
                   ? "—"
-                  : category.outcome === "tie"
-                    ? "Tie"
-                    : category.winnerShortName}
+                  : category.outcome === "comingSoon"
+                    ? "Coming Soon"
+                    : category.outcome === "tie"
+                      ? "Tie"
+                      : category.winnerShortName}
               </span>
             </li>
           ))}
         </ul>
+
+        {result.comingSoonCategories.length > 0 ? (
+          <div className="mt-6">
+            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[#86868b]">
+              Coming Soon Categories
+            </h3>
+            <ul className="grid gap-2 sm:grid-cols-2">
+              {result.comingSoonCategories.map((category) => (
+                <li
+                  key={category.id}
+                  className="flex items-center justify-between gap-3 rounded-xl border border-dashed border-black/[0.08] bg-white px-3 py-2.5"
+                >
+                  <span className="text-sm text-[#1d1d1f]">{category.label}</span>
+                  <span className="shrink-0 rounded-full bg-[#f5f5f7] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#86868b]">
+                    Coming Soon
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
 
         {insight ? (
           <div className="mt-5 rounded-2xl border border-[#0071e3]/15 bg-[#f0f7ff] px-4 py-4">

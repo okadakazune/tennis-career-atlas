@@ -4,6 +4,10 @@ import {
   DEFAULT_BATTLE_PLAYER_A,
   DEFAULT_BATTLE_PLAYER_B,
 } from "@/data/battle-score";
+import { DEFAULT_SPORT } from "@/data/sports/registry";
+import type { SportId } from "@/data/sports/types";
+
+export type SelectedSport = SportId | "all";
 
 export type ChartViewMode = "career" | "detail";
 
@@ -23,8 +27,21 @@ export interface CompareUrlState {
   view: ChartViewMode;
   yearlyMetric?: YearlyMetric;
   battle?: [string, string];
+  sport?: SelectedSport;
 }
 
+const VALID_SPORTS = new Set<SportId | "all">([
+  "tennis",
+  "football",
+  "basketball",
+  "baseball",
+  "formula1",
+  "golf",
+  "boxing",
+  "athletics",
+  "swimming",
+  "all",
+]);
 const VALID_GRANULARITIES = new Set<TrajectoryGranularity>([
   "yearly",
   "monthly",
@@ -88,8 +105,20 @@ function parseYearlyMetric(searchParams: URLSearchParams): YearlyMetric | undefi
   return undefined;
 }
 
+function parseSport(searchParams: URLSearchParams): SelectedSport | undefined {
+  const sportParam = searchParams.get("sport");
+  if (sportParam && VALID_SPORTS.has(sportParam as SelectedSport)) {
+    return sportParam as SelectedSport;
+  }
+  return undefined;
+}
+
 export function resolveYearlyMetric(metric: YearlyMetric | undefined): YearlyMetric {
   return metric ?? DEFAULT_YEARLY_METRIC;
+}
+
+export function resolveSelectedSport(sport: SelectedSport | undefined): SelectedSport {
+  return sport ?? DEFAULT_SPORT;
 }
 
 export function parseBattlePair(
@@ -120,6 +149,7 @@ export function hasCompareUrlParams(searchParams: URLSearchParams): boolean {
     searchParams.has("granularity") ||
     searchParams.has("view") ||
     searchParams.has("yearlyMetric") ||
+    searchParams.has("sport") ||
     searchParams.has("mode") ||
     searchParams.has("scale")
   );
@@ -173,6 +203,11 @@ export function parseCompareUrlState(
     partial.yearlyMetric = yearlyMetric;
   }
 
+  const sport = parseSport(searchParams);
+  if (sport) {
+    partial.sport = sport;
+  }
+
   return partial;
 }
 
@@ -191,6 +226,11 @@ export function serializeCompareUrlState(state: CompareUrlState): URLSearchParam
 
   if (state.granularity === "yearly") {
     params.set("yearlyMetric", resolveYearlyMetric(state.yearlyMetric));
+  }
+
+  const sport = resolveSelectedSport(state.sport);
+  if (sport !== DEFAULT_SPORT) {
+    params.set("sport", sport);
   }
 
   return params;
