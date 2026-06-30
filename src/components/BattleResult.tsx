@@ -4,10 +4,13 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import type { BattleScoreResult } from "@/data/battle-score";
 import { generateBattleInsight } from "@/data/battle-insight";
 import { getSportDefinition } from "@/data/sports/registry";
+import type { BattleTimelineData } from "@/data/battle-timeline";
+import { CareerBattleTimeline } from "@/components/CareerBattleTimeline";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 
 interface BattleResultProps {
   result: BattleScoreResult;
+  timeline: BattleTimelineData | null;
   getBattleShareUrl: () => string;
 }
 
@@ -79,7 +82,7 @@ function PlayerBattleCard({
   );
 }
 
-export function BattleResult({ result, getBattleShareUrl }: BattleResultProps) {
+export function BattleResult({ result, timeline, getBattleShareUrl }: BattleResultProps) {
   const [copied, setCopied] = useState(false);
   const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const insight = generateBattleInsight(result);
@@ -202,6 +205,14 @@ export function BattleResult({ result, getBattleShareUrl }: BattleResultProps) {
           />
         </div>
       </div>
+
+      {timeline ? (
+        <CareerBattleTimeline
+          timeline={timeline}
+          displayAge={result.displayAge}
+          overallWinner={result.overallWinner}
+        />
+      ) : null}
 
       <div className="px-5 py-5 sm:px-6">
         <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[#86868b]">

@@ -61,6 +61,7 @@ import {
   DEFAULT_BATTLE_PLAYER_B,
 } from "@/data/battle-score";
 import { isLiveSport } from "@/data/sports/registry";
+import { computeBattleTimeline } from "@/data/battle-timeline";
 import {
   resolveSelectedSport,
   type SelectedSport,
@@ -222,6 +223,15 @@ function CareerAtlasAppMain() {
       displayAge,
     });
   }, [showBattleResult, selectedSport, selectedPlayers, displayAge]);
+
+  const battleTimeline = useMemo(() => {
+    if (!showBattleResult || !isLiveSport(selectedSport)) return null;
+    return computeBattleTimeline({
+      sport: selectedSport,
+      playerA: selectedPlayers[0],
+      playerB: selectedPlayers[1],
+    });
+  }, [showBattleResult, selectedSport, selectedPlayers]);
 
   const handleStartBattle = useCallback(() => {
     if (battlePlayerAId === battlePlayerBId) return;
@@ -518,6 +528,7 @@ function CareerAtlasAppMain() {
         <div ref={battleResultRef}>
           <BattleResult
             result={battleScoreResult}
+            timeline={battleTimeline}
             getBattleShareUrl={getBattleShareUrl}
           />
         </div>
