@@ -194,6 +194,8 @@ function CareerAtlasAppMain() {
   const [chartHoverAge, setChartHoverAge] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<CompareDashboardTab>("career");
   const dashboardPanelRef = useRef<HTMLDivElement>(null);
+  const battleResultRef = useRef<HTMLDivElement>(null);
+  const shouldScrollToBattleRef = useRef(false);
   const selectedPlayers = useMemo(
     () => getPlayers().filter((player) => selectedIds.includes(player.id)),
     [selectedIds],
@@ -228,7 +230,20 @@ function CareerAtlasAppMain() {
     setSelectedIds(nextIds);
     setComparisonTargets(buildComparisonTargetsFromIds(nextIds));
     setBattleActive(true);
+    shouldScrollToBattleRef.current = true;
   }, [battlePlayerAId, battlePlayerBId]);
+
+  useEffect(() => {
+    if (!shouldScrollToBattleRef.current || !battleScoreResult) return;
+
+    shouldScrollToBattleRef.current = false;
+    requestAnimationFrame(() => {
+      battleResultRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  }, [battleScoreResult]);
 
   const handleTabChange = useCallback((tab: CompareDashboardTab) => {
     setActiveTab(tab);
@@ -499,6 +514,22 @@ function CareerAtlasAppMain() {
         </div>
       ) : null}
 
+      {battleScoreResult ? (
+        <div ref={battleResultRef}>
+          <BattleResult
+            result={battleScoreResult}
+            getBattleShareUrl={getBattleShareUrl}
+          />
+        </div>
+      ) : null}
+
+      {showBattleResult ? (
+        <BattleEvidenceNav
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+        />
+      ) : null}
+
       <PlayerSelector
         players={getPlayers()}
         selectedIds={selectedIds}
@@ -512,26 +543,13 @@ function CareerAtlasAppMain() {
         onClearAll={clearAll}
         onApplyPreset={applyPreset}
         shareLinkButton={<ShareLinkButton getShareUrl={getShareUrl} />}
+        sectionTitle={showBattleResult ? "Change players" : "Choose your players"}
       />
 
       <section
         aria-label="Comparison dashboard"
         className="flex flex-col gap-3 border-t border-black/[0.05] pt-5"
       >
-        {battleScoreResult ? (
-          <BattleResult
-            result={battleScoreResult}
-            getBattleShareUrl={getBattleShareUrl}
-          />
-        ) : null}
-
-        {showBattleResult ? (
-          <BattleEvidenceNav
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
-          />
-        ) : null}
-
         <CompareDashboardStickyHeader
           activeTab={activeTab}
           onTabChange={handleTabChange}

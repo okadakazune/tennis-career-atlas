@@ -17,7 +17,7 @@ export function BattleEvidenceNav({
   return (
     <nav aria-label="Explore the evidence" className="rounded-2xl border border-black/[0.06] bg-[#fafafa] p-4">
       <p className="mb-3 text-sm font-semibold text-[#1d1d1f]">
-        Explore the evidence:
+        Explore the evidence
       </p>
       <div className="flex flex-wrap gap-2">
         {COMPARE_DASHBOARD_TABS.map((tab) => {
