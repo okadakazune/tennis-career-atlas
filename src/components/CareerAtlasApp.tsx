@@ -233,6 +233,11 @@ function CareerAtlasAppMain() {
     });
   }, [showBattleResult, selectedSport, selectedPlayers]);
 
+  const handleTimelineAgeSelect = useCallback((age: number) => {
+    setChartHoverAge(null);
+    setSelectedAge(clampSnapshotAge(age));
+  }, []);
+
   const handleStartBattle = useCallback(() => {
     if (battlePlayerAId === battlePlayerBId) return;
 
@@ -529,6 +534,7 @@ function CareerAtlasAppMain() {
           <BattleResult
             result={battleScoreResult}
             timeline={battleTimeline}
+            onTimelineAgeSelect={handleTimelineAgeSelect}
             getBattleShareUrl={getBattleShareUrl}
           />
         </div>

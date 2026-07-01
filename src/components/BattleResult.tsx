@@ -11,6 +11,7 @@ import { PlayerAvatar } from "@/components/PlayerAvatar";
 interface BattleResultProps {
   result: BattleScoreResult;
   timeline: BattleTimelineData | null;
+  onTimelineAgeSelect: (age: number) => void;
   getBattleShareUrl: () => string;
 }
 
@@ -82,7 +83,7 @@ function PlayerBattleCard({
   );
 }
 
-export function BattleResult({ result, timeline, getBattleShareUrl }: BattleResultProps) {
+export function BattleResult({ result, timeline, onTimelineAgeSelect, getBattleShareUrl }: BattleResultProps) {
   const [copied, setCopied] = useState(false);
   const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const insight = generateBattleInsight(result);
@@ -138,7 +139,7 @@ export function BattleResult({ result, timeline, getBattleShareUrl }: BattleResu
   return (
     <section
       id="battle-result"
-      className="scroll-mt-4 overflow-hidden rounded-3xl border border-black/[0.08] bg-white shadow-[0_16px_48px_rgba(0,0,0,0.08)]"
+      className="scroll-mt-4 rounded-3xl border border-black/[0.08] bg-white shadow-[0_16px_48px_rgba(0,0,0,0.08)]"
     >
       <div className="border-b border-black/[0.06] bg-[linear-gradient(90deg,#fff8eb,#ffffff,#eff6ff)] px-5 py-5 sm:px-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -211,13 +212,17 @@ export function BattleResult({ result, timeline, getBattleShareUrl }: BattleResu
           timeline={timeline}
           displayAge={result.displayAge}
           overallWinner={result.overallWinner}
+          onAgeSelect={onTimelineAgeSelect}
         />
       ) : null}
 
       <div className="px-5 py-5 sm:px-6">
-        <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[#86868b]">
+        <h3 className="mb-1 text-sm font-semibold uppercase tracking-wide text-[#86868b]">
           Category Breakdown
         </h3>
+        <p className="mb-3 text-xs text-[#86868b]">
+          Snapshot at age {result.displayAge}
+        </p>
 
         <div className="mb-4 flex flex-wrap gap-2">
           <span className="rounded-full bg-[#f0f7ff] px-3 py-1.5 text-xs font-semibold text-[#0071e3]">

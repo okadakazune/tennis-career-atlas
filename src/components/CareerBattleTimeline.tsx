@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { BattleCategoryResult, BattleSide } from "@/data/battle-score";
 import type { BattleTimelineData, BattleTimelinePoint } from "@/data/battle-timeline";
 import { generateBattleStory } from "@/data/battle-story";
@@ -9,6 +9,7 @@ interface CareerBattleTimelineProps {
   timeline: BattleTimelineData;
   displayAge: number;
   overallWinner: BattleSide | "tie" | null;
+  onAgeSelect: (age: number) => void;
 }
 
 const TIE_COLOR = "#c7c7cc";
@@ -77,7 +78,7 @@ function TimelineHoverCard({
         : "Even";
 
   return (
-    <div className="chart-tooltip-card absolute bottom-full left-1/2 z-20 mb-3 w-56 -translate-x-1/2 rounded-xl border border-black/[0.08] bg-white p-3 shadow-[0_12px_40px_rgba(0,0,0,0.12)] sm:w-64">
+    <div className="chart-tooltip-card pointer-events-none w-56 rounded-xl border border-black/[0.08] bg-white p-3 shadow-[0_12px_40px_rgba(0,0,0,0.16)] sm:w-64">
       <p className="text-xs font-semibold uppercase tracking-wide text-[#86868b]">
         Age {point.age}
       </p>
@@ -127,12 +128,21 @@ function TimelineHoverCard({
   );
 }
 
+interface TimelineTooltipState {
+  point: BattleTimelinePoint;
+  x: number;
+  y: number;
+}
+
 export function CareerBattleTimeline({
   timeline,
   displayAge,
   overallWinner,
+  onAgeSelect,
 }: CareerBattleTimelineProps) {
+  const trackRef = useRef<HTMLDivElement>(null);
   const [hoveredAge, setHoveredAge] = useState<number | null>(null);
+  const [tooltip, setTooltip] = useState<TimelineTooltipState | null>(null);
   const story = useMemo(
     () => generateBattleStory({ timeline, displayAge, overallWinner }),
     [timeline, displayAge, overallWinner],
@@ -145,6 +155,26 @@ export function CareerBattleTimeline({
     return null;
   }
 
+  function showTooltip(button: HTMLButtonElement, point: BattleTimelinePoint) {
+    const track = trackRef.current;
+    if (!track) return;
+
+    const trackRect = track.getBoundingClientRect();
+    const buttonRect = button.getBoundingClientRect();
+
+    setTooltip({
+      point,
+      x: buttonRect.left + buttonRect.width / 2 - trackRect.left,
+      y: buttonRect.bottom - trackRect.top + 10,
+    });
+    setHoveredAge(point.age);
+  }
+
+  function hideTooltip() {
+    setTooltip(null);
+    setHoveredAge(null);
+  }
+
   return (
     <div className="border-b border-black/[0.06] px-5 py-5 sm:px-6">
       <div className="mb-5">
@@ -152,7 +182,8 @@ export function CareerBattleTimeline({
           Career Battle Timeline
         </h3>
         <p className="mt-1 text-sm text-[#86868b]">
-          Who was ahead at each stage of their career?
+          Who was ahead at each stage of their career? Click an age to update
+          the breakdown below.
         </p>
       </div>
 
@@ -180,92 +211,143 @@ export function CareerBattleTimeline({
         </span>
       </div>
 
-      <div className="relative -mx-1 overflow-x-auto pb-6 pt-2 [scrollbar-width:thin]">
-        <div className="relative flex min-w-max items-end px-2">
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute bottom-[18px] left-2 right-2 h-px bg-black/[0.06]"
-          />
+      <div
+        ref={trackRef}
+        className={`relative -mx-1 pt-2 transition-[padding] ${tooltip ? "pb-44" : "pb-2"}`}
+        onMouseLeave={hideTooltip}
+      >
+        <div
+          className="overflow-x-auto pb-4 [scrollbar-width:thin]"
+          onScroll={hideTooltip}
+        >
+          <div className="relative flex min-w-max items-end px-2">
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute bottom-[18px] left-2 right-2 h-px bg-black/[0.06]"
+            />
 
-          {timeline.points.map((point, index) => {
-            const color = getLeaderColor(
-              point.leader,
-              timeline.playerA.color,
-              timeline.playerB.color,
-            );
-            const isActive = point.age === displayAge;
-            const isHovered = hoveredAge === point.age;
-            const animationDelayMs = index * DOT_ANIMATION_MS;
+            {timeline.points.map((point, index) => {
+              const color = getLeaderColor(
+                point.leader,
+                timeline.playerA.color,
+                timeline.playerB.color,
+              );
+              const isActive = point.age === displayAge;
+              const isHovered = hoveredAge === point.age;
+              const animationDelayMs = index * DOT_ANIMATION_MS;
 
-            return (
-              <div
-                key={point.age}
-                className="relative flex w-10 shrink-0 flex-col items-center sm:w-11"
-                onMouseEnter={() => setHoveredAge(point.age)}
-                onMouseLeave={() => setHoveredAge(null)}
-                onFocus={() => setHoveredAge(point.age)}
-                onBlur={() => setHoveredAge(null)}
-              >
-                {point.isLeadChange ? (
-                  <div
-                    className="battle-timeline-lead-label mb-2 flex flex-col items-center"
-                    style={{ animationDelay: `${animationDelayMs + 120}ms` }}
-                  >
-                    <span className="whitespace-nowrap text-[9px] font-semibold uppercase tracking-wide text-[#ff7a00] sm:text-[10px]">
-                      ⚡ Lead changes
-                    </span>
-                    <span className="mt-0.5 text-[10px] font-medium tabular-nums text-[#86868b]">
-                      Age {point.age}
-                    </span>
+              return (
+                <div
+                  key={point.age}
+                  className={`relative flex w-10 shrink-0 flex-col items-center sm:w-11 ${
+                    isHovered ? "z-10" : "z-0"
+                  }`}
+                >
+                  {point.isLeadChange ? (
+                    <div
+                      className="battle-timeline-lead-label mb-2 flex flex-col items-center"
+                      style={{ animationDelay: `${animationDelayMs + 120}ms` }}
+                    >
+                      <span className="whitespace-nowrap text-[9px] font-semibold uppercase tracking-wide text-[#ff7a00] sm:text-[10px]">
+                        ⚡ Lead changes
+                      </span>
+                      <span className="mt-0.5 text-[10px] font-medium tabular-nums text-[#86868b]">
+                        Age {point.age}
+                      </span>
+                      <span
+                        aria-hidden="true"
+                        className="mt-1 h-6 w-px bg-[#ff7a00]/40"
+                      />
+                    </div>
+                  ) : (
                     <span
-                      aria-hidden="true"
-                      className="mt-1 h-6 w-px bg-[#ff7a00]/40"
+                      className={`mb-2 text-[10px] font-medium tabular-nums ${
+                        isActive
+                          ? "font-bold text-[#1d1d1f]"
+                          : "text-[#86868b]"
+                      }`}
+                    >
+                      {point.age}
+                    </span>
+                  )}
+
+                  <div className="relative flex h-11 items-center justify-center">
+                    <button
+                      type="button"
+                      aria-label={`Select age ${point.age}: ${
+                        point.leader === "a"
+                          ? timeline.playerA.shortName
+                          : point.leader === "b"
+                            ? timeline.playerB.shortName
+                            : "Tie"
+                      } leads ${formatScore(point.scoreA)} to ${formatScore(point.scoreB)}`}
+                      aria-pressed={isActive}
+                      aria-describedby={
+                        isHovered ? `timeline-tooltip-${point.age}` : undefined
+                      }
+                      className={`battle-timeline-dot ui-transition cursor-pointer rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0071e3] focus-visible:ring-offset-2 ${
+                        point.isLeadChange ? "battle-timeline-lead-dot" : ""
+                      } ${
+                        isActive
+                          ? "scale-125 ring-2 ring-[#1d1d1f] ring-offset-2 shadow-[0_4px_14px_rgba(0,0,0,0.18)]"
+                          : "ring-2 ring-white/90 shadow-[0_2px_8px_rgba(0,0,0,0.12)] hover:scale-110 hover:ring-[#0071e3]/35 hover:shadow-[0_4px_12px_rgba(0,0,0,0.16)]"
+                      }`}
+                      style={{
+                        backgroundColor: color,
+                        width: point.isLeadChange ? 16 : 14,
+                        height: point.isLeadChange ? 16 : 14,
+                        animationDelay: `${animationDelayMs}ms`,
+                        boxShadow: point.isLeadChange
+                          ? isActive
+                            ? `0 0 0 4px ${color}55`
+                            : `0 0 0 3px ${color}33`
+                          : undefined,
+                      }}
+                      onClick={() => {
+                        onAgeSelect(point.age);
+                        hideTooltip();
+                      }}
+                      onMouseEnter={(event) =>
+                        showTooltip(event.currentTarget, point)
+                      }
+                      onFocus={(event) =>
+                        showTooltip(event.currentTarget, point)
+                      }
+                      onBlur={hideTooltip}
                     />
                   </div>
-                ) : (
-                  <span className="mb-2 text-[10px] font-medium tabular-nums text-[#86868b]">
-                    {point.age}
-                  </span>
-                )}
 
-                <div className="relative flex h-10 items-center justify-center">
-                  {isHovered ? (
-                    <TimelineHoverCard point={point} timeline={timeline} />
+                  {point.isLeadChange ? (
+                    <span
+                      className={`mt-1 text-[10px] font-medium tabular-nums ${
+                        isActive
+                          ? "font-bold text-[#1d1d1f]"
+                          : "text-[#86868b]"
+                      }`}
+                    >
+                      {point.age}
+                    </span>
                   ) : null}
-
-                  <button
-                    type="button"
-                    aria-label={`Age ${point.age}: ${
-                      point.leader === "a"
-                        ? timeline.playerA.shortName
-                        : point.leader === "b"
-                          ? timeline.playerB.shortName
-                          : "Tie"
-                    } leads ${formatScore(point.scoreA)} to ${formatScore(point.scoreB)}`}
-                    className={`battle-timeline-dot relative rounded-full transition-transform hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0071e3] focus-visible:ring-offset-2 ${
-                      point.isLeadChange ? "battle-timeline-lead-dot" : ""
-                    } ${isActive ? "ring-2 ring-[#1d1d1f] ring-offset-2" : ""}`}
-                    style={{
-                      backgroundColor: color,
-                      width: point.isLeadChange ? 16 : 12,
-                      height: point.isLeadChange ? 16 : 12,
-                      animationDelay: `${animationDelayMs}ms`,
-                      boxShadow: point.isLeadChange
-                        ? `0 0 0 4px ${color}33`
-                        : undefined,
-                    }}
-                  />
                 </div>
-
-                {point.isLeadChange ? (
-                  <span className="mt-1 text-[10px] font-medium tabular-nums text-[#86868b]">
-                    {point.age}
-                  </span>
-                ) : null}
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
+
+        {tooltip ? (
+          <div
+            id={`timeline-tooltip-${tooltip.point.age}`}
+            role="tooltip"
+            className="pointer-events-none absolute z-[200]"
+            style={{
+              left: tooltip.x,
+              top: tooltip.y,
+              transform: "translateX(-50%)",
+            }}
+          >
+            <TimelineHoverCard point={tooltip.point} timeline={timeline} />
+          </div>
+        ) : null}
       </div>
 
       {story ? (

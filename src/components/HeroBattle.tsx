@@ -71,6 +71,9 @@ export function HeroBattle({
               <p className="mt-3 text-2xl font-bold text-[#1d1d1f] sm:text-3xl">
                 Who&apos;s Greater?
               </p>
+              <p className="mt-1 text-sm text-[#86868b]">
+                Tap a player card to swap them
+              </p>
             </div>
 
             <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-end">
