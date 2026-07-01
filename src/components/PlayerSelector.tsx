@@ -19,6 +19,8 @@ interface PlayerSelectorProps {
   onClearAll: () => void;
   onApplyPreset: (playerIds: string[]) => void;
   shareLinkButton?: ReactNode;
+  sectionTitle?: string;
+  sectionDescription?: string;
 }
 
 export function PlayerSelector({
@@ -34,21 +36,22 @@ export function PlayerSelector({
   onClearAll,
   onApplyPreset,
   shareLinkButton,
+  sectionTitle = "Choose your players",
+  sectionDescription,
 }: PlayerSelectorProps) {
   const maxPlayers = getMaxComparisonPlayers(granularity);
+  const description =
+    sectionDescription ??
+    `Compare up to ${maxPlayers} players${granularity === "weekly" ? " in weekly view" : ""} · ${comparisonTargets.length}/${maxPlayers} selected`;
 
   return (
     <section className="rounded-xl border border-black/[0.05] bg-white/70 p-4 shadow-[0_1px_8px_rgba(0,0,0,0.03)] sm:p-5">
       <div className="mb-4 flex flex-col gap-3 sm:mb-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-lg font-semibold tracking-tight text-[#1d1d1f]">
-            Players
+            {sectionTitle}
           </h2>
-          <p className="mt-0.5 text-sm text-[#86868b]">
-            Compare up to {maxPlayers} players
-            {granularity === "weekly" ? " in weekly view" : ""} ·{" "}
-            {comparisonTargets.length}/{maxPlayers} selected
-          </p>
+          <p className="mt-0.5 text-sm text-[#86868b]">{description}</p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
           {shareLinkButton}

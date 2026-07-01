@@ -1,4 +1,6 @@
 import playersMeta from "@/data/players-meta.json";
+import type { SportId } from "@/data/sports/types";
+import { DEFAULT_SPORT } from "@/data/sports/registry";
 
 export interface RankingPoint {
   rankingDate: string;
@@ -35,6 +37,7 @@ export interface Player {
   birthDate: string;
   countryCode: string;
   color: string;
+  sport: SportId;
   careerStatus?: PlayerCareerStatus;
   playerTier?: PlayerTier;
   imageUrl?: string;
@@ -53,6 +56,7 @@ export interface PlayerMeta {
   birthDate: string;
   countryCode: string;
   color: string;
+  sport?: SportId;
   careerStatus?: PlayerCareerStatus;
   playerTier?: PlayerTier;
   imageUrl?: string;
@@ -92,6 +96,13 @@ let loadPromise: Promise<Player[]> | null = null;
 let playersById = new Map<string, Player>();
 let playersByAtpId = new Map<string, Player>();
 let featuredIndexByAtpId = new Map<string, PlayerIndexEntry>();
+
+function normalizePlayer(player: Player): Player {
+  return {
+    ...player,
+    sport: player.sport ?? DEFAULT_SPORT,
+  };
+}
 
 function metaToIndexEntry(meta: PlayerMeta): PlayerIndexEntry {
   const [nameFirst, ...nameRest] = meta.name.split(" ");
@@ -155,9 +166,10 @@ export function loadPlayers(): Promise<Player[]> {
         return response.json() as Promise<Player[]>;
       })
       .then((players) => {
-        playersCache = players;
-        rebuildPlayerMaps(players);
-        return players;
+        const normalizedPlayers = players.map((player) => normalizePlayer(player));
+        playersCache = normalizedPlayers;
+        rebuildPlayerMaps(normalizedPlayers);
+        return normalizedPlayers;
       })
       .catch((error) => {
         loadPromise = null;
@@ -166,6 +178,10 @@ export function loadPlayers(): Promise<Player[]> {
   }
 
   return loadPromise;
+}
+
+export function getPlayersBySport(sport: SportId): Player[] {
+  return getPlayers().filter((player) => player.sport === sport);
 }
 
 export function getPlayers(): Player[] {

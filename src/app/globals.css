@@ -84,6 +84,49 @@ body {
   animation: ui-fade-in 200ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
+.battle-timeline-dot {
+  animation: battle-timeline-dot-in 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  opacity: 0;
+  transform: scale(0);
+}
+
+.battle-timeline-lead-dot {
+  animation:
+    battle-timeline-dot-in 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards,
+    battle-timeline-lead-glow 900ms ease-in-out 2;
+}
+
+.battle-timeline-lead-label {
+  animation: ui-fade-in 280ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  opacity: 0;
+}
+
+.battle-timeline-story {
+  animation: ui-fade-in 400ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  opacity: 0;
+}
+
+@keyframes battle-timeline-dot-in {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes battle-timeline-lead-glow {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.15);
+  }
+}
+
 .ui-chart-metric-enter {
   animation: ui-fade-in 180ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
