@@ -88,6 +88,9 @@ function TimelineHoverCard({
         {timeline.playerB.shortName} {formatScore(point.scoreB)}
       </p>
       <p className="mt-1 text-xs font-medium text-[#86868b]">Leader: {leaderName}</p>
+      {point.isLeadChange ? (
+        <p className="mt-1 text-xs font-medium text-[#ff7a00]">⚡ Lead changed here</p>
+      ) : null}
 
       {winning.length > 0 ? (
         <div className="mt-3">
@@ -209,6 +212,12 @@ export function CareerBattleTimeline({
           />
           Tie
         </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span aria-hidden="true" className="text-[#ff7a00]">
+            ⚡
+          </span>
+          Lead change
+        </span>
       </div>
 
       <div
@@ -243,25 +252,19 @@ export function CareerBattleTimeline({
                     isHovered ? "z-10" : "z-0"
                   }`}
                 >
-                  {point.isLeadChange ? (
-                    <div
-                      className="battle-timeline-lead-label mb-2 flex flex-col items-center"
-                      style={{ animationDelay: `${animationDelayMs + 120}ms` }}
-                    >
-                      <span className="whitespace-nowrap text-[9px] font-semibold uppercase tracking-wide text-[#ff7a00] sm:text-[10px]">
-                        ⚡ Lead changes
-                      </span>
-                      <span className="mt-0.5 text-[10px] font-medium tabular-nums text-[#86868b]">
-                        Age {point.age}
-                      </span>
+                  <div className="relative mb-2 flex h-4 w-full items-end justify-center">
+                    {point.isLeadChange ? (
                       <span
-                        aria-hidden="true"
-                        className="mt-1 h-6 w-px bg-[#ff7a00]/40"
-                      />
-                    </div>
-                  ) : (
+                        className="battle-timeline-lead-label absolute -top-0.5 text-[11px] leading-none text-[#ff7a00]"
+                        style={{ animationDelay: `${animationDelayMs + 120}ms` }}
+                        title={`Lead change at age ${point.age}`}
+                        aria-label={`Lead change at age ${point.age}`}
+                      >
+                        ⚡
+                      </span>
+                    ) : null}
                     <span
-                      className={`mb-2 text-[10px] font-medium tabular-nums ${
+                      className={`text-[10px] font-medium tabular-nums ${
                         isActive
                           ? "font-bold text-[#1d1d1f]"
                           : "text-[#86868b]"
@@ -269,7 +272,7 @@ export function CareerBattleTimeline({
                     >
                       {point.age}
                     </span>
-                  )}
+                  </div>
 
                   <div className="relative flex h-11 items-center justify-center">
                     <button
@@ -316,18 +319,6 @@ export function CareerBattleTimeline({
                       onBlur={hideTooltip}
                     />
                   </div>
-
-                  {point.isLeadChange ? (
-                    <span
-                      className={`mt-1 text-[10px] font-medium tabular-nums ${
-                        isActive
-                          ? "font-bold text-[#1d1d1f]"
-                          : "text-[#86868b]"
-                      }`}
-                    >
-                      {point.age}
-                    </span>
-                  ) : null}
                 </div>
               );
             })}

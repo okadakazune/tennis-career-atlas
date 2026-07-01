@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { BattleScoreResult } from "@/data/battle-score";
 import { generateBattleInsight } from "@/data/battle-insight";
+import { generateBattleSnapshotSummary } from "@/data/battle-snapshot-summary";
 import { getSportDefinition } from "@/data/sports/registry";
 import type { BattleTimelineData } from "@/data/battle-timeline";
 import { CareerBattleTimeline } from "@/components/CareerBattleTimeline";
@@ -87,6 +88,7 @@ export function BattleResult({ result, timeline, onTimelineAgeSelect, getBattleS
   const [copied, setCopied] = useState(false);
   const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const insight = generateBattleInsight(result);
+  const snapshotSummary = generateBattleSnapshotSummary(result);
   const sportDef = getSportDefinition(result.sport);
 
   const winner =
@@ -179,6 +181,11 @@ export function BattleResult({ result, timeline, onTimelineAgeSelect, getBattleS
           <p className="mt-1 text-4xl font-bold tabular-nums tracking-tight text-[#1d1d1f] sm:text-5xl">
             {scoreDisplay}
           </p>
+          {snapshotSummary ? (
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-[#86868b] sm:text-base">
+              {snapshotSummary}
+            </p>
+          ) : null}
         </div>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-2 sm:gap-4">
