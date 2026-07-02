@@ -247,3 +247,8 @@ export function buildCompareShareUrl(
 ): string {
   return `${origin}${buildCompareSharePath(state)}`;
 }
+
+export function syncCompareUrlState(state: CompareUrlState): void {
+  if (typeof window === "undefined") return;
+  window.history.replaceState(window.history.state, "", buildCompareSharePath(state));
+}

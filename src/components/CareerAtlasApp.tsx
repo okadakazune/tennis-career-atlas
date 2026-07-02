@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import {
   PLAYER_IDS,
   PlayerIndexEntry,
@@ -31,7 +31,6 @@ import {
   getSnapshotAgeOptions,
 } from "@/data/career-stats";
 import {
-  buildCompareSharePath,
   buildCompareShareUrl,
   clampSnapshotAge,
   DEFAULT_BATTLE_PAIR,
@@ -41,6 +40,7 @@ import {
   parseCompareUrlState,
   resolveSharePlayerIds,
   resolveYearlyMetric,
+  syncCompareUrlState,
   ChartViewMode,
   YearlyMetric,
 } from "@/data/compare-url-state";
@@ -141,13 +141,12 @@ function resolveInitialBattleState(searchParams: URLSearchParams) {
 }
 
 function CareerAtlasAppMain() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const snapshotAges = useMemo(() => getSnapshotAgeOptions(), []);
-  const initialBattleState = useMemo(
-    () => resolveInitialBattleState(searchParams),
-    [searchParams],
+  const initialBattleStateRef = useRef(
+    resolveInitialBattleState(searchParams),
   );
+  const initialBattleState = initialBattleStateRef.current;
   const urlBootstrapRef = useRef(
     parseCompareUrlState(searchParams) ?? undefined,
   );
@@ -212,18 +211,6 @@ function CareerAtlasAppMain() {
     selectedIds.length === 2 &&
     selectedPlayers.length === 2;
 
-  const battleScoreResult = useMemo(() => {
-    if (!showBattleResult || !isLiveSport(selectedSport)) return null;
-    const playerA = selectedPlayers[0];
-    const playerB = selectedPlayers[1];
-    return computeBattleScore({
-      sport: selectedSport,
-      playerA,
-      playerB,
-      displayAge,
-    });
-  }, [showBattleResult, selectedSport, selectedPlayers, displayAge]);
-
   const battleTimeline = useMemo(() => {
     if (!showBattleResult || !isLiveSport(selectedSport)) return null;
     return computeBattleTimeline({
@@ -232,6 +219,31 @@ function CareerAtlasAppMain() {
       playerB: selectedPlayers[1],
     });
   }, [showBattleResult, selectedSport, selectedPlayers]);
+
+  const careerBattleResult = useMemo(() => {
+    if (!showBattleResult || !isLiveSport(selectedSport) || !battleTimeline) {
+      return null;
+    }
+    const careerAge = battleTimeline.points.at(-1)?.age;
+    if (careerAge == null) return null;
+
+    return computeBattleScore({
+      sport: selectedSport,
+      playerA: selectedPlayers[0],
+      playerB: selectedPlayers[1],
+      displayAge: careerAge,
+    });
+  }, [showBattleResult, selectedSport, selectedPlayers, battleTimeline]);
+
+  const ageBattleResult = useMemo(() => {
+    if (!showBattleResult || !isLiveSport(selectedSport)) return null;
+    return computeBattleScore({
+      sport: selectedSport,
+      playerA: selectedPlayers[0],
+      playerB: selectedPlayers[1],
+      displayAge,
+    });
+  }, [showBattleResult, selectedSport, selectedPlayers, displayAge]);
 
   const handleTimelineAgeSelect = useCallback((age: number) => {
     setChartHoverAge(null);
@@ -249,7 +261,7 @@ function CareerAtlasAppMain() {
   }, [battlePlayerAId, battlePlayerBId]);
 
   useEffect(() => {
-    if (!shouldScrollToBattleRef.current || !battleScoreResult) return;
+    if (!shouldScrollToBattleRef.current || !ageBattleResult) return;
 
     shouldScrollToBattleRef.current = false;
     requestAnimationFrame(() => {
@@ -258,7 +270,7 @@ function CareerAtlasAppMain() {
         block: "start",
       });
     });
-  }, [battleScoreResult]);
+  }, [ageBattleResult]);
 
   const handleTabChange = useCallback((tab: CompareDashboardTab) => {
     setActiveTab(tab);
@@ -276,7 +288,7 @@ function CareerAtlasAppMain() {
       return;
     }
 
-    const nextPath = buildCompareSharePath({
+    syncCompareUrlState({
       playerIds: selectedIds,
       age: selectedAge,
       granularity,
@@ -288,8 +300,7 @@ function CareerAtlasAppMain() {
           ? [selectedIds[0], selectedIds[1]]
           : undefined,
     });
-    router.replace(nextPath, { scroll: false });
-  }, [selectedIds, selectedAge, granularity, yScale, yearlyMetric, battleActive, selectedSport, router]);
+  }, [selectedIds, selectedAge, granularity, yScale, yearlyMetric, battleActive, selectedSport]);
 
   const getShareUrl = useCallback(() => {
     if (typeof window === "undefined") return "/";
@@ -529,10 +540,11 @@ function CareerAtlasAppMain() {
         </div>
       ) : null}
 
-      {battleScoreResult ? (
+      {careerBattleResult && ageBattleResult ? (
         <div ref={battleResultRef}>
           <BattleResult
-            result={battleScoreResult}
+            careerResult={careerBattleResult}
+            ageResult={ageBattleResult}
             timeline={battleTimeline}
             onTimelineAgeSelect={handleTimelineAgeSelect}
             getBattleShareUrl={getBattleShareUrl}
