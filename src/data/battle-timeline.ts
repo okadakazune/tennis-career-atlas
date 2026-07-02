@@ -94,3 +94,8 @@ export function computeBattleTimeline({
     points,
   };
 }
+
+export function getCareerBattleAge(timeline: BattleTimelineData): number | null {
+  if (timeline.points.length === 0) return null;
+  return timeline.points[timeline.points.length - 1].age;
+}

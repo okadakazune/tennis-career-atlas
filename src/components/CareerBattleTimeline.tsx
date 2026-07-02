@@ -1,20 +1,17 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { BattleCategoryResult, BattleSide } from "@/data/battle-score";
 import type { BattleTimelineData, BattleTimelinePoint } from "@/data/battle-timeline";
-import { generateBattleStory } from "@/data/battle-story";
 
 interface CareerBattleTimelineProps {
   timeline: BattleTimelineData;
   displayAge: number;
-  overallWinner: BattleSide | "tie" | null;
   onAgeSelect: (age: number) => void;
 }
 
 const TIE_COLOR = "#c7c7cc";
 const DOT_ANIMATION_MS = 45;
-const STORY_DELAY_MS = 400;
 
 function formatScore(value: number): string {
   return Number.isInteger(value) ? String(value) : value.toFixed(1);
@@ -140,19 +137,11 @@ interface TimelineTooltipState {
 export function CareerBattleTimeline({
   timeline,
   displayAge,
-  overallWinner,
   onAgeSelect,
 }: CareerBattleTimelineProps) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [hoveredAge, setHoveredAge] = useState<number | null>(null);
   const [tooltip, setTooltip] = useState<TimelineTooltipState | null>(null);
-  const story = useMemo(
-    () => generateBattleStory({ timeline, displayAge, overallWinner }),
-    [timeline, displayAge, overallWinner],
-  );
-
-  const storyDelayMs =
-    timeline.points.length * DOT_ANIMATION_MS + STORY_DELAY_MS;
 
   if (timeline.points.length === 0) {
     return null;
@@ -182,11 +171,11 @@ export function CareerBattleTimeline({
     <div className="border-b border-black/[0.06] px-5 py-5 sm:px-6">
       <div className="mb-5">
         <h3 className="text-sm font-semibold uppercase tracking-wide text-[#86868b]">
-          Career Battle Timeline
+          Age Timeline
         </h3>
         <p className="mt-1 text-sm text-[#86868b]">
-          Who was ahead at each stage of their career? Click an age to update
-          the breakdown below.
+          Explore how the Age Battle shifts over time. Click an age to update
+          the Age Battle, categories, and story below.
         </p>
       </div>
 
@@ -306,9 +295,9 @@ export function CareerBattleTimeline({
                             : `0 0 0 3px ${color}33`
                           : undefined,
                       }}
-                      onClick={() => {
+                      onClick={(event) => {
+                        event.stopPropagation();
                         onAgeSelect(point.age);
-                        hideTooltip();
                       }}
                       onMouseEnter={(event) =>
                         showTooltip(event.currentTarget, point)
@@ -340,15 +329,6 @@ export function CareerBattleTimeline({
           </div>
         ) : null}
       </div>
-
-      {story ? (
-        <p
-          className="battle-timeline-story mt-2 text-sm leading-relaxed text-[#1d1d1f]"
-          style={{ animationDelay: `${storyDelayMs}ms` }}
-        >
-          {story}
-        </p>
-      ) : null}
     </div>
   );
 }

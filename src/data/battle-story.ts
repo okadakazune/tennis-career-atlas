@@ -1,4 +1,4 @@
-import type { BattleSide } from "@/data/battle-score";
+import type { BattleCategoryResult, BattleScoreResult, BattleSide } from "@/data/battle-score";
 import type { BattleTimelineData } from "@/data/battle-timeline";
 
 export interface BattleStoryInput {
@@ -95,4 +95,58 @@ export function generateBattleStory(data: BattleStoryInput): string | null {
   }
 
   return `${playerA.shortName} and ${playerB.shortName} traded momentum across their careers, with ${closingName} ahead in the most recent snapshot.`;
+}
+
+function formatCategoryStrengths(
+  categories: BattleCategoryResult[],
+  limit = 3,
+): string {
+  return categories
+    .slice(0, limit)
+    .map((category) => category.label.toLowerCase())
+    .join(", ");
+}
+
+/**
+ * Fixed career-wide narrative for the Career Battle card.
+ * Rule-based today; intended to be swapped for an AI API later.
+ */
+export function generateCareerBattleStory(
+  careerResult: BattleScoreResult,
+  timeline: BattleTimelineData | null,
+): string | null {
+  if (careerResult.countedCategories === 0) {
+    return null;
+  }
+
+  if (careerResult.overallWinner === "tie") {
+    return `${careerResult.playerA.shortName} and ${careerResult.playerB.shortName} finish this career battle evenly matched across the full comparison.`;
+  }
+
+  if (!careerResult.overallWinner) {
+    return null;
+  }
+
+  const winner =
+    careerResult.overallWinner === "a"
+      ? careerResult.playerA
+      : careerResult.playerB;
+  const winnerCategories = careerResult.categories.filter(
+    (category) => category.outcome === careerResult.overallWinner,
+  );
+  const strengths = formatCategoryStrengths(winnerCategories);
+
+  if (strengths) {
+    return `${winner.shortName} ultimately wins this career battle by excelling in ${strengths}.`;
+  }
+
+  if (timeline) {
+    return generateBattleStory({
+      timeline,
+      displayAge: careerResult.displayAge,
+      overallWinner: careerResult.overallWinner,
+    });
+  }
+
+  return `${winner.shortName} ultimately wins this career battle across the full comparison.`;
 }
