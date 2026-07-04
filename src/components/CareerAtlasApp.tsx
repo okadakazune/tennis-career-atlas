@@ -53,7 +53,6 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { CareerInsightsCard } from "@/components/CareerInsightsCard";
 import { HeroBattle } from "@/components/HeroBattle";
 import { BattleResult } from "@/components/BattleResult";
-import { BattleEvidenceNav } from "@/components/BattleEvidenceNav";
 import { BeyondSportsSection } from "@/components/BeyondSportsSection";
 import {
   computeBattleScore,
@@ -547,16 +546,10 @@ function CareerAtlasAppMain() {
             ageResult={ageBattleResult}
             timeline={battleTimeline}
             onTimelineAgeSelect={handleTimelineAgeSelect}
+            onDeepDiveSelect={handleTabChange}
             getBattleShareUrl={getBattleShareUrl}
           />
         </div>
-      ) : null}
-
-      {showBattleResult ? (
-        <BattleEvidenceNav
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-        />
       ) : null}
 
       <PlayerSelector

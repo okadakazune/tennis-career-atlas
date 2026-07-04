@@ -32,6 +32,66 @@ function summarizeCategoryLabels(categories: BattleCategoryResult[], limit = 2):
     .join(" and ");
 }
 
+function formatCategoryLabelsForProse(
+  categories: BattleCategoryResult[],
+  limit = 3,
+): string {
+  const labels = categories.slice(0, limit).map((category) => category.label);
+  if (labels.length === 0) return "";
+  if (labels.length === 1) return labels[0];
+  if (labels.length === 2) return `${labels[0]} and ${labels[1]}`;
+  return `${labels.slice(0, -1).join(", ")} and ${labels[labels.length - 1]}`;
+}
+
+export interface CareerBattleWhyInsight {
+  winnerLead: string;
+  loserCounter: string | null;
+}
+
+/**
+ * Versus-style "why did they win?" copy for the Career Battle hero.
+ * Rule-based wording layer — facts come from structured category outcomes.
+ */
+export function generateCareerBattleWhyInsight(
+  result: BattleScoreResult,
+): CareerBattleWhyInsight | null {
+  if (result.countedCategories === 0) {
+    return null;
+  }
+
+  if (result.overallWinner === "tie") {
+    return {
+      winnerLead: `${result.playerA.shortName} and ${result.playerB.shortName} finish evenly matched across ${result.countedCategories} career categories.`,
+      loserCounter: null,
+    };
+  }
+
+  if (!result.overallWinner) {
+    return null;
+  }
+
+  const winner =
+    result.overallWinner === "a" ? result.playerA : result.playerB;
+  const loser =
+    result.overallWinner === "a" ? result.playerB : result.playerA;
+  const loserSide: BattleSide = result.overallWinner === "a" ? "b" : "a";
+
+  const winnerCategories = getWinnerCategories(result.categories, result.overallWinner);
+  const loserCategories = getWinnerCategories(result.categories, loserSide);
+  const winnerLabels = formatCategoryLabelsForProse(winnerCategories);
+  const loserLabels = formatCategoryLabelsForProse(loserCategories);
+
+  const winnerLead = winnerLabels
+    ? `${winner.shortName} wins thanks to superior ${winnerLabels}.`
+    : `${winner.shortName} wins the career battle across the compared categories.`;
+
+  const loserCounter = loserLabels
+    ? `${loser.shortName} remains ahead in ${loserLabels}.`
+    : null;
+
+  return { winnerLead, loserCounter };
+}
+
 function describeCategoryGroup(categories: BattleCategoryResult[]): string | null {
   if (categories.length === 0) return null;
 
