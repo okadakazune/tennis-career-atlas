@@ -183,6 +183,8 @@ async function main() {
   await mkdir(OUT_DIR, { recursive: true });
 
   const outputPath = path.join(OUT_DIR, "grand-slam-results.generated.json");
+  const publicDataDir = path.join(ROOT, "public", "data");
+  const publicOutputPath = path.join(publicDataDir, "grand-slam-results.generated.json");
   const payload = {
     meta: {
       generatedAt: new Date().toISOString(),
@@ -195,8 +197,11 @@ async function main() {
   };
 
   await writeFile(outputPath, `${JSON.stringify(payload, null, 2)}\n`);
+  await mkdir(publicDataDir, { recursive: true });
+  await writeFile(publicOutputPath, `${JSON.stringify(payload, null, 2)}\n`);
 
   console.log(`Wrote Grand Slam results to ${outputPath}`);
+  console.log(`Wrote Grand Slam results to ${publicOutputPath}`);
   for (const charted of chartedConfig) {
     const yearCount = Object.keys(players[charted.id] ?? {}).length;
     console.log(`  ${charted.shortName}: ${yearCount} seasons with GS data`);

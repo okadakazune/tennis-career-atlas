@@ -1,8 +1,12 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { BattleCategoryResult, BattleScoreResult } from "@/data/battle-score";
 import { generateCareerBattleWhyInsight } from "@/data/battle-insight";
+import {
+  getCategoryEmoji,
+  sortCategoriesByPriority,
+} from "@/data/battle-category-display";
 import { generateBattleSnapshotSummary } from "@/data/battle-snapshot-summary";
 import { getSportDefinition } from "@/data/sports/registry";
 import type { BattleTimelineData } from "@/data/battle-timeline";
@@ -19,7 +23,7 @@ interface BattleResultProps {
   getBattleShareUrl: () => string;
 }
 
-const DEEP_DIVE_TABS: {
+const EVIDENCE_TABS: {
   id: CompareDashboardTab;
   label: string;
   description: string;
@@ -28,9 +32,11 @@ const DEEP_DIVE_TABS: {
   { id: "grand-slam", label: "Grand Slam", description: "Major titles by age" },
   { id: "goat", label: "GOAT", description: "GOAT score breakdown" },
   { id: "stats", label: "Stats", description: "Career milestones" },
-  { id: "age", label: "Age", description: "Same-age snapshots" },
   { id: "no1", label: "No.1", description: "Weeks at world No.1" },
+  { id: "age", label: "Age", description: "Same-age snapshots" },
 ];
+
+const BAR_SEGMENTS = 8;
 
 function formatScore(value: number): string {
   return Number.isInteger(value) ? String(value) : value.toFixed(1);
@@ -52,38 +58,152 @@ function getLoser(result: BattleScoreResult) {
       : null;
 }
 
-function getWinnerScore(result: BattleScoreResult): string {
-  if (result.overallWinner === "a") {
-    return `${formatScore(result.scoreA)} – ${formatScore(result.scoreB)}`;
-  }
-  if (result.overallWinner === "b") {
-    return `${formatScore(result.scoreB)} – ${formatScore(result.scoreA)}`;
-  }
-  return `${formatScore(result.scoreA)} – ${formatScore(result.scoreB)}`;
+function getWinnerScoreValue(result: BattleScoreResult): number {
+  if (result.overallWinner === "a") return result.scoreA;
+  if (result.overallWinner === "b") return result.scoreB;
+  return Math.max(result.scoreA, result.scoreB);
 }
 
-function groupCategories(result: BattleScoreResult) {
-  const aWins = result.categories.filter((category) => category.outcome === "a");
-  const bWins = result.categories.filter((category) => category.outcome === "b");
-  const ties = result.categories.filter((category) => category.outcome === "tie");
-  return { aWins, bWins, ties };
+function getWinnerScoreLabel(result: BattleScoreResult): string {
+  if (result.overallWinner === "a") {
+    return `${formatScore(result.scoreA)}–${formatScore(result.scoreB)}`;
+  }
+  if (result.overallWinner === "b") {
+    return `${formatScore(result.scoreB)}–${formatScore(result.scoreA)}`;
+  }
+  return `${formatScore(result.scoreA)}–${formatScore(result.scoreB)}`;
+}
+
+function groupCategoriesByLeader(result: BattleScoreResult) {
+  const winner = getWinner(result);
+  const loser = getLoser(result);
+  const aWins = sortCategoriesByPriority(
+    result.categories.filter((category) => category.outcome === "a"),
+  );
+  const bWins = sortCategoriesByPriority(
+    result.categories.filter((category) => category.outcome === "b"),
+  );
+  const ties = sortCategoriesByPriority(
+    result.categories.filter((category) => category.outcome === "tie"),
+  );
+
+  if (result.overallWinner === "b") {
+    return {
+      leaderWins: bWins,
+      leaderName: winner?.shortName ?? result.playerB.shortName,
+      challengerWins: aWins,
+      challengerName: loser?.shortName ?? result.playerA.shortName,
+      ties,
+    };
+  }
+
+  return {
+    leaderWins: aWins,
+    leaderName: winner?.shortName ?? result.playerA.shortName,
+    challengerWins: bWins,
+    challengerName: loser?.shortName ?? result.playerB.shortName,
+    ties,
+  };
+}
+
+function ScoreBar({
+  label,
+  score,
+  maxScore,
+  accentColor,
+}: {
+  label: string;
+  score: number;
+  maxScore: number;
+  accentColor: string;
+}) {
+  const filled = maxScore > 0 ? Math.round((score / maxScore) * BAR_SEGMENTS) : 0;
+
+  return (
+    <div className="w-full max-w-md">
+      <div className="mb-1.5 flex items-baseline justify-between gap-3">
+        <span className="text-sm font-semibold text-[#1d1d1f] sm:text-base">{label}</span>
+        <span className="text-lg font-bold tabular-nums text-[#1d1d1f] sm:text-xl">
+          {formatScore(score)}
+        </span>
+      </div>
+      <div
+        className="flex gap-0.5"
+        role="img"
+        aria-label={`${label}: ${score} of ${maxScore} categories`}
+      >
+        {Array.from({ length: BAR_SEGMENTS }).map((_, index) => (
+          <span
+            key={index}
+            className="h-2.5 flex-1 rounded-sm sm:h-3"
+            style={{
+              backgroundColor: index < filled ? accentColor : "#e8e8ed",
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function BattleSummarySticky({
+  careerResult,
+  displayAge,
+  visible,
+}: {
+  careerResult: BattleScoreResult;
+  displayAge: number;
+  visible: boolean;
+}) {
+  if (!visible) return null;
+
+  const winner = getWinner(careerResult);
+
+  return (
+    <div className="fixed inset-x-0 top-0 z-50 border-b border-black/[0.08] bg-white/95 shadow-sm backdrop-blur-md">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+          <span className="truncate text-sm font-semibold text-[#1d1d1f] sm:text-base">
+            {careerResult.playerA.shortName}
+          </span>
+          <span className="shrink-0 rounded-full bg-amber-100 px-2.5 py-0.5 text-sm font-bold tabular-nums text-amber-900">
+            {getWinnerScoreLabel(careerResult)}
+          </span>
+          <span className="truncate text-sm font-semibold text-[#1d1d1f] sm:text-base">
+            {careerResult.playerB.shortName}
+          </span>
+        </div>
+        <div className="flex shrink-0 items-center gap-2 text-xs text-[#86868b] sm:text-sm">
+          {winner ? (
+            <span className="hidden font-medium text-amber-800 sm:inline">
+              {winner.shortName} leads
+            </span>
+          ) : null}
+          <span className="rounded-full bg-[#f0f7ff] px-2.5 py-0.5 font-semibold text-[#0071e3]">
+            Age {displayAge}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function WinnerHero({ result }: { result: BattleScoreResult }) {
   const winner = getWinner(result);
-  const loser = getLoser(result);
+  const winnerScore = getWinnerScoreValue(result);
+  const maxScore = Math.max(result.scoreA, result.scoreB, 1);
 
   return (
-    <div className="rounded-3xl border border-amber-200/60 bg-gradient-to-b from-amber-50/80 via-white to-white px-6 py-8 text-center shadow-[0_12px_40px_rgba(255,193,7,0.12)] sm:px-10 sm:py-10">
-      <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-700">
+    <div className="rounded-3xl border border-amber-200/70 bg-gradient-to-b from-amber-50 via-white to-white px-6 py-10 text-center shadow-[0_16px_48px_rgba(255,193,7,0.14)] sm:px-12 sm:py-12">
+      <p className="text-xs font-bold uppercase tracking-[0.25em] text-amber-700 sm:text-sm">
         <span aria-hidden="true">🏆 </span>
-        Winner
+        Career Winner
       </p>
 
       {winner ? (
         <>
-          <div className="mx-auto mt-5 flex justify-center">
-            <div className="rounded-full ring-4 ring-amber-200/70 ring-offset-2">
+          <div className="mx-auto mt-6 flex justify-center">
+            <div className="rounded-full ring-4 ring-amber-300/60 ring-offset-4">
               <PlayerAvatar
                 name={winner.name}
                 color={winner.color}
@@ -93,36 +213,54 @@ function WinnerHero({ result }: { result: BattleScoreResult }) {
               />
             </div>
           </div>
-          <h3 className="mt-5 text-3xl font-bold tracking-tight text-[#1d1d1f] sm:text-4xl">
+          <h3 className="mt-6 text-4xl font-bold tracking-tight text-[#1d1d1f] sm:text-5xl">
             {winner.name}
           </h3>
         </>
       ) : (
-        <h3 className="mt-5 text-2xl font-bold tracking-tight text-[#86868b] sm:text-3xl">
+        <h3 className="mt-6 text-3xl font-bold tracking-tight text-[#86868b] sm:text-4xl">
           Even match
         </h3>
       )}
 
-      <p className="mt-2 text-sm font-semibold uppercase tracking-wide text-[#86868b]">
-        Career Battle
+      <p className="mt-5 text-6xl font-bold tabular-nums tracking-tight text-[#1d1d1f] sm:text-7xl">
+        {getWinnerScoreLabel(result)}
       </p>
 
-      <p className="mt-3 text-5xl font-bold tabular-nums tracking-tight text-[#1d1d1f] sm:text-6xl">
-        {getWinnerScore(result)}
-      </p>
-
-      <p className="mt-3 text-sm text-[#86868b]">
-        Compared across {result.countedCategories}{" "}
-        {result.countedCategories === 1 ? "category" : "categories"}
-      </p>
-
-      {loser ? (
-        <p className="mt-2 text-xs text-[#aeaeb2]">
-          vs {loser.shortName}
+      {winner ? (
+        <p className="mt-3 text-base text-[#86868b] sm:text-lg">
+          Won {winnerScore} of {result.countedCategories} comparison{" "}
+          {result.countedCategories === 1 ? "category" : "categories"}
         </p>
       ) : null}
+
+      <div className="mx-auto mt-8 max-w-sm space-y-4 text-left">
+        <ScoreBar
+          label={result.playerA.shortName}
+          score={result.scoreA}
+          maxScore={maxScore}
+          accentColor={result.playerA.color}
+        />
+        <ScoreBar
+          label={result.playerB.shortName}
+          score={result.scoreB}
+          maxScore={maxScore}
+          accentColor={result.playerB.color}
+        />
+      </div>
+
+      <p className="mt-8 text-xs font-semibold uppercase tracking-[0.2em] text-[#aeaeb2]">
+        Career Battle
+      </p>
     </div>
   );
+}
+
+function formatStrengthList(strengths: string[]): string {
+  if (strengths.length === 0) return "";
+  if (strengths.length === 1) return strengths[0];
+  if (strengths.length === 2) return `${strengths[0]} and ${strengths[1]}`;
+  return `${strengths.slice(0, -1).join(", ")}, and ${strengths[strengths.length - 1]}`;
 }
 
 function WhyDidTheyWin({
@@ -132,38 +270,49 @@ function WhyDidTheyWin({
 }) {
   if (!insight) return null;
 
+  const title =
+    insight.winnerStrengths.length > 0 || insight.loserStrengths
+      ? `Why did ${insight.winnerName} win?`
+      : "Why is it even?";
+
   return (
     <div className="rounded-2xl border border-black/[0.06] bg-white px-5 py-5 sm:px-6">
-      <p className="text-xs font-semibold uppercase tracking-wide text-[#86868b]">
-        Why did they win?
-      </p>
-      <p className="mt-3 text-base leading-relaxed text-[#1d1d1f] sm:text-lg">
-        {insight.winnerLead}
-      </p>
-      {insight.loserCounter ? (
-        <p className="mt-2 text-base leading-relaxed text-[#86868b] sm:text-lg">
-          {insight.loserCounter}
-        </p>
-      ) : null}
+      <h3 className="text-base font-semibold text-[#1d1d1f] sm:text-lg">{title}</h3>
+
+      <div className="mt-4 space-y-3 text-base leading-relaxed text-[#1d1d1f] sm:text-lg">
+        {insight.winnerStrengths.length > 0 ? (
+          <p>
+            {insight.winnerIntro}{" "}
+            {formatStrengthList(insight.winnerStrengths)}.
+          </p>
+        ) : (
+          <p>{insight.winnerIntro}</p>
+        )}
+
+        {insight.loserName && insight.loserStrengths && insight.loserStrengths.length > 0 ? (
+          <p className="text-[#86868b]">
+            {insight.loserName} remains ahead in{" "}
+            {formatStrengthList(insight.loserStrengths)}.
+          </p>
+        ) : null}
+      </div>
     </div>
   );
 }
 
-function CategoryCheckList({ categories }: { categories: BattleCategoryResult[] }) {
+function CategoryLeadList({ categories }: { categories: BattleCategoryResult[] }) {
   if (categories.length === 0) {
-    return <p className="text-sm text-[#aeaeb2]">None</p>;
+    return <p className="text-sm text-[#aeaeb2]">—</p>;
   }
 
   return (
-    <ul className="space-y-2">
+    <ul className="space-y-2.5">
       {categories.map((category) => (
         <li
           key={category.id}
-          className="flex items-start gap-2 text-sm text-[#1d1d1f] sm:text-base"
+          className="flex items-center gap-2 text-sm text-[#1d1d1f] sm:text-base"
         >
-          <span className="mt-0.5 shrink-0 font-semibold text-emerald-600" aria-hidden="true">
-            ✓
-          </span>
+          <span aria-hidden="true">{getCategoryEmoji(category.id)}</span>
           <span>{category.label}</span>
         </li>
       ))}
@@ -171,42 +320,40 @@ function CategoryCheckList({ categories }: { categories: BattleCategoryResult[] 
   );
 }
 
-function WinningCategories({
-  result,
-  subtitle,
-}: {
-  result: BattleScoreResult;
-  subtitle?: string;
-}) {
-  const { aWins, bWins, ties } = useMemo(() => groupCategories(result), [result]);
+function WinningCategories({ result }: { result: BattleScoreResult }) {
+  const { leaderWins, leaderName, challengerWins, challengerName, ties } = useMemo(
+    () => groupCategoriesByLeader(result),
+    [result],
+  );
 
   return (
     <div>
       <h3 className="text-sm font-semibold uppercase tracking-wide text-[#86868b]">
         Winning Categories
       </h3>
-      {subtitle ? (
-        <p className="mt-1 text-xs text-[#86868b]">{subtitle}</p>
-      ) : null}
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="rounded-2xl border border-black/[0.06] bg-[#fafafa] p-4">
-          <p className="mb-3 text-sm font-semibold text-[#1d1d1f]">
-            {result.playerA.shortName} wins
-          </p>
-          <CategoryCheckList categories={aWins} />
-        </div>
+      <div className="mt-4 space-y-4">
+        {leaderWins.length > 0 ? (
+          <div className="rounded-2xl border border-amber-200/50 bg-amber-50/40 p-4 sm:p-5">
+            <p className="mb-3 text-sm font-bold text-[#1d1d1f] sm:text-base">
+              {leaderName} leads
+            </p>
+            <CategoryLeadList categories={leaderWins} />
+          </div>
+        ) : null}
 
-        <div className="rounded-2xl border border-black/[0.06] bg-[#fafafa] p-4">
-          <p className="mb-3 text-sm font-semibold text-[#1d1d1f]">
-            {result.playerB.shortName} wins
-          </p>
-          <CategoryCheckList categories={bWins} />
-        </div>
+        {challengerWins.length > 0 ? (
+          <div className="rounded-2xl border border-black/[0.06] bg-[#fafafa] p-4 sm:p-5">
+            <p className="mb-3 text-sm font-bold text-[#1d1d1f] sm:text-base">
+              {challengerName} leads
+            </p>
+            <CategoryLeadList categories={challengerWins} />
+          </div>
+        ) : null}
 
         {ties.length > 0 ? (
-          <div className="rounded-2xl border border-black/[0.06] bg-[#fafafa] p-4 sm:col-span-2 lg:col-span-1">
-            <p className="mb-3 text-sm font-semibold text-[#86868b]">Tie</p>
+          <div className="rounded-2xl border border-black/[0.06] bg-white p-4 sm:p-5">
+            <p className="mb-3 text-sm font-bold text-[#86868b]">Tied</p>
             <ul className="space-y-2">
               {ties.map((category) => (
                 <li key={category.id} className="text-sm text-[#86868b] sm:text-base">
@@ -217,22 +364,87 @@ function WinningCategories({
           </div>
         ) : null}
       </div>
-
-      {result.comingSoonCategories.length > 0 ? (
-        <div className="mt-4 rounded-2xl border border-dashed border-black/[0.08] bg-white px-4 py-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#86868b]">
-            Coming soon
-          </p>
-          <p className="mt-1 text-sm text-[#aeaeb2]">
-            {result.comingSoonCategories.map((category) => category.label).join(" · ")}
-          </p>
-        </div>
-      ) : null}
     </div>
   );
 }
 
-function DeepDiveNav({
+function QuickComparisonCard({
+  category,
+  result,
+}: {
+  category: BattleCategoryResult;
+  result: BattleScoreResult;
+}) {
+  const winnerLabel =
+    category.outcome === "a"
+      ? result.playerA.shortName
+      : category.outcome === "b"
+        ? result.playerB.shortName
+        : "Tie";
+
+  return (
+    <div className="flex min-w-[140px] flex-col rounded-2xl border border-black/[0.06] bg-white p-4 shadow-sm">
+      <p className="text-sm font-semibold text-[#1d1d1f]">
+        <span aria-hidden="true">{getCategoryEmoji(category.id)} </span>
+        {category.label}
+      </p>
+
+      <div className="mt-4 grid grid-cols-2 gap-2 text-center">
+        <div>
+          <p className="text-2xl font-bold tabular-nums text-[#1d1d1f]">
+            {category.valueA}
+          </p>
+          <p className="mt-0.5 truncate text-[10px] font-medium uppercase tracking-wide text-[#86868b]">
+            {result.playerA.shortName}
+          </p>
+        </div>
+        <div>
+          <p className="text-2xl font-bold tabular-nums text-[#1d1d1f]">
+            {category.valueB}
+          </p>
+          <p className="mt-0.5 truncate text-[10px] font-medium uppercase tracking-wide text-[#86868b]">
+            {result.playerB.shortName}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-4 border-t border-black/[0.06] pt-3 text-center">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-[#86868b]">
+          Winner
+        </p>
+        <p
+          className={`mt-0.5 text-sm font-bold ${
+            category.outcome === "tie" ? "text-[#86868b]" : "text-[#1d1d1f]"
+          }`}
+        >
+          {winnerLabel}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function QuickComparisonCards({ result }: { result: BattleScoreResult }) {
+  const categories = useMemo(
+    () => sortCategoriesByPriority(result.categories),
+    [result.categories],
+  );
+
+  return (
+    <div>
+      <h3 className="text-sm font-semibold uppercase tracking-wide text-[#86868b]">
+        Quick Comparison
+      </h3>
+      <div className="mt-4 grid grid-cols-2 gap-3 lg:flex lg:gap-3 lg:overflow-x-auto lg:pb-1">
+        {categories.map((category) => (
+          <QuickComparisonCard key={category.id} category={category} result={result} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ExploreEvidenceNav({
   onSelect,
 }: {
   onSelect: (tab: CompareDashboardTab) => void;
@@ -240,15 +452,15 @@ function DeepDiveNav({
   return (
     <div>
       <h3 className="text-sm font-semibold uppercase tracking-wide text-[#86868b]">
-        Explore the evidence
+        Explore detailed evidence
       </h3>
       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {DEEP_DIVE_TABS.map((tab) => (
+        {EVIDENCE_TABS.map((tab) => (
           <button
             key={tab.id}
             type="button"
             onClick={() => onSelect(tab.id)}
-            className="ui-transition group rounded-2xl border border-black/[0.06] bg-white px-4 py-4 text-left shadow-sm hover:border-[#0071e3]/30 hover:bg-[#f8fbff] hover:shadow-md"
+            className="ui-transition group rounded-2xl border border-black/[0.06] bg-[#fafafa] px-4 py-4 text-left hover:border-[#0071e3]/30 hover:bg-[#f8fbff] hover:shadow-sm"
           >
             <p className="text-base font-semibold text-[#1d1d1f] group-hover:text-[#0071e3]">
               {tab.label}
@@ -257,33 +469,6 @@ function DeepDiveNav({
           </button>
         ))}
       </div>
-    </div>
-  );
-}
-
-function AgeBattleSnapshot({ result }: { result: BattleScoreResult }) {
-  const winner = getWinner(result);
-  const scoreHeadline =
-    result.overallWinner === "tie"
-      ? `${result.playerA.shortName} and ${result.playerB.shortName} tie`
-      : winner
-        ? `${winner.shortName} leads`
-        : "No leader yet";
-
-  return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-[#0071e3]">
-          Age Battle
-        </p>
-        <p className="mt-1 text-sm text-[#86868b]">
-          Snapshot at age {result.displayAge}
-        </p>
-        <p className="mt-2 text-lg font-semibold text-[#1d1d1f]">{scoreHeadline}</p>
-      </div>
-      <p className="text-3xl font-bold tabular-nums text-[#1d1d1f] sm:text-4xl">
-        {formatScore(result.scoreA)} – {formatScore(result.scoreB)}
-      </p>
     </div>
   );
 }
@@ -297,10 +482,25 @@ export function BattleResult({
   getBattleShareUrl,
 }: BattleResultProps) {
   const [copied, setCopied] = useState(false);
+  const [stickyVisible, setStickyVisible] = useState(false);
+  const heroSentinelRef = useRef<HTMLDivElement>(null);
   const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const whyInsight = generateCareerBattleWhyInsight(careerResult);
   const ageStory = generateBattleSnapshotSummary(ageResult);
   const sportDef = getSportDefinition(careerResult.sport);
+
+  useEffect(() => {
+    const sentinel = heroSentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setStickyVisible(!entry.isIntersecting),
+      { threshold: 0, rootMargin: "-56px 0px 0px 0px" },
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, []);
 
   const handleCopyBattleLink = useCallback(async () => {
     const url = getBattleShareUrl();
@@ -327,68 +527,66 @@ export function BattleResult({
   }, [getBattleShareUrl]);
 
   return (
-    <section
-      id="battle-result"
-      className="scroll-mt-4 overflow-hidden rounded-3xl border border-black/[0.08] bg-white shadow-[0_16px_48px_rgba(0,0,0,0.08)]"
-    >
-      <div className="border-b border-black/[0.06] bg-[linear-gradient(180deg,#fff8eb_0%,#ffffff_40%)] px-5 py-5 sm:px-6 sm:py-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[#ff7a00]">
-              <span aria-hidden="true">{sportDef?.emoji ?? "🏆"}</span>
-              Battle Result
-            </p>
-            <h2 className="mt-2 text-2xl font-bold tracking-tight text-[#1d1d1f] sm:text-3xl">
-              {careerResult.playerA.shortName} vs {careerResult.playerB.shortName}
-            </h2>
+    <>
+      <BattleSummarySticky
+        careerResult={careerResult}
+        displayAge={ageResult.displayAge}
+        visible={stickyVisible}
+      />
+
+      <section
+        id="battle-result"
+        className="scroll-mt-4 overflow-hidden rounded-3xl border border-black/[0.08] bg-white shadow-[0_16px_48px_rgba(0,0,0,0.08)]"
+      >
+        <div className="border-b border-black/[0.06] bg-[linear-gradient(180deg,#fff8eb_0%,#ffffff_50%)] px-5 py-5 sm:px-6 sm:py-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[#ff7a00]">
+                <span aria-hidden="true">{sportDef?.emoji ?? "🏆"}</span>
+                Battle Result
+              </p>
+              <h2 className="mt-2 text-2xl font-bold tracking-tight text-[#1d1d1f] sm:text-3xl">
+                {careerResult.playerA.shortName} vs {careerResult.playerB.shortName}
+              </h2>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => void handleCopyBattleLink()}
+              className="inline-flex shrink-0 items-center justify-center rounded-full border border-black/[0.08] bg-white px-4 py-2 text-sm font-medium text-[#1d1d1f] transition-colors hover:bg-[#fafafa]"
+            >
+              {copied ? "Copied!" : "Copy Battle Link"}
+            </button>
           </div>
 
-          <button
-            type="button"
-            onClick={() => void handleCopyBattleLink()}
-            className="inline-flex shrink-0 items-center justify-center rounded-full border border-black/[0.08] bg-white px-4 py-2 text-sm font-medium text-[#1d1d1f] transition-colors hover:bg-[#fafafa]"
-          >
-            {copied ? "Copied!" : "Copy Battle Link"}
-          </button>
+          <div ref={heroSentinelRef} className="mt-6 space-y-5">
+            <WinnerHero result={careerResult} />
+            <WhyDidTheyWin insight={whyInsight} />
+            <WinningCategories result={careerResult} />
+            <QuickComparisonCards result={careerResult} />
+            <ExploreEvidenceNav onSelect={onDeepDiveSelect} />
+          </div>
         </div>
 
-        <div className="mt-6 space-y-5">
-          <WinnerHero result={careerResult} />
-          <WhyDidTheyWin insight={whyInsight} />
-          <WinningCategories result={careerResult} />
-          <DeepDiveNav onSelect={onDeepDiveSelect} />
-        </div>
-      </div>
-
-      <div className="border-b border-black/[0.06] bg-[#f8fbff] px-5 py-5 sm:px-6">
-        <AgeBattleSnapshot result={ageResult} />
-      </div>
-
-      {timeline ? (
-        <CareerBattleTimeline
-          timeline={timeline}
-          displayAge={ageResult.displayAge}
-          onAgeSelect={onTimelineAgeSelect}
-        />
-      ) : null}
-
-      <div className="space-y-5 px-5 py-5 sm:px-6">
-        <WinningCategories
-          result={ageResult}
-          subtitle={`Snapshot at age ${ageResult.displayAge}`}
-        />
+        {timeline ? (
+          <CareerBattleTimeline
+            timeline={timeline}
+            displayAge={ageResult.displayAge}
+            onAgeSelect={onTimelineAgeSelect}
+          />
+        ) : null}
 
         {ageStory ? (
-          <div className="rounded-2xl border border-[#0071e3]/15 bg-[#f0f7ff] px-4 py-4">
+          <div className="border-t border-black/[0.06] px-5 py-5 sm:px-6">
             <p className="text-xs font-semibold uppercase tracking-wide text-[#0071e3]">
-              Age Story
+              Age {ageResult.displayAge} snapshot
             </p>
             <p className="mt-2 text-sm leading-relaxed text-[#1d1d1f] sm:text-base">
               {ageStory}
             </p>
           </div>
         ) : null}
-      </div>
-    </section>
+      </section>
+    </>
   );
 }

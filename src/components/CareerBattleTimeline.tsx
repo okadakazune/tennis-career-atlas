@@ -171,11 +171,11 @@ export function CareerBattleTimeline({
     <div className="border-b border-black/[0.06] px-5 py-5 sm:px-6">
       <div className="mb-5">
         <h3 className="text-sm font-semibold uppercase tracking-wide text-[#86868b]">
-          Age Timeline
+          How the battle changed over time
         </h3>
         <p className="mt-1 text-sm text-[#86868b]">
-          Explore how the Age Battle shifts over time. Click an age to update
-          the Age Battle, categories, and story below.
+          Supplementary view — click an age to update the age snapshot above the
+          charts below.
         </p>
       </div>
 

@@ -25,7 +25,7 @@ import { AgeSnapshotTable } from "@/components/AgeSnapshotTable";
 import { No1StreakTimeline } from "@/components/No1StreakTimeline";
 import { GrandSlamTabContent } from "@/components/GrandSlamTabContent";
 import { Top10LongevityCards } from "@/components/Top10LongevityCards";
-import { resolveDisplayAge } from "@/data/grand-slam";
+import { resolveDisplayAge, loadGrandSlamResults } from "@/data/grand-slam";
 import {
   DEFAULT_SNAPSHOT_AGE,
   getSnapshotAgeOptions,
@@ -696,7 +696,7 @@ function CareerAtlasAppContent() {
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadPlayers()
+    Promise.all([loadPlayers(), loadGrandSlamResults()])
       .then(() => setIsReady(true))
       .catch((error: unknown) => {
         const message =
@@ -725,7 +725,7 @@ function CareerAtlasAppContent() {
   if (!isReady) {
     return (
       <div className="mx-auto flex min-h-[40vh] w-full max-w-6xl items-center justify-center text-sm text-[#86868b]">
-        Loading player data…
+        Loading comparison data…
       </div>
     );
   }

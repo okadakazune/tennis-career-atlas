@@ -1,4 +1,4 @@
-import grandSlamData from "@/data/grand-slam-results.generated.json";
+import bundledGrandSlamData from "@/data/grand-slam-results.generated.json";
 import { Player } from "@/data/players";
 import { DEFAULT_SNAPSHOT_AGE } from "@/data/career-stats";
 
@@ -52,10 +52,72 @@ export const GRAND_SLAM_TOURNAMENTS: { key: GrandSlamKey; label: string; shortLa
 
 const DID_NOT_PLAY: GrandSlamResultLabel = "Did not play";
 
-const resultsByPlayer = grandSlamData.players as Record<
+type GrandSlamResultsByPlayer = Record<
   string,
   Record<string, Partial<Record<GrandSlamKey, GrandSlamResultLabel>>>
 >;
+
+const GRAND_SLAM_DATA_URL = "/data/grand-slam-results.generated.json";
+
+let resultsByPlayerCache: GrandSlamResultsByPlayer | null = null;
+let loadGrandSlamPromise: Promise<void> | null = null;
+
+function extractPlayersFromPayload(data: unknown): GrandSlamResultsByPlayer {
+  if (!data || typeof data !== "object") {
+    return {};
+  }
+
+  const record = data as {
+    players?: GrandSlamResultsByPlayer;
+    default?: { players?: GrandSlamResultsByPlayer };
+  };
+
+  return record.players ?? record.default?.players ?? {};
+}
+
+function getBundledGrandSlamResults(): GrandSlamResultsByPlayer {
+  return extractPlayersFromPayload(bundledGrandSlamData);
+}
+
+function getResultsByPlayer(): GrandSlamResultsByPlayer {
+  if (!resultsByPlayerCache) {
+    resultsByPlayerCache = getBundledGrandSlamResults();
+  }
+
+  return resultsByPlayerCache;
+}
+
+export function loadGrandSlamResults(): Promise<void> {
+  if (loadGrandSlamPromise) {
+    return loadGrandSlamPromise;
+  }
+
+  loadGrandSlamPromise = fetch(GRAND_SLAM_DATA_URL)
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`Failed to load Grand Slam data (${response.status})`);
+      }
+      return response.json() as Promise<unknown>;
+    })
+    .then((payload) => {
+      const players = extractPlayersFromPayload(payload);
+      if (Object.keys(players).length > 0) {
+        resultsByPlayerCache = players;
+      }
+    })
+    .catch(() => {
+      if (!resultsByPlayerCache) {
+        resultsByPlayerCache = getBundledGrandSlamResults();
+      }
+    });
+
+  return loadGrandSlamPromise;
+}
+
+function getBirthYear(player: Player): number | null {
+  const birthYear = Number(player.birthDate.slice(0, 4));
+  return Number.isFinite(birthYear) ? birthYear : null;
+}
 
 export function formatGrandSlamResultShort(result: GrandSlamResultLabel): string {
   switch (result) {
@@ -130,21 +192,26 @@ export function getGrandSlamResultDisplay(
 }
 
 function getCalendarYearForAge(player: Player, age: number): string | null {
-  const matches = player.trajectoryYearly.filter(
+  const matches = (player.trajectoryYearly ?? []).filter(
     (point) => Math.round(point.age) === age,
   );
-  if (matches.length === 0) return null;
+  if (matches.length > 0) {
+    const point = matches.find((entry) => entry.isLatestWeek) ?? matches[matches.length - 1];
+    return String(
+      point.calendarYear ??
+        point.yearEndDate?.slice(0, 4) ??
+        point.rankingDate.slice(0, 4),
+    );
+  }
 
-  const point = matches.find((entry) => entry.isLatestWeek) ?? matches[matches.length - 1];
-  return String(
-    point.calendarYear ??
-      point.yearEndDate?.slice(0, 4) ??
-      point.rankingDate.slice(0, 4),
-  );
+  const birthYear = getBirthYear(player);
+  if (birthYear == null) return null;
+
+  return String(birthYear + age);
 }
 
 export function getAgeForCalendarYear(player: Player, year: string): number | null {
-  const yearlyPoint = player.trajectoryYearly.find(
+  const yearlyPoint = (player.trajectoryYearly ?? []).find(
     (point) =>
       String(
         point.calendarYear ??
@@ -152,7 +219,17 @@ export function getAgeForCalendarYear(player: Player, year: string): number | nu
           point.rankingDate.slice(0, 4),
       ) === year,
   );
-  return yearlyPoint ? Math.round(yearlyPoint.age) : null;
+  if (yearlyPoint) {
+    return Math.round(yearlyPoint.age);
+  }
+
+  const yearNum = Number(year);
+  const birthYear = getBirthYear(player);
+  if (!Number.isFinite(yearNum) || birthYear == null) {
+    return null;
+  }
+
+  return yearNum - birthYear;
 }
 
 function seasonHasGrandSlamActivity(results: GrandSlamSeasonResults): boolean {
@@ -165,7 +242,7 @@ function buildSeasonResults(
   playerId: string,
   year: string,
 ): GrandSlamSeasonResults {
-  const season = resultsByPlayer[playerId]?.[year] ?? {};
+  const season = getResultsByPlayer()[playerId]?.[year] ?? {};
 
   return {
     year,
@@ -189,7 +266,7 @@ export function countGrandSlamTitlesInSeason(
 export function computeGrandSlamCareerTotals(
   playerId: string,
 ): GrandSlamCareerTotals {
-  const seasons = resultsByPlayer[playerId] ?? {};
+  const seasons = getResultsByPlayer()[playerId] ?? {};
   let titles = 0;
   let finals = 0;
 
@@ -245,7 +322,7 @@ export interface GrandSlamCareerTimelineRow {
 export function buildGrandSlamCareerTimeline(
   player: Player,
 ): GrandSlamCareerTimelineRow[] {
-  const seasons = resultsByPlayer[player.id] ?? {};
+  const seasons = getResultsByPlayer()[player.id] ?? {};
   const rows: GrandSlamCareerTimelineRow[] = [];
 
   for (const year of Object.keys(seasons).sort()) {
@@ -270,7 +347,7 @@ export function countGrandSlamTitlesThroughAge(
   player: Player,
   age: number,
 ): number {
-  const seasons = resultsByPlayer[player.id] ?? {};
+  const seasons = getResultsByPlayer()[player.id] ?? {};
   let total = 0;
 
   for (const [year, season] of Object.entries(seasons)) {
@@ -289,7 +366,7 @@ export function countGrandSlamFinalsThroughAge(
   player: Player,
   age: number,
 ): number {
-  const seasons = resultsByPlayer[player.id] ?? {};
+  const seasons = getResultsByPlayer()[player.id] ?? {};
   let total = 0;
 
   for (const [year, season] of Object.entries(seasons)) {
@@ -313,10 +390,21 @@ export function buildGrandSlamTitlesChartData(
   let maxAge = -Infinity;
 
   for (const player of players) {
-    for (const point of player.trajectoryYearly) {
+    for (const point of player.trajectoryYearly ?? []) {
       const age = Math.round(point.age);
       minAge = Math.min(minAge, age);
       maxAge = Math.max(maxAge, age);
+    }
+  }
+
+  if (!Number.isFinite(minAge) || !Number.isFinite(maxAge)) {
+    for (const player of players) {
+      for (const year of Object.keys(getResultsByPlayer()[player.id] ?? {})) {
+        const age = getAgeForCalendarYear(player, year);
+        if (age == null) continue;
+        minAge = Math.min(minAge, age);
+        maxAge = Math.max(maxAge, age);
+      }
     }
   }
 

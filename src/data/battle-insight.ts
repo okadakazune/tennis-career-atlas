@@ -1,4 +1,5 @@
 import type { BattleCategoryResult, BattleScoreResult, BattleSide } from "@/data/battle-score";
+import { sortCategoriesByPriority } from "@/data/battle-category-display";
 
 const AGE_CATEGORY_IDS = new Set([
   "greatestAtAge",
@@ -32,20 +33,30 @@ function summarizeCategoryLabels(categories: BattleCategoryResult[], limit = 2):
     .join(" and ");
 }
 
-function formatCategoryLabelsForProse(
-  categories: BattleCategoryResult[],
-  limit = 3,
-): string {
-  const labels = categories.slice(0, limit).map((category) => category.label);
-  if (labels.length === 0) return "";
-  if (labels.length === 1) return labels[0];
-  if (labels.length === 2) return `${labels[0]} and ${labels[1]}`;
-  return `${labels.slice(0, -1).join(", ")} and ${labels[labels.length - 1]}`;
+function friendlyCategoryLabel(category: BattleCategoryResult): string {
+  const labels: Record<string, string> = {
+    majorTitles: "Grand Slam record",
+    dominance: "Weeks at World No.1",
+    longevity: "exceptional longevity",
+    firstBreakthrough: "early career progression",
+    peakStreak: "No.1 streak",
+    majorFinals: "Grand Slam finals",
+  };
+  return labels[category.id] ?? category.label;
+}
+
+function formatStrengthLines(categories: BattleCategoryResult[], limit = 3): string[] {
+  return sortCategoriesByPriority(categories)
+    .slice(0, limit)
+    .map((category) => friendlyCategoryLabel(category));
 }
 
 export interface CareerBattleWhyInsight {
-  winnerLead: string;
-  loserCounter: string | null;
+  winnerName: string;
+  winnerIntro: string;
+  winnerStrengths: string[];
+  loserName: string | null;
+  loserStrengths: string[] | null;
 }
 
 /**
@@ -61,8 +72,11 @@ export function generateCareerBattleWhyInsight(
 
   if (result.overallWinner === "tie") {
     return {
-      winnerLead: `${result.playerA.shortName} and ${result.playerB.shortName} finish evenly matched across ${result.countedCategories} career categories.`,
-      loserCounter: null,
+      winnerName: result.playerA.shortName,
+      winnerIntro: `${result.playerA.shortName} and ${result.playerB.shortName} finish evenly matched across ${result.countedCategories} career categories.`,
+      winnerStrengths: [],
+      loserName: null,
+      loserStrengths: null,
     };
   }
 
@@ -78,18 +92,19 @@ export function generateCareerBattleWhyInsight(
 
   const winnerCategories = getWinnerCategories(result.categories, result.overallWinner);
   const loserCategories = getWinnerCategories(result.categories, loserSide);
-  const winnerLabels = formatCategoryLabelsForProse(winnerCategories);
-  const loserLabels = formatCategoryLabelsForProse(loserCategories);
+  const winnerStrengths = formatStrengthLines(winnerCategories);
+  const loserStrengths =
+    loserCategories.length > 0 ? formatStrengthLines(loserCategories, 2) : null;
 
-  const winnerLead = winnerLabels
-    ? `${winner.shortName} wins thanks to superior ${winnerLabels}.`
-    : `${winner.shortName} wins the career battle across the compared categories.`;
-
-  const loserCounter = loserLabels
-    ? `${loser.shortName} remains ahead in ${loserLabels}.`
-    : null;
-
-  return { winnerLead, loserCounter };
+  return {
+    winnerName: winner.shortName,
+    winnerIntro: winnerStrengths.length
+      ? `${winner.shortName} wins thanks to`
+      : `${winner.shortName} wins the career battle across the compared categories.`,
+    winnerStrengths,
+    loserName: loserStrengths ? loser.shortName : null,
+    loserStrengths,
+  };
 }
 
 function describeCategoryGroup(categories: BattleCategoryResult[]): string | null {
