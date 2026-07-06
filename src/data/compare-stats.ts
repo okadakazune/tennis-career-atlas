@@ -297,10 +297,60 @@ export function findBestPlayerIdsForMetric(
   return values.filter((entry) => entry.value === best).map((entry) => entry.playerId);
 }
 
+export function countYearsInTop10ThroughAge(player: Player, age: number): number {
+  const years = new Set<string>();
+
+  for (const point of player.trajectoryYearly) {
+    if (Math.floor(point.age) > age) continue;
+    const rank = point.yearEndRank ?? point.ranking;
+    if (rank <= 10) {
+      years.add(
+        String(point.calendarYear ?? point.rankingDate.slice(0, 4)),
+      );
+    }
+  }
+
+  return years.size;
+}
+
+export function getBestRankThroughAge(
+  player: Player,
+  age: number,
+): number | null {
+  let bestRank: number | null = null;
+
+  for (const point of player.trajectoryWeekly) {
+    if (Math.floor(point.age) > age) continue;
+    if (bestRank === null || point.ranking < bestRank) {
+      bestRank = point.ranking;
+    }
+  }
+
+  return bestRank;
+}
+
+export function getLongestNo1StreakThroughAge(
+  player: Player,
+  age: number,
+): number {
+  let longest = 0;
+
+  for (const point of player.trajectoryWeekly) {
+    if (Math.floor(point.age) > age) continue;
+    if (point.ranking !== 1) continue;
+    longest = Math.max(
+      longest,
+      point.consecutiveWeeksAtNo1 ?? 0,
+    );
+  }
+
+  return longest;
+}
+
 export function countWeeksAtNo1ThroughAge(player: Player, age: number): number {
   let count = 0;
   for (const point of player.trajectoryWeekly) {
-    if (Math.round(point.age) > age) continue;
+    if (Math.floor(point.age) > age) continue;
     if (point.ranking === 1) count += 1;
   }
   return count;

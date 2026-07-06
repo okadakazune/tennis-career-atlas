@@ -65,7 +65,10 @@ export interface ResolvedBattleMetric {
 export interface SportBattleContext {
   sport: SportId;
   displayAge: number;
+  comparisonMode: BattleComparisonMode;
 }
+
+export type BattleComparisonMode = "full-career" | "current-age-snapshot";
 
 export interface SportBattleAthlete {
   id: string;

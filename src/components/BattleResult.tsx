@@ -7,17 +7,28 @@ import {
   getCategoryEmoji,
   sortCategoriesByPriority,
 } from "@/data/battle-category-display";
-import { generateBattleSnapshotSummary } from "@/data/battle-snapshot-summary";
+import { getExploreMode } from "@/data/explore/explore-modes";
+import type { ExploreModeId } from "@/data/explore/explore-types";
 import { getSportDefinition } from "@/data/sports/registry";
+import type { SportId } from "@/data/sports/types";
 import type { BattleTimelineData } from "@/data/battle-timeline";
+import { AgeSelector } from "@/components/AgeSelector";
+import { BattleExploreBar } from "@/components/BattleExploreBar";
 import { CareerBattleTimeline } from "@/components/CareerBattleTimeline";
+import { ExploreCategoriesModal } from "@/components/ExploreCategoriesModal";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import type { CompareDashboardTab } from "@/components/CompareTabNav";
 
 interface BattleResultProps {
-  careerResult: BattleScoreResult;
-  ageResult: BattleScoreResult;
+  result: BattleScoreResult;
+  comparisonLabel: string | null;
+  exploreModeId: ExploreModeId;
+  sport: SportId;
   timeline: BattleTimelineData | null;
+  snapshotAges: number[];
+  displayAge: number;
+  onExploreModeChange: (modeId: ExploreModeId) => void;
+  onAgeChange: (age: number) => void;
   onTimelineAgeSelect: (age: number) => void;
   onDeepDiveSelect: (tab: CompareDashboardTab) => void;
   getBattleShareUrl: () => string;
@@ -65,6 +76,18 @@ function getWinnerScoreValue(result: BattleScoreResult): number {
 }
 
 function getWinnerScoreLabel(result: BattleScoreResult): string {
+  if (result.isSingleMetric && result.categories[0]) {
+    const category = result.categories[0];
+    if (result.overallWinner === "tie") {
+      return `${category.valueA} – ${category.valueB}`;
+    }
+    const winnerValue =
+      result.overallWinner === "b" ? category.valueB : category.valueA;
+    const loserValue =
+      result.overallWinner === "b" ? category.valueA : category.valueB;
+    return `${winnerValue} vs ${loserValue}`;
+  }
+
   if (result.overallWinner === "a") {
     return `${formatScore(result.scoreA)}–${formatScore(result.scoreB)}`;
   }
@@ -146,58 +169,99 @@ function ScoreBar({
   );
 }
 
-function BattleSummarySticky({
-  careerResult,
-  displayAge,
-  visible,
+function SingleMetricHero({
+  result,
+  comparisonLabel,
 }: {
-  careerResult: BattleScoreResult;
-  displayAge: number;
-  visible: boolean;
+  result: BattleScoreResult;
+  comparisonLabel: string | null;
 }) {
-  if (!visible) return null;
-
-  const winner = getWinner(careerResult);
+  const category = result.categories[0];
+  const winner = getWinner(result);
+  const exploreMode = getExploreMode(result.exploreModeId);
 
   return (
-    <div className="fixed inset-x-0 top-0 z-50 border-b border-black/[0.08] bg-white/95 shadow-sm backdrop-blur-md">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
-        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-          <span className="truncate text-sm font-semibold text-[#1d1d1f] sm:text-base">
-            {careerResult.playerA.shortName}
-          </span>
-          <span className="shrink-0 rounded-full bg-amber-100 px-2.5 py-0.5 text-sm font-bold tabular-nums text-amber-900">
-            {getWinnerScoreLabel(careerResult)}
-          </span>
-          <span className="truncate text-sm font-semibold text-[#1d1d1f] sm:text-base">
-            {careerResult.playerB.shortName}
-          </span>
-        </div>
-        <div className="flex shrink-0 items-center gap-2 text-xs text-[#86868b] sm:text-sm">
-          {winner ? (
-            <span className="hidden font-medium text-amber-800 sm:inline">
-              {winner.shortName} leads
-            </span>
-          ) : null}
-          <span className="rounded-full bg-[#f0f7ff] px-2.5 py-0.5 font-semibold text-[#0071e3]">
-            Age {displayAge}
-          </span>
-        </div>
-      </div>
+    <div className="rounded-3xl border border-amber-200/70 bg-gradient-to-b from-amber-50 via-white to-white px-6 py-10 text-center shadow-[0_16px_48px_rgba(255,193,7,0.14)] sm:px-12 sm:py-12">
+      <p className="text-xs font-bold uppercase tracking-[0.25em] text-amber-700 sm:text-sm">
+        <span aria-hidden="true">🔍 </span>
+        {exploreMode.label}
+      </p>
+
+      {winner ? (
+        <>
+          <div className="mx-auto mt-6 flex justify-center">
+            <div className="rounded-full ring-4 ring-amber-300/60 ring-offset-4">
+              <PlayerAvatar
+                name={winner.name}
+                color={winner.color}
+                imageUrl={winner.imageUrl}
+                imagePosition={winner.imagePosition}
+                size="summary"
+              />
+            </div>
+          </div>
+          <h3 className="mt-6 text-4xl font-bold tracking-tight text-[#1d1d1f] sm:text-5xl">
+            {winner.name}
+          </h3>
+        </>
+      ) : (
+        <h3 className="mt-6 text-3xl font-bold tracking-tight text-[#86868b] sm:text-4xl">
+          Even on {exploreMode.label}
+        </h3>
+      )}
+
+      {category ? (
+        <>
+          <p className="mt-5 text-6xl font-bold tabular-nums tracking-tight text-[#1d1d1f] sm:text-7xl">
+            {getWinnerScoreLabel(result)}
+          </p>
+          <p className="mt-3 text-base text-[#86868b] sm:text-lg">{category.label}</p>
+
+          <div className="mx-auto mt-8 grid max-w-sm grid-cols-2 gap-4">
+            <div className="rounded-2xl bg-[#fafafa] px-4 py-3">
+              <p className="text-3xl font-bold tabular-nums text-[#1d1d1f]">
+                {category.valueA}
+              </p>
+              <p className="mt-1 text-xs font-medium text-[#86868b]">
+                {result.playerA.shortName}
+              </p>
+            </div>
+            <div className="rounded-2xl bg-[#fafafa] px-4 py-3">
+              <p className="text-3xl font-bold tabular-nums text-[#1d1d1f]">
+                {category.valueB}
+              </p>
+              <p className="mt-1 text-xs font-medium text-[#86868b]">
+                {result.playerB.shortName}
+              </p>
+            </div>
+          </div>
+        </>
+      ) : null}
+
+      {comparisonLabel ? (
+        <p className="mx-auto mt-6 max-w-md text-sm text-[#86868b]">{comparisonLabel}</p>
+      ) : null}
     </div>
   );
 }
 
-function WinnerHero({ result }: { result: BattleScoreResult }) {
+function CompositeWinnerHero({
+  result,
+  comparisonLabel,
+}: {
+  result: BattleScoreResult;
+  comparisonLabel: string | null;
+}) {
   const winner = getWinner(result);
   const winnerScore = getWinnerScoreValue(result);
   const maxScore = Math.max(result.scoreA, result.scoreB, 1);
+  const exploreMode = getExploreMode(result.exploreModeId);
 
   return (
     <div className="rounded-3xl border border-amber-200/70 bg-gradient-to-b from-amber-50 via-white to-white px-6 py-10 text-center shadow-[0_16px_48px_rgba(255,193,7,0.14)] sm:px-12 sm:py-12">
       <p className="text-xs font-bold uppercase tracking-[0.25em] text-amber-700 sm:text-sm">
         <span aria-hidden="true">🏆 </span>
-        Career Winner
+        {exploreMode.label} Winner
       </p>
 
       {winner ? (
@@ -229,7 +293,7 @@ function WinnerHero({ result }: { result: BattleScoreResult }) {
 
       {winner ? (
         <p className="mt-3 text-base text-[#86868b] sm:text-lg">
-          Won {winnerScore} of {result.countedCategories} comparison{" "}
+          Won {winnerScore} of {result.countedCategories}{" "}
           {result.countedCategories === 1 ? "category" : "categories"}
         </p>
       ) : null}
@@ -249,9 +313,56 @@ function WinnerHero({ result }: { result: BattleScoreResult }) {
         />
       </div>
 
-      <p className="mt-8 text-xs font-semibold uppercase tracking-[0.2em] text-[#aeaeb2]">
-        Career Battle
-      </p>
+      {comparisonLabel ? (
+        <p className="mx-auto mt-6 max-w-md text-sm text-[#86868b]">{comparisonLabel}</p>
+      ) : null}
+    </div>
+  );
+}
+
+function BattleSummarySticky({
+  result,
+  exploreModeId,
+  displayAge,
+  visible,
+}: {
+  result: BattleScoreResult;
+  exploreModeId: ExploreModeId;
+  displayAge: number;
+  visible: boolean;
+}) {
+  if (!visible) return null;
+
+  const winner = getWinner(result);
+  const modeLabel = getExploreMode(exploreModeId).label;
+
+  return (
+    <div className="fixed inset-x-0 top-0 z-50 border-b border-black/[0.08] bg-white/95 shadow-sm backdrop-blur-md">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+          <span className="truncate text-sm font-semibold text-[#1d1d1f] sm:text-base">
+            {result.playerA.shortName}
+          </span>
+          <span className="shrink-0 rounded-full bg-amber-100 px-2.5 py-0.5 text-sm font-bold tabular-nums text-amber-900">
+            {getWinnerScoreLabel(result)}
+          </span>
+          <span className="truncate text-sm font-semibold text-[#1d1d1f] sm:text-base">
+            {result.playerB.shortName}
+          </span>
+        </div>
+        <div className="flex shrink-0 items-center gap-2 text-xs text-[#86868b] sm:text-sm">
+          {winner ? (
+            <span className="hidden font-medium text-amber-800 sm:inline">
+              {winner.shortName} · {modeLabel}
+            </span>
+          ) : null}
+          {exploreModeId === "age" ? (
+            <span className="rounded-full bg-[#f0f7ff] px-2.5 py-0.5 font-semibold text-[#0071e3]">
+              Age {displayAge}
+            </span>
+          ) : null}
+        </div>
+      </div>
     </div>
   );
 }
@@ -326,10 +437,12 @@ function WinningCategories({ result }: { result: BattleScoreResult }) {
     [result],
   );
 
+  if (result.isSingleMetric) return null;
+
   return (
     <div>
       <h3 className="text-sm font-semibold uppercase tracking-wide text-[#86868b]">
-        Winning Categories
+        Category Breakdown
       </h3>
 
       <div className="mt-4 space-y-4">
@@ -430,6 +543,8 @@ function QuickComparisonCards({ result }: { result: BattleScoreResult }) {
     [result.categories],
   );
 
+  if (categories.length === 0) return null;
+
   return (
     <div>
       <h3 className="text-sm font-semibold uppercase tracking-wide text-[#86868b]">
@@ -474,20 +589,27 @@ function ExploreEvidenceNav({
 }
 
 export function BattleResult({
-  careerResult,
-  ageResult,
+  result,
+  comparisonLabel,
+  exploreModeId,
+  sport,
   timeline,
+  snapshotAges,
+  displayAge,
+  onExploreModeChange,
+  onAgeChange,
   onTimelineAgeSelect,
   onDeepDiveSelect,
   getBattleShareUrl,
 }: BattleResultProps) {
   const [copied, setCopied] = useState(false);
   const [stickyVisible, setStickyVisible] = useState(false);
+  const [categoriesModalOpen, setCategoriesModalOpen] = useState(false);
   const heroSentinelRef = useRef<HTMLDivElement>(null);
   const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const whyInsight = generateCareerBattleWhyInsight(careerResult);
-  const ageStory = generateBattleSnapshotSummary(ageResult);
-  const sportDef = getSportDefinition(careerResult.sport);
+  const whyInsight = generateCareerBattleWhyInsight(result);
+  const sportDef = getSportDefinition(result.sport);
+  const exploreMode = getExploreMode(exploreModeId);
 
   useEffect(() => {
     const sentinel = heroSentinelRef.current;
@@ -529,24 +651,33 @@ export function BattleResult({
   return (
     <>
       <BattleSummarySticky
-        careerResult={careerResult}
-        displayAge={ageResult.displayAge}
+        result={result}
+        exploreModeId={exploreModeId}
+        displayAge={displayAge}
         visible={stickyVisible}
+      />
+
+      <ExploreCategoriesModal
+        open={categoriesModalOpen}
+        activeModeId={exploreModeId}
+        sport={sport}
+        onClose={() => setCategoriesModalOpen(false)}
+        onSelect={onExploreModeChange}
       />
 
       <section
         id="battle-result"
         className="scroll-mt-4 overflow-hidden rounded-3xl border border-black/[0.08] bg-white shadow-[0_16px_48px_rgba(0,0,0,0.08)]"
       >
-        <div className="border-b border-black/[0.06] bg-[linear-gradient(180deg,#fff8eb_0%,#ffffff_50%)] px-5 py-5 sm:px-6 sm:py-6">
+        <div className="border-b border-black/[0.06] bg-[linear-gradient(180deg,#f0f7ff_0%,#ffffff_40%)] px-5 py-5 sm:px-6 sm:py-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[#ff7a00]">
+              <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[#0071e3]">
                 <span aria-hidden="true">{sportDef?.emoji ?? "🏆"}</span>
-                Battle Result
+                Battle Explorer
               </p>
               <h2 className="mt-2 text-2xl font-bold tracking-tight text-[#1d1d1f] sm:text-3xl">
-                {careerResult.playerA.shortName} vs {careerResult.playerB.shortName}
+                {result.playerA.shortName} vs {result.playerB.shortName}
               </h2>
             </div>
 
@@ -559,31 +690,60 @@ export function BattleResult({
             </button>
           </div>
 
-          <div ref={heroSentinelRef} className="mt-6 space-y-5">
-            <WinnerHero result={careerResult} />
-            <WhyDidTheyWin insight={whyInsight} />
-            <WinningCategories result={careerResult} />
-            <QuickComparisonCards result={careerResult} />
-            <ExploreEvidenceNav onSelect={onDeepDiveSelect} />
+          <div className="mt-5">
+            <BattleExploreBar
+              activeModeId={exploreModeId}
+              sport={sport}
+              onModeChange={onExploreModeChange}
+              onOpenMoreCategories={() => setCategoriesModalOpen(true)}
+            />
+          </div>
+
+          {exploreModeId === "age" ? (
+            <div className="mt-4">
+              <AgeSelector
+                ages={snapshotAges}
+                displayAge={displayAge}
+                onAgeChange={onAgeChange}
+                ariaLabel="Select age to compare"
+              />
+            </div>
+          ) : null}
+
+          <div ref={heroSentinelRef} className="mt-6">
+            <div
+              key={
+                exploreModeId === "age"
+                  ? `${exploreModeId}-${displayAge}`
+                  : exploreModeId
+              }
+              className="ui-panel-enter space-y-5"
+            >
+              {result.isSingleMetric ? (
+                <SingleMetricHero result={result} comparisonLabel={comparisonLabel} />
+              ) : (
+                <CompositeWinnerHero result={result} comparisonLabel={comparisonLabel} />
+              )}
+              {!result.isSingleMetric ? <WhyDidTheyWin insight={whyInsight} /> : null}
+              <WinningCategories result={result} />
+              <QuickComparisonCards result={result} />
+              <ExploreEvidenceNav onSelect={onDeepDiveSelect} />
+            </div>
           </div>
         </div>
 
         {timeline ? (
-          <CareerBattleTimeline
-            timeline={timeline}
-            displayAge={ageResult.displayAge}
-            onAgeSelect={onTimelineAgeSelect}
-          />
-        ) : null}
-
-        {ageStory ? (
-          <div className="border-t border-black/[0.06] px-5 py-5 sm:px-6">
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#0071e3]">
-              Age {ageResult.displayAge} snapshot
-            </p>
-            <p className="mt-2 text-sm leading-relaxed text-[#1d1d1f] sm:text-base">
-              {ageStory}
-            </p>
+          <div key={`timeline-${exploreModeId}`} className="ui-panel-enter">
+            <div className="border-b border-black/[0.06] px-5 py-3 sm:px-6">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#86868b]">
+                Timeline · {exploreMode.label}
+              </p>
+            </div>
+            <CareerBattleTimeline
+              timeline={timeline}
+              displayAge={displayAge}
+              onAgeSelect={onTimelineAgeSelect}
+            />
           </div>
         ) : null}
       </section>

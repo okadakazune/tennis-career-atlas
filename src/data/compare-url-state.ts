@@ -4,8 +4,14 @@ import {
   DEFAULT_BATTLE_PLAYER_A,
   DEFAULT_BATTLE_PLAYER_B,
 } from "@/data/battle-score";
+import {
+  DEFAULT_EXPLORE_MODE_ID,
+  isValidExploreModeId,
+  resolveExploreModeId,
+} from "@/data/explore/explore-modes";
 import { DEFAULT_SPORT } from "@/data/sports/registry";
 import type { SportId } from "@/data/sports/types";
+import type { ExploreModeId } from "@/data/explore/explore-types";
 
 export type SelectedSport = SportId | "all";
 
@@ -28,6 +34,8 @@ export interface CompareUrlState {
   yearlyMetric?: YearlyMetric;
   battle?: [string, string];
   sport?: SelectedSport;
+  /** Explore comparison lens (e.g. grand-slam, no1, age). Serialized as `mode`. */
+  exploreMode?: ExploreModeId;
 }
 
 const VALID_SPORTS = new Set<SportId | "all">([
@@ -62,6 +70,22 @@ export function filterValidPlayerIds(playerIds: string[]): string[] {
 export function resolveSharePlayerIds(playerIds: string[] | undefined): string[] {
   const valid = filterValidPlayerIds(playerIds ?? []);
   return valid.length > 0 ? valid : [...DEFAULT_SHARE_PLAYER_IDS];
+}
+
+function parseExploreMode(searchParams: URLSearchParams): ExploreModeId | undefined {
+  const modeParam = searchParams.get("mode");
+  if (!modeParam) return undefined;
+
+  // Legacy: granularity was stored as `mode`.
+  if (VALID_GRANULARITIES.has(modeParam as TrajectoryGranularity)) {
+    return undefined;
+  }
+
+  if (isValidExploreModeId(modeParam)) {
+    return resolveExploreModeId(modeParam);
+  }
+
+  return undefined;
 }
 
 function parseGranularity(
@@ -208,6 +232,11 @@ export function parseCompareUrlState(
     partial.sport = sport;
   }
 
+  const exploreMode = parseExploreMode(searchParams);
+  if (exploreMode) {
+    partial.exploreMode = exploreMode;
+  }
+
   return partial;
 }
 
@@ -231,6 +260,11 @@ export function serializeCompareUrlState(state: CompareUrlState): URLSearchParam
   const sport = resolveSelectedSport(state.sport);
   if (sport !== DEFAULT_SPORT) {
     params.set("sport", sport);
+  }
+
+  const exploreMode = state.exploreMode ?? DEFAULT_EXPLORE_MODE_ID;
+  if (exploreMode !== DEFAULT_EXPLORE_MODE_ID) {
+    params.set("mode", exploreMode);
   }
 
   return params;

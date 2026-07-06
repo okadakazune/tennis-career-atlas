@@ -1,7 +1,16 @@
 import { Player } from "@/data/players";
-import { buildCompareOverview } from "@/data/compare-stats";
+import {
+  buildCompareOverview,
+  countWeeksAtNo1ThroughAge,
+  countYearsInTop10ThroughAge,
+  getBestRankThroughAge,
+  getLongestNo1StreakThroughAge,
+} from "@/data/compare-stats";
 import { getYearlyRankingAtAge } from "@/data/career-stats";
-import { countGrandSlamTitlesThroughAge } from "@/data/grand-slam";
+import {
+  countGrandSlamFinalsThroughAge,
+  countGrandSlamTitlesThroughAge,
+} from "@/data/grand-slam";
 import type {
   CompareDirection,
   ResolvedBattleMetric,
@@ -39,13 +48,32 @@ function metric(
   return { value, display, direction };
 }
 
+function getFirstAgeAtOrBelowRank(
+  player: Player,
+  maxRank: number,
+  throughAge: number,
+): number | null {
+  let firstAge: number | null = null;
+
+  for (const point of player.trajectoryWeekly) {
+    if (Math.floor(point.age) > throughAge) continue;
+    if (point.ranking <= maxRank) {
+      firstAge = point.age;
+      break;
+    }
+  }
+
+  return firstAge;
+}
+
 export function resolveTennisBattleMetric(
   categoryId: UniversalBattleCategoryId,
   player: Player,
   context: SportBattleContext,
 ): ResolvedBattleMetric | null {
   const overview = buildCompareOverview([player])[0];
-  const { displayAge } = context;
+  const { displayAge, comparisonMode } = context;
+  const useFullCareer = comparisonMode === "full-career";
 
   switch (categoryId) {
     case "greatestAtAge":
@@ -66,50 +94,54 @@ export function resolveTennisBattleMetric(
         formatRank(getYearEndRankAtAge(player, displayAge)),
         "lower",
       );
-    case "peak":
-      return metric(overview?.bestRank ?? null, formatRank(overview?.bestRank ?? null), "lower");
-    case "majorTitles":
-      return metric(
-        overview?.grandSlamTitles ?? null,
-        formatCount(overview?.grandSlamTitles ?? null),
-        "higher",
-      );
-    case "majorFinals":
-      return metric(
-        overview?.grandSlamFinals ?? null,
-        formatCount(overview?.grandSlamFinals ?? null),
-        "higher",
-      );
-    case "longevity":
-      return metric(
-        overview?.yearsInTop10 ?? null,
-        formatCount(overview?.yearsInTop10 ?? null),
-        "higher",
-      );
-    case "dominance":
-      return metric(
-        overview?.totalWeeksAtNo1 ?? null,
-        formatCount(overview?.totalWeeksAtNo1 ?? null),
-        "higher",
-      );
-    case "peakStreak":
-      return metric(
-        overview?.longestNo1Streak ?? null,
-        formatCount(overview?.longestNo1Streak ?? null),
-        "higher",
-      );
-    case "firstBreakthrough":
-      return metric(
-        overview?.firstAgeTop10 ?? null,
-        formatAge(overview?.firstAgeTop10 ?? null),
-        "lower",
-      );
-    case "firstDominance":
-      return metric(
-        overview?.firstAgeNo1 ?? null,
-        formatAge(overview?.firstAgeNo1 ?? null),
-        "lower",
-      );
+    case "peak": {
+      const value = useFullCareer
+        ? overview?.bestRank ?? null
+        : getBestRankThroughAge(player, displayAge);
+      return metric(value, formatRank(value), "lower");
+    }
+    case "majorTitles": {
+      const value = useFullCareer
+        ? overview?.grandSlamTitles ?? null
+        : countGrandSlamTitlesThroughAge(player, displayAge);
+      return metric(value, formatCount(value), "higher");
+    }
+    case "majorFinals": {
+      const value = useFullCareer
+        ? overview?.grandSlamFinals ?? null
+        : countGrandSlamFinalsThroughAge(player, displayAge);
+      return metric(value, formatCount(value), "higher");
+    }
+    case "longevity": {
+      const value = useFullCareer
+        ? overview?.yearsInTop10 ?? null
+        : countYearsInTop10ThroughAge(player, displayAge);
+      return metric(value, formatCount(value), "higher");
+    }
+    case "dominance": {
+      const value = useFullCareer
+        ? overview?.totalWeeksAtNo1 ?? null
+        : countWeeksAtNo1ThroughAge(player, displayAge);
+      return metric(value, formatCount(value), "higher");
+    }
+    case "peakStreak": {
+      const value = useFullCareer
+        ? overview?.longestNo1Streak ?? null
+        : getLongestNo1StreakThroughAge(player, displayAge);
+      return metric(value, formatCount(value), "higher");
+    }
+    case "firstBreakthrough": {
+      const value = useFullCareer
+        ? overview?.firstAgeTop10 ?? null
+        : getFirstAgeAtOrBelowRank(player, 10, displayAge);
+      return metric(value, formatAge(value), "lower");
+    }
+    case "firstDominance": {
+      const value = useFullCareer
+        ? overview?.firstAgeNo1 ?? null
+        : getFirstAgeAtOrBelowRank(player, 1, displayAge);
+      return metric(value, formatAge(value), "lower");
+    }
     case "eraBattle":
     case "goat":
     case "clutch":

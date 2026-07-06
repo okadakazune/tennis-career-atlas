@@ -97,10 +97,16 @@ let playersById = new Map<string, Player>();
 let playersByAtpId = new Map<string, Player>();
 let featuredIndexByAtpId = new Map<string, PlayerIndexEntry>();
 
+const metaById = new Map(playersMeta.map((meta) => [meta.id, meta]));
+
 function normalizePlayer(player: Player): Player {
+  const meta = metaById.get(player.id);
   return {
     ...player,
     sport: player.sport ?? DEFAULT_SPORT,
+    careerStatus: (meta?.careerStatus ?? player.careerStatus) as
+      | PlayerCareerStatus
+      | undefined,
   };
 }
 

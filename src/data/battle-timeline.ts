@@ -1,9 +1,7 @@
 import { Player } from "@/data/players";
-import {
-  getAvailableAgesForPlayers,
-  SNAPSHOT_AGE_MAX,
-  SNAPSHOT_AGE_MIN,
-} from "@/data/career-stats";
+import { getBattleTimelineAges } from "@/data/battle-age";
+import type { ExploreModeId } from "@/data/explore/explore-modes";
+import { SNAPSHOT_AGE_MIN } from "@/data/career-stats";
 import {
   computeBattleScore,
   type BattleCategoryResult,
@@ -25,6 +23,7 @@ export interface BattleTimelineData {
   sport: SportId;
   playerA: BattlePlayerSummary;
   playerB: BattlePlayerSummary;
+  exploreModeId: ExploreModeId;
   points: BattleTimelinePoint[];
 }
 
@@ -32,6 +31,7 @@ export interface ComputeBattleTimelineInput {
   sport: SportId;
   playerA: Player;
   playerB: Player;
+  exploreModeId?: ExploreModeId;
 }
 
 function isDecisiveLeader(
@@ -44,11 +44,9 @@ export function computeBattleTimeline({
   sport,
   playerA,
   playerB,
+  exploreModeId = "career",
 }: ComputeBattleTimelineInput): BattleTimelineData {
-  const availableAges = getAvailableAgesForPlayers([playerA, playerB]);
-  const ages = availableAges.filter(
-    (age) => age >= SNAPSHOT_AGE_MIN && age <= SNAPSHOT_AGE_MAX,
-  );
+  const ages = getBattleTimelineAges(playerA, playerB);
 
   const points: BattleTimelinePoint[] = ages.map((age) => {
     const score = computeBattleScore({
@@ -56,6 +54,7 @@ export function computeBattleTimeline({
       playerA,
       playerB,
       displayAge: age,
+      exploreModeId,
     });
 
     return {
@@ -85,17 +84,15 @@ export function computeBattleTimeline({
     playerA,
     playerB,
     displayAge: ages[0] ?? SNAPSHOT_AGE_MIN,
+    exploreModeId,
   });
 
   return {
     sport,
     playerA: referenceScore.playerA,
     playerB: referenceScore.playerB,
+    exploreModeId,
     points,
   };
 }
 
-export function getCareerBattleAge(timeline: BattleTimelineData): number | null {
-  if (timeline.points.length === 0) return null;
-  return timeline.points[timeline.points.length - 1].age;
-}

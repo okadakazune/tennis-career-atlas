@@ -1,4 +1,7 @@
 import { Player } from "@/data/players";
+import { getBattleComparisonMode } from "@/data/battle-age";
+import { resolveExploreCategories } from "@/data/explore/category-engine";
+import { getExploreMode, type ExploreModeId } from "@/data/explore/explore-modes";
 import {
   getComingSoonUniversalBattleCategories,
   getLiveUniversalBattleCategories,
@@ -40,12 +43,15 @@ export interface BattleScoreResult {
   playerA: BattlePlayerSummary;
   playerB: BattlePlayerSummary;
   displayAge: number;
+  exploreModeId: ExploreModeId;
+  exploreModeLabel: string;
   categories: BattleCategoryResult[];
   comingSoonCategories: BattleCategoryResult[];
   scoreA: number;
   scoreB: number;
   overallWinner: BattleSide | "tie" | null;
   countedCategories: number;
+  isSingleMetric: boolean;
 }
 
 export interface ComputeBattleScoreInput {
@@ -53,6 +59,7 @@ export interface ComputeBattleScoreInput {
   playerA: Player;
   playerB: Player;
   displayAge: number;
+  exploreModeId?: ExploreModeId;
 }
 
 function compareValues(
@@ -120,60 +127,66 @@ function buildComingSoonCategoryResults(
   }));
 }
 
-export function computeBattleScore({
-  sport = DEFAULT_SPORT,
-  playerA,
-  playerB,
-  displayAge,
-}: ComputeBattleScoreInput): BattleScoreResult {
-  const context: SportBattleContext = { sport, displayAge };
+function scoreCategories(
+  sport: SportId,
+  playerA: Player,
+  playerB: Player,
+  displayAge: number,
+  categoryDefs: UniversalBattleCategoryDef[],
+): Pick<
+  BattleScoreResult,
+  "categories" | "scoreA" | "scoreB" | "overallWinner" | "countedCategories"
+> {
+  const context: SportBattleContext = {
+    sport,
+    displayAge,
+    comparisonMode: getBattleComparisonMode(playerA, playerB),
+  };
   let scoreA = 0;
   let scoreB = 0;
   let countedCategories = 0;
 
-  const categories: BattleCategoryResult[] = getLiveUniversalBattleCategories().map(
-    (category) => {
-      const metricA = resolveSportMetric(sport, category.id, playerA, context);
-      const metricB = resolveSportMetric(sport, category.id, playerB, context);
-      const outcome = compareValues(
-        metricA?.value ?? null,
-        metricB?.value ?? null,
-        metricA?.direction ?? metricB?.direction ?? "higher",
-      );
-      const label = resolveCategoryLabel(category, displayAge);
+  const categories: BattleCategoryResult[] = categoryDefs.map((category) => {
+    const metricA = resolveSportMetric(sport, category.id, playerA, context);
+    const metricB = resolveSportMetric(sport, category.id, playerB, context);
+    const outcome = compareValues(
+      metricA?.value ?? null,
+      metricB?.value ?? null,
+      metricA?.direction ?? metricB?.direction ?? "higher",
+    );
+    const label = resolveCategoryLabel(category, displayAge);
 
-      if (outcome === "a") {
-        scoreA += 1;
-        countedCategories += 1;
-      } else if (outcome === "b") {
-        scoreB += 1;
-        countedCategories += 1;
-      } else if (outcome === "tie") {
-        scoreA += 0.5;
-        scoreB += 0.5;
-        countedCategories += 1;
-      }
+    if (outcome === "a") {
+      scoreA += 1;
+      countedCategories += 1;
+    } else if (outcome === "b") {
+      scoreB += 1;
+      countedCategories += 1;
+    } else if (outcome === "tie") {
+      scoreA += 0.5;
+      scoreB += 0.5;
+      countedCategories += 1;
+    }
 
-      const winnerShortName =
-        outcome === "a"
-          ? playerA.shortName
-          : outcome === "b"
-            ? playerB.shortName
-            : outcome === "tie"
-              ? "Tie"
-              : undefined;
+    const winnerShortName =
+      outcome === "a"
+        ? playerA.shortName
+        : outcome === "b"
+          ? playerB.shortName
+          : outcome === "tie"
+            ? "Tie"
+            : undefined;
 
-      return {
-        id: category.id,
-        label,
-        outcome,
-        winnerShortName,
-        valueA: metricA?.display ?? "—",
-        valueB: metricB?.display ?? "—",
-        status: "live" as const,
-      };
-    },
-  );
+    return {
+      id: category.id,
+      label,
+      outcome,
+      winnerShortName,
+      valueA: metricA?.display ?? "—",
+      valueB: metricB?.display ?? "—",
+      status: "live" as const,
+    };
+  });
 
   let overallWinner: BattleSide | "tie" | null = null;
   if (countedCategories > 0) {
@@ -182,17 +195,40 @@ export function computeBattleScore({
     else overallWinner = "tie";
   }
 
+  return { categories, scoreA, scoreB, overallWinner, countedCategories };
+}
+
+export function computeBattleScore({
+  sport = DEFAULT_SPORT,
+  playerA,
+  playerB,
+  displayAge,
+  exploreModeId = "career",
+}: ComputeBattleScoreInput): BattleScoreResult {
+  const exploreMode = getExploreMode(exploreModeId);
+  const categoryDefs =
+    exploreModeId === "career"
+      ? getLiveUniversalBattleCategories()
+      : resolveExploreCategories(exploreModeId);
+
+  const scored = scoreCategories(
+    sport,
+    playerA,
+    playerB,
+    displayAge,
+    categoryDefs,
+  );
+
   return {
     sport,
     playerA: toPlayerSummary(playerA),
     playerB: toPlayerSummary(playerB),
     displayAge,
-    categories,
+    exploreModeId,
+    exploreModeLabel: exploreMode.label,
+    isSingleMetric: exploreMode.kind === "single",
     comingSoonCategories: buildComingSoonCategoryResults(displayAge),
-    scoreA,
-    scoreB,
-    overallWinner,
-    countedCategories,
+    ...scored,
   };
 }
 

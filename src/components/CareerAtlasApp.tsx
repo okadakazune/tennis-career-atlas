@@ -27,8 +27,21 @@ import { GrandSlamTabContent } from "@/components/GrandSlamTabContent";
 import { Top10LongevityCards } from "@/components/Top10LongevityCards";
 import { resolveDisplayAge, loadGrandSlamResults } from "@/data/grand-slam";
 import {
+  getComparableBattleAge,
+} from "@/data/battle-age";
+import {
+  resolveExploreComparisonLabel,
+  resolveExploreDashboardTab,
+  resolveExploreDisplayAge,
+} from "@/data/explore/category-engine";
+import {
+  resolveExploreModeId,
+} from "@/data/explore/explore-modes";
+import type { ExploreModeId } from "@/data/explore/explore-types";
+import {
   DEFAULT_SNAPSHOT_AGE,
   getSnapshotAgeOptions,
+  SNAPSHOT_AGE_MAX,
 } from "@/data/career-stats";
 import {
   buildCompareShareUrl,
@@ -141,7 +154,6 @@ function resolveInitialBattleState(searchParams: URLSearchParams) {
 
 function CareerAtlasAppMain() {
   const searchParams = useSearchParams();
-  const snapshotAges = useMemo(() => getSnapshotAgeOptions(), []);
   const initialBattleStateRef = useRef(
     resolveInitialBattleState(searchParams),
   );
@@ -190,6 +202,9 @@ function CareerAtlasAppMain() {
   const [selectedSport, setSelectedSport] = useState<SelectedSport>(() =>
     resolveSelectedSport(urlBootstrapRef.current?.sport),
   );
+  const [exploreModeId, setExploreModeId] = useState<ExploreModeId>(() =>
+    resolveExploreModeId(urlBootstrapRef.current?.exploreMode),
+  );
   const [chartHoverAge, setChartHoverAge] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<CompareDashboardTab>("career");
   const dashboardPanelRef = useRef<HTMLDivElement>(null);
@@ -199,8 +214,21 @@ function CareerAtlasAppMain() {
     () => getPlayers().filter((player) => selectedIds.includes(player.id)),
     [selectedIds],
   );
-  const displayAge = clampSnapshotAge(
-    resolveDisplayAge(selectedAge, chartHoverAge),
+
+  const battleAgeCap = useMemo(() => {
+    if (selectedPlayers.length < 2) return SNAPSHOT_AGE_MAX;
+    return getComparableBattleAge(selectedPlayers[0], selectedPlayers[1]);
+  }, [selectedPlayers]);
+
+  const snapshotAges = useMemo(() => {
+    const allAges = getSnapshotAgeOptions();
+    if (selectedPlayers.length < 2) return allAges;
+    return allAges.filter((age) => age <= battleAgeCap);
+  }, [selectedPlayers, battleAgeCap]);
+
+  const displayAge = Math.min(
+    clampSnapshotAge(resolveDisplayAge(selectedAge, chartHoverAge)),
+    battleAgeCap,
   );
   const isAgeSyncedFromChart = chartHoverAge != null;
 
@@ -210,41 +238,62 @@ function CareerAtlasAppMain() {
     selectedIds.length === 2 &&
     selectedPlayers.length === 2;
 
+  const exploreDisplayAge = useMemo(() => {
+    if (selectedPlayers.length < 2) return displayAge;
+    return resolveExploreDisplayAge(
+      exploreModeId,
+      selectedPlayers[0],
+      selectedPlayers[1],
+      displayAge,
+    );
+  }, [selectedPlayers, exploreModeId, displayAge]);
+
+  const battleResult = useMemo(() => {
+    if (!showBattleResult || !isLiveSport(selectedSport)) {
+      return null;
+    }
+
+    return computeBattleScore({
+      sport: selectedSport,
+      playerA: selectedPlayers[0],
+      playerB: selectedPlayers[1],
+      displayAge: exploreDisplayAge,
+      exploreModeId,
+    });
+  }, [showBattleResult, selectedSport, selectedPlayers, exploreDisplayAge, exploreModeId]);
+
+  const comparisonLabel = useMemo(() => {
+    if (selectedPlayers.length < 2) return null;
+    return resolveExploreComparisonLabel(
+      exploreModeId,
+      selectedPlayers[0],
+      selectedPlayers[1],
+      exploreDisplayAge,
+    );
+  }, [selectedPlayers, exploreModeId, exploreDisplayAge]);
+
   const battleTimeline = useMemo(() => {
     if (!showBattleResult || !isLiveSport(selectedSport)) return null;
     return computeBattleTimeline({
       sport: selectedSport,
       playerA: selectedPlayers[0],
       playerB: selectedPlayers[1],
+      exploreModeId,
     });
-  }, [showBattleResult, selectedSport, selectedPlayers]);
-
-  const careerBattleResult = useMemo(() => {
-    if (!showBattleResult || !isLiveSport(selectedSport) || !battleTimeline) {
-      return null;
-    }
-    const careerAge = battleTimeline.points.at(-1)?.age;
-    if (careerAge == null) return null;
-
-    return computeBattleScore({
-      sport: selectedSport,
-      playerA: selectedPlayers[0],
-      playerB: selectedPlayers[1],
-      displayAge: careerAge,
-    });
-  }, [showBattleResult, selectedSport, selectedPlayers, battleTimeline]);
-
-  const ageBattleResult = useMemo(() => {
-    if (!showBattleResult || !isLiveSport(selectedSport)) return null;
-    return computeBattleScore({
-      sport: selectedSport,
-      playerA: selectedPlayers[0],
-      playerB: selectedPlayers[1],
-      displayAge,
-    });
-  }, [showBattleResult, selectedSport, selectedPlayers, displayAge]);
+  }, [showBattleResult, selectedSport, selectedPlayers, exploreModeId]);
 
   const handleTimelineAgeSelect = useCallback((age: number) => {
+    setChartHoverAge(null);
+    setSelectedAge(clampSnapshotAge(age));
+    setExploreModeId("age");
+  }, []);
+
+  const handleExploreModeChange = useCallback((modeId: ExploreModeId) => {
+    setExploreModeId(modeId);
+    setActiveTab(resolveExploreDashboardTab(modeId));
+  }, []);
+
+  const handleAgeChange = useCallback((age: number) => {
     setChartHoverAge(null);
     setSelectedAge(clampSnapshotAge(age));
   }, []);
@@ -260,7 +309,7 @@ function CareerAtlasAppMain() {
   }, [battlePlayerAId, battlePlayerBId]);
 
   useEffect(() => {
-    if (!shouldScrollToBattleRef.current || !ageBattleResult) return;
+    if (!shouldScrollToBattleRef.current || !battleResult) return;
 
     shouldScrollToBattleRef.current = false;
     requestAnimationFrame(() => {
@@ -269,7 +318,7 @@ function CareerAtlasAppMain() {
         block: "start",
       });
     });
-  }, [ageBattleResult]);
+  }, [battleResult]);
 
   const handleTabChange = useCallback((tab: CompareDashboardTab) => {
     setActiveTab(tab);
@@ -294,12 +343,13 @@ function CareerAtlasAppMain() {
       view: fromRankingScale(yScale),
       yearlyMetric: granularity === "yearly" ? yearlyMetric : undefined,
       sport: selectedSport,
+      exploreMode: exploreModeId,
       battle:
         battleActive && selectedIds.length === 2
           ? [selectedIds[0], selectedIds[1]]
           : undefined,
     });
-  }, [selectedIds, selectedAge, granularity, yScale, yearlyMetric, battleActive, selectedSport]);
+  }, [selectedIds, selectedAge, granularity, yScale, yearlyMetric, battleActive, selectedSport, exploreModeId]);
 
   const getShareUrl = useCallback(() => {
     if (typeof window === "undefined") return "/";
@@ -312,6 +362,7 @@ function CareerAtlasAppMain() {
         view: fromRankingScale(yScale),
         yearlyMetric: granularity === "yearly" ? yearlyMetric : undefined,
         sport: selectedSport,
+        exploreMode: exploreModeId,
         battle:
           battleActive && selectedIds.length === 2
             ? [selectedIds[0], selectedIds[1]]
@@ -319,7 +370,7 @@ function CareerAtlasAppMain() {
       },
       window.location.origin,
     );
-  }, [selectedIds, selectedAge, granularity, yScale, yearlyMetric, battleActive, selectedSport]);
+  }, [selectedIds, selectedAge, granularity, yScale, yearlyMetric, battleActive, selectedSport, exploreModeId]);
 
   const getBattleShareUrl = useCallback(() => {
     if (typeof window === "undefined") return "/";
@@ -333,11 +384,12 @@ function CareerAtlasAppMain() {
         view: fromRankingScale(yScale),
         yearlyMetric: granularity === "yearly" ? yearlyMetric : undefined,
         sport: selectedSport,
+        exploreMode: exploreModeId,
         battle: [selectedIds[0], selectedIds[1]],
       },
       window.location.origin,
     );
-  }, [selectedIds, selectedAge, granularity, yScale, yearlyMetric, selectedSport, getShareUrl]);
+  }, [selectedIds, selectedAge, granularity, yScale, yearlyMetric, selectedSport, exploreModeId, getShareUrl]);
 
   useEffect(() => {
     if (selectedIds.length > 0) return;
@@ -539,12 +591,18 @@ function CareerAtlasAppMain() {
         </div>
       ) : null}
 
-      {careerBattleResult && ageBattleResult ? (
+      {battleResult ? (
         <div ref={battleResultRef}>
           <BattleResult
-            careerResult={careerBattleResult}
-            ageResult={ageBattleResult}
+            result={battleResult}
+            comparisonLabel={comparisonLabel}
+            exploreModeId={exploreModeId}
+            sport={battleResult.sport}
             timeline={battleTimeline}
+            snapshotAges={snapshotAges}
+            displayAge={displayAge}
+            onExploreModeChange={handleExploreModeChange}
+            onAgeChange={handleAgeChange}
             onTimelineAgeSelect={handleTimelineAgeSelect}
             onDeepDiveSelect={handleTabChange}
             getBattleShareUrl={getBattleShareUrl}
