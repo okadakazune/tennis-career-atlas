@@ -6,7 +6,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Tennis Career Atlas",
   description:
-    "Compare ATP ranking trajectories by age for the greatest players in tennis history.",
+    "Powered by WHAT IF ENGINE. Change one comparison condition — Grand Slams, Masters, age, surface, No.1 — and discover how the answer shifts.",
   icons: {
     icon: "/favicon.svg",
   },

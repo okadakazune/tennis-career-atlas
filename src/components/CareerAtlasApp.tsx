@@ -35,9 +35,11 @@ import {
   resolveExploreDisplayAge,
 } from "@/data/explore/category-engine";
 import {
-  resolveExploreModeId,
-} from "@/data/explore/explore-modes";
+  buildExploreSuggestions,
+  sortSuggestionsForDiscovery,
+} from "@/data/explore/explore-suggestions";
 import type { ExploreModeId } from "@/data/explore/explore-types";
+import { resolveExploreModeId } from "@/data/explore/explore-modes";
 import {
   DEFAULT_SNAPSHOT_AGE,
   getSnapshotAgeOptions,
@@ -282,6 +284,30 @@ function CareerAtlasAppMain() {
     });
   }, [showBattleResult, selectedSport, selectedPlayers, exploreModeId]);
 
+  const exploreSuggestions = useMemo(() => {
+    if (!battleResult || selectedPlayers.length < 2 || !isLiveSport(selectedSport)) {
+      return [];
+    }
+
+    return sortSuggestionsForDiscovery(
+      buildExploreSuggestions({
+        sport: battleResult.sport,
+        playerA: selectedPlayers[0],
+        playerB: selectedPlayers[1],
+        currentModeId: exploreModeId,
+        currentResult: battleResult,
+        selectedAge: displayAge,
+        limit: 10,
+      }),
+    );
+  }, [
+    battleResult,
+    selectedPlayers,
+    selectedSport,
+    exploreModeId,
+    displayAge,
+  ]);
+
   const handleTimelineAgeSelect = useCallback((age: number) => {
     setChartHoverAge(null);
     setSelectedAge(clampSnapshotAge(age));
@@ -292,6 +318,32 @@ function CareerAtlasAppMain() {
     setExploreModeId(modeId);
     setActiveTab(resolveExploreDashboardTab(modeId));
   }, []);
+
+  const handleHeroWhatIfSelect = useCallback(
+    (modeId: ExploreModeId, ageOverride?: number) => {
+      setExploreModeId(modeId);
+      setActiveTab(resolveExploreDashboardTab(modeId));
+
+      if (ageOverride != null) {
+        setChartHoverAge(null);
+        setSelectedAge(clampSnapshotAge(ageOverride));
+      }
+
+      const playerA =
+        battlePlayerAId || DEFAULT_BATTLE_PLAYER_A;
+      const playerB =
+        battlePlayerBId || DEFAULT_BATTLE_PLAYER_B;
+      if (playerA === playerB) return;
+
+      setBattlePlayerAId(playerA);
+      setBattlePlayerBId(playerB);
+      setSelectedIds([playerA, playerB]);
+      setComparisonTargets(buildComparisonTargetsFromIds([playerA, playerB]));
+      setBattleActive(true);
+      shouldScrollToBattleRef.current = true;
+    },
+    [battlePlayerAId, battlePlayerBId],
+  );
 
   const handleAgeChange = useCallback((age: number) => {
     setChartHoverAge(null);
@@ -576,9 +628,11 @@ function CareerAtlasAppMain() {
         onSportChange={setSelectedSport}
         playerAId={battlePlayerAId}
         playerBId={battlePlayerBId}
+        activeExploreModeId={exploreModeId}
         onPlayerAChange={setBattlePlayerAId}
         onPlayerBChange={setBattlePlayerBId}
         onStartBattle={handleStartBattle}
+        onWhatIfSelect={handleHeroWhatIfSelect}
       />
 
       {dataSourceMeta.isLatestWeekStale ? (
@@ -606,6 +660,7 @@ function CareerAtlasAppMain() {
             onTimelineAgeSelect={handleTimelineAgeSelect}
             onDeepDiveSelect={handleTabChange}
             getBattleShareUrl={getBattleShareUrl}
+            exploreSuggestions={exploreSuggestions}
           />
         </div>
       ) : null}

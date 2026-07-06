@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  getWhatIfChip,
+  getWhatIfQuestion,
+  WHAT_IF_ENGINE,
+} from "@/data/what-if-brand";
 import type { ExploreModeId } from "@/data/explore/explore-types";
 import {
   getFeaturedExploreModes,
@@ -21,16 +26,17 @@ export function BattleExploreBar({
   onOpenMoreCategories,
 }: BattleExploreBarProps) {
   const featuredModes = getFeaturedExploreModes(sport);
+  const activeMode = getExploreMode(activeModeId);
 
   return (
     <div className="rounded-2xl border border-black/[0.06] bg-[#fafafa] p-4 sm:p-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0071e3]">
-            Explore
+            {WHAT_IF_ENGINE.exploreEyebrow}
           </p>
           <p className="mt-1 text-sm text-[#86868b]">
-            Change the comparison lens — who wins under different conditions?
+            {WHAT_IF_ENGINE.explorePrompt}
           </p>
         </div>
         <button
@@ -38,14 +44,14 @@ export function BattleExploreBar({
           onClick={onOpenMoreCategories}
           className="ui-transition shrink-0 self-start rounded-full border border-black/[0.08] bg-white px-4 py-2 text-sm font-medium text-[#1d1d1f] hover:border-[#0071e3]/30 hover:text-[#0071e3]"
         >
-          More Categories
+          {WHAT_IF_ENGINE.moreCategories}
         </button>
       </div>
 
       <div
         className="mt-4 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         role="tablist"
-        aria-label="Explore comparison modes"
+        aria-label="What-if questions"
       >
         {featuredModes.map((mode) => {
           const isActive = mode.id === activeModeId;
@@ -69,7 +75,7 @@ export function BattleExploreBar({
                     : "bg-white text-[#1d1d1f] shadow-sm hover:bg-[#f0f7ff] hover:text-[#0071e3]"
               }`}
             >
-              {mode.label}
+              {getWhatIfChip(mode.id, mode.label, mode.emoji)}
               {isComingSoon ? (
                 <span className="ml-1.5 text-[10px] font-normal opacity-80">Soon</span>
               ) : null}
@@ -78,13 +84,9 @@ export function BattleExploreBar({
         })}
       </div>
 
-      <p className="mt-3 text-xs text-[#86868b]">
-        Viewing:{" "}
-        <span className="font-semibold text-[#1d1d1f]">
-          {getExploreMode(activeModeId).label}
-        </span>
-        {" · "}
-        {getExploreMode(activeModeId).description}
+      <p className="mt-3 text-sm text-[#1d1d1f]">
+        <span className="font-semibold text-[#0071e3]">Current question:</span>{" "}
+        {getWhatIfQuestion(activeMode.id, activeMode.label)}
       </p>
     </div>
   );

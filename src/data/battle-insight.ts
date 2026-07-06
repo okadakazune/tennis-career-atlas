@@ -73,7 +73,7 @@ export function generateCareerBattleWhyInsight(
   if (result.overallWinner === "tie") {
     return {
       winnerName: result.playerA.shortName,
-      winnerIntro: `${result.playerA.shortName} and ${result.playerB.shortName} finish evenly matched across ${result.countedCategories} career categories.`,
+      winnerIntro: `${result.playerA.shortName} and ${result.playerB.shortName} are even under this lens across ${result.countedCategories} categories.`,
       winnerStrengths: [],
       loserName: null,
       loserStrengths: null,
@@ -99,8 +99,8 @@ export function generateCareerBattleWhyInsight(
   return {
     winnerName: winner.shortName,
     winnerIntro: winnerStrengths.length
-      ? `${winner.shortName} wins thanks to`
-      : `${winner.shortName} wins the career battle across the compared categories.`,
+      ? `${winner.shortName} leads here thanks to`
+      : `${winner.shortName} leads under this lens across the compared categories.`,
     winnerStrengths,
     loserName: loserStrengths ? loser.shortName : null,
     loserStrengths,

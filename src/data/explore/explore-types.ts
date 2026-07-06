@@ -10,6 +10,7 @@ export type ExploreModeGroup =
   | "ranking"
   | "performance"
   | "longevity"
+  | "surface"
   | "advanced";
 
 /** How displayAge is chosen for this explore lens. */
@@ -33,6 +34,24 @@ export interface ExploreModeDef {
   status: "live" | "comingSoon";
   /** Sort order within featured bar (lower = earlier). */
   featuredOrder?: number;
+  /** Show in the post-result suggestion cards. */
+  suggestAfterResult?: boolean;
+  /** Lower = shown earlier in suggestion cards. */
+  suggestPriority?: number;
+  emoji?: string;
+}
+
+export interface ExploreSuggestionPreview {
+  modeId: ExploreModeId;
+  label: string;
+  description: string;
+  whatIfQuestion: string;
+  emoji?: string;
+  status: "live" | "comingSoon";
+  winnerShortName: string | null;
+  isTie: boolean;
+  isDifferentWinner: boolean;
+  isCurrentMode: boolean;
 }
 
 export const DEFAULT_EXPLORE_MODE_ID: ExploreModeId = "career";

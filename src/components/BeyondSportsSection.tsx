@@ -12,11 +12,11 @@ export function BeyondSportsSection() {
           Beyond Tennis
         </p>
         <h2 className="mt-2 text-2xl font-bold tracking-tight text-[#1d1d1f] sm:text-3xl">
-          The Sports Battle Engine is just getting started
+          The What If Engine is just getting started
         </h2>
         <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-[#86868b] sm:text-base">
-          Tennis is live today. Football, basketball, F1, boxing, and more are
-          on deck — built on the same battle categories and age-based comparisons.
+          Tennis is live today. Football, basketball, F1, boxing, and more —
+          same question, every sport: what if you change the condition?
         </p>
       </div>
 

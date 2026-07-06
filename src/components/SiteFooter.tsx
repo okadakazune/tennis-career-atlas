@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { SITE_NAME, WHAT_IF_ENGINE } from "@/data/what-if-brand";
 import dataSourceMeta from "@/data/data-source-meta.json";
 
 const SACKMANN_URL = "https://github.com/JeffSackmann/tennis_atp";
@@ -32,6 +33,10 @@ export function SiteFooter() {
 
   return (
     <footer className="mt-4 border-t border-black/[0.06] pt-8 pb-6 text-xs text-[#86868b] sm:text-sm">
+      <div className="mb-6">
+        <p className="text-sm font-semibold text-[#1d1d1f]">{SITE_NAME}</p>
+        <p className="mt-0.5 text-xs text-[#86868b]">{WHAT_IF_ENGINE.poweredBy}</p>
+      </div>
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#1d1d1f]">

@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import type { BattleCategoryResult, BattleSide } from "@/data/battle-score";
 import type { BattleTimelineData, BattleTimelinePoint } from "@/data/battle-timeline";
+import { WHAT_IF_ENGINE } from "@/data/what-if-brand";
 
 interface CareerBattleTimelineProps {
   timeline: BattleTimelineData;
@@ -171,7 +172,7 @@ export function CareerBattleTimeline({
     <div className="border-b border-black/[0.06] px-5 py-5 sm:px-6">
       <div className="mb-5">
         <h3 className="text-sm font-semibold uppercase tracking-wide text-[#86868b]">
-          How the battle changed over time
+          {WHAT_IF_ENGINE.timelinePrompt}
         </h3>
         <p className="mt-1 text-sm text-[#86868b]">
           Supplementary view — click an age to update the age snapshot above the

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { WHAT_IF_ENGINE, getWhatIfQuestion, SITE_NAME } from "@/data/what-if-brand";
 import type { ExploreModeGroup, ExploreModeId } from "@/data/explore/explore-types";
 import {
   EXPLORE_MODE_GROUP_LABELS,
@@ -22,6 +23,7 @@ const GROUP_ORDER: ExploreModeGroup[] = [
   "ranking",
   "performance",
   "longevity",
+  "surface",
   "advanced",
 ];
 
@@ -74,10 +76,11 @@ export function ExploreCategoriesModal({
               id="explore-categories-title"
               className="text-xl font-bold tracking-tight text-[#1d1d1f]"
             >
-              Compare Categories
+              {WHAT_IF_ENGINE.modalTitle}
             </h2>
+            <p className="mt-1 text-xs text-[#aeaeb2]">{SITE_NAME}</p>
             <p className="mt-1 text-sm text-[#86868b]">
-              Pick a lens — Battle, Timeline, and Charts all follow.
+              {WHAT_IF_ENGINE.modalSubtitle}
             </p>
           </div>
           <button
@@ -131,10 +134,10 @@ export function ExploreCategoriesModal({
                                 : "border-black/[0.06] bg-white hover:border-[#0071e3]/30 hover:bg-[#f8fbff]"
                           }`}
                         >
-                          <p className="text-sm font-semibold text-[#1d1d1f]">
-                            {mode.label}
+                          <p className="text-sm font-semibold leading-snug text-[#1d1d1f]">
+                            {getWhatIfQuestion(mode.id, mode.label)}
                           </p>
-                          <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-[#86868b]">
+                          <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-[#86868b]">
                             {isComingSoon ? "Coming soon" : mode.description}
                           </p>
                         </button>

@@ -17,7 +17,14 @@ import { BattleExploreBar } from "@/components/BattleExploreBar";
 import { CareerBattleTimeline } from "@/components/CareerBattleTimeline";
 import { ExploreCategoriesModal } from "@/components/ExploreCategoriesModal";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
+import { TryAnotherComparison } from "@/components/TryAnotherComparison";
 import type { CompareDashboardTab } from "@/components/CompareTabNav";
+import type { ExploreSuggestionPreview } from "@/data/explore/explore-types";
+import {
+  getWhatIfQuestion,
+  SITE_NAME,
+  WHAT_IF_ENGINE,
+} from "@/data/what-if-brand";
 
 interface BattleResultProps {
   result: BattleScoreResult;
@@ -32,6 +39,7 @@ interface BattleResultProps {
   onTimelineAgeSelect: (age: number) => void;
   onDeepDiveSelect: (tab: CompareDashboardTab) => void;
   getBattleShareUrl: () => string;
+  exploreSuggestions: ExploreSuggestionPreview[];
 }
 
 const EVIDENCE_TABS: {
@@ -67,12 +75,6 @@ function getLoser(result: BattleScoreResult) {
     : result.overallWinner === "b"
       ? result.playerA
       : null;
-}
-
-function getWinnerScoreValue(result: BattleScoreResult): number {
-  if (result.overallWinner === "a") return result.scoreA;
-  if (result.overallWinner === "b") return result.scoreB;
-  return Math.max(result.scoreA, result.scoreB);
 }
 
 function getWinnerScoreLabel(result: BattleScoreResult): string {
@@ -183,8 +185,8 @@ function SingleMetricHero({
   return (
     <div className="rounded-3xl border border-amber-200/70 bg-gradient-to-b from-amber-50 via-white to-white px-6 py-10 text-center shadow-[0_16px_48px_rgba(255,193,7,0.14)] sm:px-12 sm:py-12">
       <p className="text-xs font-bold uppercase tracking-[0.25em] text-amber-700 sm:text-sm">
-        <span aria-hidden="true">🔍 </span>
-        {exploreMode.label}
+        <span aria-hidden="true">{exploreMode.emoji ?? "💭"} </span>
+        {getWhatIfQuestion(exploreMode.id, exploreMode.label)}
       </p>
 
       {winner ? (
@@ -241,6 +243,10 @@ function SingleMetricHero({
       {comparisonLabel ? (
         <p className="mx-auto mt-6 max-w-md text-sm text-[#86868b]">{comparisonLabel}</p>
       ) : null}
+
+      <p className="mx-auto mt-3 max-w-md text-sm font-medium text-[#0071e3]">
+        {WHAT_IF_ENGINE.resultPrompt}
+      </p>
     </div>
   );
 }
@@ -253,15 +259,14 @@ function CompositeWinnerHero({
   comparisonLabel: string | null;
 }) {
   const winner = getWinner(result);
-  const winnerScore = getWinnerScoreValue(result);
   const maxScore = Math.max(result.scoreA, result.scoreB, 1);
   const exploreMode = getExploreMode(result.exploreModeId);
 
   return (
     <div className="rounded-3xl border border-amber-200/70 bg-gradient-to-b from-amber-50 via-white to-white px-6 py-10 text-center shadow-[0_16px_48px_rgba(255,193,7,0.14)] sm:px-12 sm:py-12">
       <p className="text-xs font-bold uppercase tracking-[0.25em] text-amber-700 sm:text-sm">
-        <span aria-hidden="true">🏆 </span>
-        {exploreMode.label} Winner
+        <span aria-hidden="true">{exploreMode.emoji ?? "💭"} </span>
+        {getWhatIfQuestion(exploreMode.id, exploreMode.label)}
       </p>
 
       {winner ? (
@@ -293,10 +298,19 @@ function CompositeWinnerHero({
 
       {winner ? (
         <p className="mt-3 text-base text-[#86868b] sm:text-lg">
-          Won {winnerScore} of {result.countedCategories}{" "}
+          {WHAT_IF_ENGINE.leadsUnderLens(winner.shortName)} ·{" "}
+          {result.countedCategories}{" "}
           {result.countedCategories === 1 ? "category" : "categories"}
         </p>
       ) : null}
+
+      {comparisonLabel ? (
+        <p className="mx-auto mt-4 max-w-md text-sm text-[#86868b]">{comparisonLabel}</p>
+      ) : null}
+
+      <p className="mx-auto mt-3 max-w-md text-sm font-medium text-[#0071e3]">
+        {WHAT_IF_ENGINE.resultPrompt}
+      </p>
 
       <div className="mx-auto mt-8 max-w-sm space-y-4 text-left">
         <ScoreBar
@@ -312,10 +326,6 @@ function CompositeWinnerHero({
           accentColor={result.playerB.color}
         />
       </div>
-
-      {comparisonLabel ? (
-        <p className="mx-auto mt-6 max-w-md text-sm text-[#86868b]">{comparisonLabel}</p>
-      ) : null}
     </div>
   );
 }
@@ -383,8 +393,8 @@ function WhyDidTheyWin({
 
   const title =
     insight.winnerStrengths.length > 0 || insight.loserStrengths
-      ? `Why did ${insight.winnerName} win?`
-      : "Why is it even?";
+      ? WHAT_IF_ENGINE.whyLeadTitle(insight.winnerName)
+      : WHAT_IF_ENGINE.whyEvenTitle;
 
   return (
     <div className="rounded-2xl border border-black/[0.06] bg-white px-5 py-5 sm:px-6">
@@ -601,6 +611,7 @@ export function BattleResult({
   onTimelineAgeSelect,
   onDeepDiveSelect,
   getBattleShareUrl,
+  exploreSuggestions,
 }: BattleResultProps) {
   const [copied, setCopied] = useState(false);
   const [stickyVisible, setStickyVisible] = useState(false);
@@ -666,19 +677,23 @@ export function BattleResult({
       />
 
       <section
-        id="battle-result"
+        id="what-if-result"
         className="scroll-mt-4 overflow-hidden rounded-3xl border border-black/[0.08] bg-white shadow-[0_16px_48px_rgba(0,0,0,0.08)]"
       >
         <div className="border-b border-black/[0.06] bg-[linear-gradient(180deg,#f0f7ff_0%,#ffffff_40%)] px-5 py-5 sm:px-6 sm:py-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[#0071e3]">
-                <span aria-hidden="true">{sportDef?.emoji ?? "🏆"}</span>
-                Battle Explorer
+                <span aria-hidden="true">{sportDef?.emoji ?? "💭"}</span>
+                {WHAT_IF_ENGINE.resultEyebrow}
               </p>
               <h2 className="mt-2 text-2xl font-bold tracking-tight text-[#1d1d1f] sm:text-3xl">
                 {result.playerA.shortName} vs {result.playerB.shortName}
               </h2>
+              <p className="mt-1 text-xs text-[#aeaeb2]">{SITE_NAME}</p>
+              <p className="mt-1.5 text-sm text-[#86868b]">
+                {WHAT_IF_ENGINE.resultPrompt}
+              </p>
             </div>
 
             <button
@@ -686,7 +701,7 @@ export function BattleResult({
               onClick={() => void handleCopyBattleLink()}
               className="inline-flex shrink-0 items-center justify-center rounded-full border border-black/[0.08] bg-white px-4 py-2 text-sm font-medium text-[#1d1d1f] transition-colors hover:bg-[#fafafa]"
             >
-              {copied ? "Copied!" : "Copy Battle Link"}
+              {copied ? WHAT_IF_ENGINE.copyLinkCopied : WHAT_IF_ENGINE.copyLink}
             </button>
           </div>
 
@@ -724,6 +739,11 @@ export function BattleResult({
               ) : (
                 <CompositeWinnerHero result={result} comparisonLabel={comparisonLabel} />
               )}
+              <TryAnotherComparison
+                suggestions={exploreSuggestions}
+                onSelect={onExploreModeChange}
+                onOpenMoreCategories={() => setCategoriesModalOpen(true)}
+              />
               {!result.isSingleMetric ? <WhyDidTheyWin insight={whyInsight} /> : null}
               <WinningCategories result={result} />
               <QuickComparisonCards result={result} />

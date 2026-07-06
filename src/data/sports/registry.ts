@@ -10,16 +10,16 @@ export const SPORTS: SportDefinition[] = [
     label: "Tennis",
     emoji: "🎾",
     status: "live",
-    tagline: "Compare ATP careers at the same age.",
-    battleLabel: "Tennis Battle",
+    tagline: "What if you compare ATP careers at the same age?",
+    battleLabel: "What If · Tennis",
   },
   {
     id: "all",
     label: "All Sports",
     emoji: "🌍",
     status: "comingSoon",
-    tagline: "Cross-sport GOAT debates are on the way.",
-    battleLabel: "All Sports Battle",
+    tagline: "Cross-sport What If comparisons are on the way.",
+    battleLabel: "What If · All Sports",
   },
 ];
 
@@ -30,7 +30,7 @@ export const COMING_SOON_SPORTS: SportDefinition[] = [
     emoji: "⚽",
     status: "comingSoon",
     tagline: "Messi vs Ronaldo and more.",
-    battleLabel: "Football Battle",
+    battleLabel: "What If · Football",
   },
   {
     id: "basketball",
@@ -38,7 +38,7 @@ export const COMING_SOON_SPORTS: SportDefinition[] = [
     emoji: "🏀",
     status: "comingSoon",
     tagline: "Jordan vs LeBron and more.",
-    battleLabel: "Basketball Battle",
+    battleLabel: "What If · Basketball",
   },
   {
     id: "baseball",
@@ -46,7 +46,7 @@ export const COMING_SOON_SPORTS: SportDefinition[] = [
     emoji: "⚾",
     status: "comingSoon",
     tagline: "Legends from Ruth to Ohtani.",
-    battleLabel: "Baseball Battle",
+    battleLabel: "What If · Baseball",
   },
   {
     id: "formula1",
@@ -54,7 +54,7 @@ export const COMING_SOON_SPORTS: SportDefinition[] = [
     emoji: "🏎",
     status: "comingSoon",
     tagline: "Senna vs Hamilton and more.",
-    battleLabel: "F1 Battle",
+    battleLabel: "What If · F1",
   },
   {
     id: "golf",
@@ -62,7 +62,7 @@ export const COMING_SOON_SPORTS: SportDefinition[] = [
     emoji: "⛳",
     status: "comingSoon",
     tagline: "Tiger vs Nicklaus and more.",
-    battleLabel: "Golf Battle",
+    battleLabel: "What If · Golf",
   },
   {
     id: "boxing",
@@ -70,7 +70,7 @@ export const COMING_SOON_SPORTS: SportDefinition[] = [
     emoji: "🥊",
     status: "comingSoon",
     tagline: "Ali vs Tyson and more.",
-    battleLabel: "Boxing Battle",
+    battleLabel: "What If · Boxing",
   },
   {
     id: "athletics",
@@ -78,7 +78,7 @@ export const COMING_SOON_SPORTS: SportDefinition[] = [
     emoji: "🏃",
     status: "comingSoon",
     tagline: "Track and field legends.",
-    battleLabel: "Athletics Battle",
+    battleLabel: "What If · Athletics",
   },
   {
     id: "swimming",
@@ -86,7 +86,7 @@ export const COMING_SOON_SPORTS: SportDefinition[] = [
     emoji: "🏊",
     status: "comingSoon",
     tagline: "Pool dominance across eras.",
-    battleLabel: "Swimming Battle",
+    battleLabel: "What If · Swimming",
   },
 ];
 
